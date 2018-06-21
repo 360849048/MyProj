@@ -1,5 +1,5 @@
-from src.sqljob import TableManager
-from src.exceler import IOFile
+from sqljob import TableManager
+from exceler import IOFile
 
 
 class IOMaker:
@@ -70,7 +70,7 @@ class IOMaker:
 
 if __name__ == '__main__':
     # 功能测试
-    iomaker = IOMaker(imm_type='zes',
+    iomaker = IOMaker(imm_type='ZEs',
                       main_board_modules=[
                           ['cdm163', {'I1': 73, 'i2': 74, 'o1': 73, 'O2': 74}],
                           ['cto163', {'O1': 41, 'o2': 43, 'o3': 45}],
