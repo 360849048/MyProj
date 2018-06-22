@@ -61,6 +61,12 @@
       standard: function(newsStandard, oldStandard){
         this.$emit("changeStandard", this.standard);
       }
+    },
+    mounted: function(){
+      this.$emit("changeType", this.type);
+      this.$emit("changeLock", this.lock);
+      this.$emit("changeInject", this.inject);
+      this.$emit("changeStandard", this.standard);
     }
   }
 </script>

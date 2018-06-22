@@ -37,48 +37,41 @@
     },
     data(){
       return{
-        type: "",
-        lock: "",
-        inject: "",
-        standard: ""
+        immParams: {
+          type: '',
+          lock: '',
+          inject: '',
+          standard: ''
+        }
       }
     },
     methods: {
       getType(type){
-        this.type = type;
+        this.immParams.type = type;
       },
       getLock(lock){
-        this.lock = lock;
+        this.immParams.lock = lock;
       },
       getInject(inject){
-        this.inject = inject;
+        this.immParams.inject = inject;
       },
       getStandard(standard){
-        this.standard = standard;
+        this.immParams.standard = standard;
       },
       useJquery(){
-        // $.ajax({
-        //   url: 'https://sp0.baidu.com/5a1Fazu8AA54nxGko9WTAnF6hhy/su',
-        //   data:{wd: 'ok'},
-        //   dataType: 'jsonp',
-        //   jsonp: 'cb',
-        //   jsonpCallback: 'jshow',
-        //   type: 'GET',
-        //   success: function(result){
-        //     console.log(result);
+        // console.log($.ajax({
+        //   url: "/foo",
+        //   type: 'POST',
+        //   data: this.immParams,
+        //   dataType: 'json',
+        //   success: function(data){
+        //     console.log(data);
         //   },
-        //   error: function(xhr){
-        //     console.log('Failed');
+        //   error: function(){
+        //     console.log('Error!!!');
         //   }
-        // })
-        console.log($.ajax({
-          url: "/foo",
-          type: 'POST',
-          data: {
-            'type': this.type,
-            'lock': this.lock
-          }
-        }));
+        // }));
+
       }
     }
   }
