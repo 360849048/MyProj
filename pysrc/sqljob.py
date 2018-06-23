@@ -322,46 +322,8 @@ class TableManager:
 
 
 if __name__ == '__main__':
-    pass
-    # data_server = TableManager("data_server", r"E:\dataSvr\lslWebLoader.db")
-    # print(data_server.getColumns())
-    # original_length = len(data_server.getAllId())
-    # last_id = data_server.getAllId()[-1]
-    #
-    # # id序号生成器
-    # def generateNewId(first_id):
-    #     new_id = first_id
-    #     while True:
-    #         yield new_id
-    #         new_id += 1
-    # new_id = generateNewId(last_id + 1)
-    #
-    # print("Pls wait...")
-    # # 循环插入
-    # for i in range(1, 9):
-    #     data_server.appendLine(id=str(next(new_id)), name="HeatingZoneControl"+str(i)+".sHeatingLimitValue", min="0", max="6000", unit="DegreeCelsius", unitSchema="C°/F", textList="VariableTexts", text="Limit Temp. Zone "+str(i))
-    #     data_server.appendLine(id=str(next(new_id)), name="HeatingZoneControl"+str(i)+".sHeatingSet", min="0", max="HeatingZoneControl"+str(i)+".sHeatingLimitValue", unit="DegreeCelsius", unitSchema="C°/F", textList="VariableTexts", text="Set Temp. Zone "+str(i))
-    #     data_server.appendLine(id=str(next(new_id)), name="HeatingZoneControl"+str(i)+".sFaultTemp", unit="DegreeCelsius", unitSchema="C°/F", textList="VariableTexts")
-    #     data_server.appendLine(id=str(next(new_id)), name="HeatingZoneControl"+str(i)+".sHeatingMax", min="0", max="HeatingZoneControl"+str(i)+".sHeatingLimitValue", unit="HeatOffsetUnit", textList="VariableTexts", text="Set+ Zone "+str(i))
-    #     data_server.appendLine(id=str(next(new_id)), name="HeatingZoneControl"+str(i)+".sHeatingMin", min="0", max="200", unit="HeatOffsetUnit", textList="VariableTexts", text="Set - Zone "+str(i))
-    #     data_server.appendLine(id=str(next(new_id)), name="HeatingZoneControl"+str(i)+".sHeatingMode", textList="VariableTexts", text="Mode Zone "+str(i))
-    #     data_server.appendLine(id=str(next(new_id)), name="HeatingZoneControl"+str(i)+".sHeatingStandby", min="0", max="HeatingZoneControl"+str(i)+".sHeatingLimitValue", unit="DegreeCelsius", unitSchema="C°/F", textList="VariableTexts", text="Standby Temp. Zone "+str(i))
-    #     data_server.appendLine(id=str(next(new_id)), name="HeatingZoneControl"+str(i)+".sHeatingStatus", textList="VariableTexts")
-    # for i in range(1, 9):
-    #     data_server.appendLine(id=str(next(new_id)), name="HeatingZoneControl"+str(i)+".sHeatingMode", textList="VariableTexts", text="Mode Zone "+str(i))
-    #     data_server.appendLine(id=str(next(new_id)), name="HeatingZoneControl"+str(i)+".sHeatingRate", min="0", max="1000", unit="1/10Percent", textList="VariableTexts", text="Rate Zone "+str(i))
-    #     data_server.appendLine(id=str(next(new_id)), name="HeatingZoneControl"+str(i)+".sHeatingZoneSwitch", textList="VariableTexts", text="Zone "+str(i))
-    #     data_server.appendLine(id=str(next(new_id)), name="HeatingZoneControl"+str(i)+r"\Kp_First_Rise.Data", textList="VariableTexts")
-    #     data_server.appendLine(id=str(next(new_id)), name="HeatingZoneControl"+str(i)+r"\Tn_First_Rise.Data", textList="VariableTexts")
-    #     data_server.appendLine(id=str(next(new_id)), name="HeatingZoneControl"+str(i)+r"\Tv_First_Rise.Data", textList="VariableTexts")
-    # data_server.appendLine(id=str(next(new_id)), name="BarrelControl1.sScrewPreventTemperature", min="0", max="4000", unit="DegreeCelsius", unitSchema="C°/F", textList="VariableTexts", text="Screw Prevent Temp.")
-    # data_server.appendLine(id=str(next(new_id)), name="BarrelControl1.sScrewPreventTime", min="300000", max="9999999", unit="ms", textList="VariableTexts", text="Screw Prevent De. Time")
-    # data_server.appendLine(id=str(next(new_id)), name="BarrelControl1.sScrewPreventTimeShow", unit="ms", textList="VariableTexts")
-    #
-    # # 插入完毕显示结果
-    # print("*"*50 + "Finished!" + "*"*50)
-    # final_next_id = next(new_id)
-    # final_length = len(data_server.getAllId())
-    # for id in range(last_id+1, final_next_id):
-    #     print(data_server.displayDetailedData(id))
-    # print("计划插入%d条记录，实际插入%d条记录" % (final_next_id - last_id - 1, final_length - original_length))
+    inputs = {}
+    t_di = TableManager('digital_input', '../libfiles/data.db')
+    for id in t_di.getAllId():
+        inputs[str(id)] = t_di.displayBriefData(id, 'id', 'CName')[1]
+    print(inputs)
