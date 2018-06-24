@@ -40,5 +40,5 @@ def getDi():
     return jsonify(ret_data)
 
 
-app.run(host='192.168.1.8', port='9999')
+app.run(host='192.168.1.109', port='9999')
 # app.run(debug=True)

@@ -22,23 +22,25 @@
               <a class="nav-link" id="v-pills-settings-tab" data-toggle="pill" href="#" role="tab">Analog Output</a>
             </div>
           </div>
-          <div class="col-sm-5">
-            <ul>
-              <li v-for="(input, index) in ios" v-if="index < Math.ceil((curPageStartItem + curPageEndItem)/2)">
-                <div class="alert alert-primary" role="alert">
-                  {{index}}&nbsp;&nbsp;&nbsp;{{input}}
-                </div>
-              </li>
-            </ul>
-          </div>
-          <div class="col-sm-5">
-            <ul>
-              <li v-for="(input, index) in ios" v-if="index >= Math.ceil((curPageStartItem + curPageEndItem)/2)">
-                <div class="alert alert-primary" role="alert">
-                  {{index}}&nbsp;&nbsp;&nbsp;{{input}}
-                </div>
-              </li>
-            </ul>
+          <div class="col-sm-10 row"  v-loading="loading">
+            <div class="col-sm">
+              <ul>
+                <li v-for="(input, index) in ios" v-if="index < Math.ceil((curPageStartItem + curPageEndItem)/2)">
+                  <div class="alert alert-primary" role="alert">
+                    {{index}}&nbsp;&nbsp;&nbsp;{{input}}
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="col-sm">
+              <ul>
+                <li v-for="(input, index) in ios" v-if="index >= Math.ceil((curPageStartItem + curPageEndItem)/2)">
+                  <div class="alert alert-primary" role="alert">
+                    {{index}}&nbsp;&nbsp;&nbsp;{{input}}
+                  </div>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
@@ -54,7 +56,8 @@
         ioNum: pageItemAmount,
         ios: {},
         pageItemAmount: pageItemAmount,
-        curPage: 1
+        curPage: 1,
+        loading: true
       }
     },
     computed: {
@@ -85,6 +88,12 @@
           url: "/io/di",
           type: 'GET',
           dataType: 'json',
+          beforeSend: function(){
+            _this.loading = true;
+          },
+          complete: function(){
+            _this.loading = false;
+          },
           data: {"start": _this.curPageStartItem, 'end': _this.curPageEndItem},
           success: function(data){
             _this.ioNum = data.amount;
