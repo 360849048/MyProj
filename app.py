@@ -27,7 +27,6 @@ def getDi():
     io_type = request.args.get('type')
     start_id = int(request.args.get('start'))
     end_id = int(request.args.get('end'))
-    print(type(io_type))
     if io_type == 'di':
         t_io = TableManager('digital_input', './libfiles/data.db')
     elif io_type == 'do':
@@ -35,7 +34,6 @@ def getDi():
     elif io_type == 'ai':
         t_io = TableManager('analog_input', './libfiles/data.db')
     else:
-        print(io_type)
         t_io = TableManager('analog_output', './libfiles/data.db')
     ret_data = {}
     ret_data['amount'] = len(t_io.getAllId())           # 每次都会重新查询，性能或许可以优化
@@ -50,5 +48,5 @@ def getDi():
     return jsonify(ret_data)
 
 
-# app.run(host='192.168.1.109', port='9999')
+# app.run(host='172.18.71.158', port=8080)
 app.run(debug=True)

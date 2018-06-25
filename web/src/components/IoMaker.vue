@@ -73,11 +73,15 @@
       }
     },
     methods: {
-      gotoPage(page){
-        if (this.pages.indexOf(page) === -1){
+      gotoPage(curPage){
+        if (this.pages.indexOf(curPage) === -1){
           return -1;
         }
-        this.curPage = page;
+        // 不能在获取到this,ios之前改变当前页面，否则会导致页面切换时候闪屏
+        // this.curPage = curPage;
+        let curPageStartItem = 1 + (curPage - 1) * pageItemAmount;
+        let curPageEndItem = curPage * pageItemAmount < this.ioNum ? curPage * pageItemAmount : this.ioNum;
+
 
         let _this = this;
         $.ajax({
@@ -89,8 +93,9 @@
           },
           complete: function(){
             _this.loading = false;
+            _this.curPage = curPage;
           },
-          data: {"type": _this.ioType, "start": _this.curPageStartItem, 'end': _this.curPageEndItem},
+          data: {"type": _this.ioType, "start": curPageStartItem, 'end': curPageEndItem},
           success: function(data){
             _this.ioNum = data.amount;
             // json数据内部按key排序，可直接使用
@@ -100,7 +105,7 @@
             console.log('Error!!!');
             _this.ioNum = 120;
             let temp = {};
-            for(let i=_this.curPageStartItem; i<=_this.curPageEndItem; i++){
+            for(let i=curPageStartItem; i<=curPageEndItem; i++){
               temp[i] = i;
             }
             _this.ios = temp;
