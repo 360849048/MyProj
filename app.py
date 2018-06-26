@@ -1,4 +1,3 @@
-import json
 from flask import Flask, request, send_file, jsonify
 from pysrc.sqljob import TableManager
 
@@ -10,16 +9,10 @@ def home():
 
 @app.route('/foo', methods=['GET'])
 def foo():
-    # print('hello')
-    # print(dir(request.form))
-    # print(request.form.to_dict())
-
     inputs = {}
     t_di = TableManager('digital_input', './libfiles/data.db')
     for id in t_di.getAllId():
-        inputs[str(id)] = t_di.displayBriefData(id, 'id', 'CName')[1]
-
-
+        inputs[str(id)] = t_di.displayBriefData(id, 'id', 'EName')[1]
     return jsonify(inputs)
 
 @app.route('/io', methods=['GET'])
@@ -33,8 +26,12 @@ def getDi():
         t_io = TableManager('digital_output', './libfiles/data.db')
     elif io_type == 'ai':
         t_io = TableManager('analog_input', './libfiles/data.db')
-    else:
+    elif io_type == 'ao':
         t_io = TableManager('analog_output', './libfiles/data.db')
+    elif io_type == 'ti':
+        t_io = TableManager('temperature_input', './libfiles/data.db')
+    else:
+        t_io = TableManager('temperature_output', './libfiles/data.db')
     ret_data = {}
     ret_data['amount'] = len(t_io.getAllId())           # 每次都会重新查询，性能或许可以优化
     ret_data['ios'] = {}
@@ -48,5 +45,5 @@ def getDi():
     return jsonify(ret_data)
 
 
-# app.run(host='172.18.71.158', port=8080)
+# pysrc.run(host='172.18.71.158', port=8080)
 app.run(debug=True)

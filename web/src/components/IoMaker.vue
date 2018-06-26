@@ -4,10 +4,12 @@
         <div class="row">
           <div class="col-sm-2">
             <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
-              <a class="nav-link active" id="v-pills-home-tab" data-toggle="pill" href="#" role="tab" @click="ioType='di'">Digital Input</a>
-              <a class="nav-link" id="v-pills-profile-tab" data-toggle="pill" href="#" role="tab" @click="ioType='do'">Digital Output</a>
-              <a class="nav-link" id="v-pills-messages-tab" data-toggle="pill" href="#" role="tab" @click="ioType='ai'">Analog Input</a>
-              <a class="nav-link" id="v-pills-settings-tab" data-toggle="pill" href="#" role="tab" @click="ioType='ao'">Analog Output</a>
+              <a class="nav-link active" data-toggle="pill" href="#" role="tab" @click="ioType='di'">Digital Input</a>
+              <a class="nav-link"  data-toggle="pill" href="#" role="tab" @click="ioType='do'">Digital Output</a>
+              <a class="nav-link"  data-toggle="pill" href="#" role="tab" @click="ioType='ai'">Analog Input</a>
+              <a class="nav-link"  data-toggle="pill" href="#" role="tab" @click="ioType='ao'">Analog Output</a>
+              <a class="nav-link"  data-toggle="pill" href="#" role="tab" @click="ioType='ti'">Temperature Input</a>
+              <a class="nav-link"  data-toggle="pill" href="#" role="tab" @click="ioType='to'">Temperature Output</a>
             </div>
           </div>
           <div class="col-sm-10">
@@ -150,5 +152,6 @@
     display: inline-block;
     padding: .15rem 1.25rem;
     margin-bottom: 0.25rem;
+    user-select: none;
   }
 </style>

@@ -19,8 +19,8 @@
             Tools
             </a>
             <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-            <router-link class="dropdown-item" href="#" to="/srctransfer">SrcTransfer</router-link>
-            <router-link class="dropdown-item" href="#" to="/iomaker">IoMaker</router-link>
+            <router-link class="dropdown-item" href="#" to="/srctransfer">Select</router-link>
+            <router-link class="dropdown-item" href="#" to="/io">IO</router-link>
             <div class="dropdown-divider"></div>
             <a class="dropdown-item" href="#">more...</a>
             </div>

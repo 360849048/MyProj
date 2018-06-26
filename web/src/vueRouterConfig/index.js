@@ -12,7 +12,7 @@ export default new VueRouter({
         {path: '/home', component: Home},
         {path: '/versions', component: Versions},
         {path: '/srctransfer', component: Srctransfer},
-        {path: '/iomaker', component: Iomaker},
+        {path: '/io', component: Iomaker},
         {path: '*', redirect: '/home'}
     ]
 })

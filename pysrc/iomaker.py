@@ -72,15 +72,13 @@ if __name__ == '__main__':
     # 功能测试
     iomaker = IOMaker(imm_type='ZEs',
                       main_board_modules=[
-                          ['cdm163', {'I1': 73, 'i2': 74, 'o1': 73, 'O2': 74}],
-                          ['cto163', {'O1': 41, 'o2': 43, 'o3': 45}],
-                          ['cam124', {'AI1': 2}]
+                          ['cto163', {'o1': 41, 'o2': 43, 'o3': 45, 'o4': 47}],
                       ],
                       board_1_modules=[
-                          ['civ512', {}],
+                          ['civ521', {}],
                           ['cai888', {}],
-                          ['cam124', {'AO1': 4}]
+                          ['cai888', {}]
                       ],
-                      big=False)
+                      big=True)
     iomaker.createIOFile()
 
