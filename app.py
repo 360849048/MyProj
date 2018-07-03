@@ -45,5 +45,5 @@ def getDi():
     return jsonify(ret_data)
 
 
-# pysrc.run(host='172.18.71.158', port=8080)
+# app.run(host='172.18.71.158', port=8080)
 app.run(debug=True)

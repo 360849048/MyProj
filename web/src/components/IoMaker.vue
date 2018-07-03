@@ -2,22 +2,25 @@
     <div id="srcmaker">
       <div class="container">
         <div class="row">
-          <div class="col-sm-2">
+          <!-- 左侧导航 -->
+          <div class="col-sm-1">
             <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
-              <a class="nav-link active" data-toggle="pill" href="#" role="tab" @click="ioType='di'">Digital Input</a>
-              <a class="nav-link"  data-toggle="pill" href="#" role="tab" @click="ioType='do'">Digital Output</a>
-              <a class="nav-link"  data-toggle="pill" href="#" role="tab" @click="ioType='ai'">Analog Input</a>
-              <a class="nav-link"  data-toggle="pill" href="#" role="tab" @click="ioType='ao'">Analog Output</a>
-              <a class="nav-link"  data-toggle="pill" href="#" role="tab" @click="ioType='ti'">Temperature Input</a>
-              <a class="nav-link"  data-toggle="pill" href="#" role="tab" @click="ioType='to'">Temperature Output</a>
+              <a class="nav-link active" data-toggle="pill" href="#" role="tab" @click="ioType='di'">DI</a>
+              <a class="nav-link"  data-toggle="pill" href="#" role="tab" @click="ioType='do'">DO</a>
+              <a class="nav-link"  data-toggle="pill" href="#" role="tab" @click="ioType='ai'">AI</a>
+              <a class="nav-link"  data-toggle="pill" href="#" role="tab" @click="ioType='ao'">AO</a>
+              <a class="nav-link"  data-toggle="pill" href="#" role="tab" @click="ioType='ti'">TI</a>
+              <a class="nav-link"  data-toggle="pill" href="#" role="tab" @click="ioType='to'">TO</a>
             </div>
           </div>
-          <div class="col-sm-10">
+          <div class="col-sm-7">
+            <!-- 上方导航 -->
             <ul class="nav nav-tabs">
               <li class="nav-item" v-for="eachPage in pages" @click="gotoPage(eachPage)">
                 <a class="nav-link" :class="{'active': curPage === eachPage}" href="#">{{eachPage}}</a>
               </li>
             </ul>
+            <!-- 正文 -->
             <div class="row" v-loading="loading">
               <div class="col-sm">
                 <ul>
@@ -39,16 +42,83 @@
               </div>
             </div>
           </div>
+          <div class="col-sm-4">
+            <div id="accordion">
+              <div class="card">
+                <div class="card-header" id="headingOne">
+                  <h5 class="mb-0">
+                    <button class="btn btn-link" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                      地址0
+                    </button>
+                  </h5>
+                </div>
+                <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
+                  <div class="card-body">
+                    <button class="btn btn-primary" type="submit" @click="module='cto163'">切换CTO163</button>
+                    <button class="btn btn-primary" type="submit" @click="module='cdm163'">切换CDM163</button>
+                    <module-config
+                      :module-name="module"
+                      :ios="ioForModule">
+                    </module-config>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="card-header" id="headingTwo">
+                  <h5 class="mb-0">
+                    <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                      地址1
+                    </button>
+                  </h5>
+                </div>
+                <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
+                  <div class="card-body">
+                    <button class="btn btn-primary" type="submit" @click="module='cto163'">切换CTO163</button>
+                    <button class="btn btn-primary" type="submit" @click="module='cdm163'">切换CDM163</button>
+                    <module-config
+                      :module-name="module"
+                      :ios="ioForModule">
+                    </module-config>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="card-header" id="headingThree">
+                  <h5 class="mb-0">
+                    <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                      地址3
+                    </button>
+                  </h5>
+                </div>
+                <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordion">
+                  <div class="card-body">
+                    <button class="btn btn-primary" type="submit" @click="module='cto163'">切换CTO163</button>
+                    <button class="btn btn-primary" type="submit" @click="module='cdm163'">切换CDM163</button>
+                    <module-config
+                      :module-name="module"
+                      :ios="ioForModule">
+                    </module-config>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 </template>
 <script>
+  import ModuleConfig from './ModuleConfig'
 
   // 规定一页最多显示的数据
   const pageItemAmount = 32;
 
   export default {
+    components:{
+      ModuleConfig
+    },
     data(){
       return {
         ioType: 'di',
@@ -56,6 +126,9 @@
         ios: {},
         curPage: 1,
         loading: true,
+
+        module: 'cto163',
+        ioForModule: {di1: '可编程io输入1', do1: '可编程io输出1'},
       }
     },
     computed: {
@@ -146,8 +219,8 @@
   .alert .badge-light{
     float: right;
   }
-  /* Overwrite default bootstrap style */
   .alert{
+    /* Overwrite default bootstrap style */
     width: 80%;
     display: inline-block;
     padding: .15rem 1.25rem;

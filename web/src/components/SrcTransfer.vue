@@ -18,17 +18,29 @@
       </div>
 
       <div class="row">
-        <button class="btn btn-primary" type="submit" @click="useJquery">Button</button>
+        <button class="btn btn-primary" type="submit" @click="useJquery">切换模块</button>
+        <button class="btn btn-primary" type="submit" @click="foo">修改点位</button>
+        <button class="btn btn-primary" type="submit" @click="bar">撤销</button>
+      </div>
+      <div class="row">
+        <module-config
+          :module-name="module"
+          :ios="ios">
+        </module-config>
       </div>
     </div>
   </div>
 </template>
 <script>
   import ImmType from './ImmType'
+  import ImmConfig from './ImmConfig'
+  import ModuleConfig from './ModuleConfig'
 
   export default{
     components:{
       ImmType,
+      ImmConfig,
+      ModuleConfig
     },
     data(){
       return{
@@ -37,7 +49,9 @@
           lock: '',
           inject: '',
           standard: ''
-        }
+        },
+        ios: {di1: '可编程io输入1', do1: '可编程io输出1'},
+        module: 'cdm163'
       }
     },
     methods: {
@@ -54,7 +68,12 @@
         this.immParams.standard = standard;
       },
       foo(){
-        alert('ok');
+        this.ios = {do1: '阀门1开', do2: '阀门2开'};
+      },
+      bar(){
+        this.module = 'cdm163';
+        this.ios = {};
+        this.ios = {di1: '可编程io输入1', do1: '可编程io输出1'};
       },
       useJquery(){
         // console.log($.ajax({
@@ -69,6 +88,9 @@
         //     console.log('Error!!!');
         //   }
         // }));
+        this.module = 'cto163';
+        this.ios = {};
+        // this.ios.do2 = 'valve 3 open';
       }
     }
   }
