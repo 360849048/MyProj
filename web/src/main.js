@@ -1,9 +1,9 @@
 import Vue from 'vue'
 import App from './App.vue'
 import router from './vueRouterConfig'
-import { loading } from 'element-ui'
+import { Loading } from 'element-ui'
 
-Vue.use(loading);
+Vue.use(Loading);
 
 new Vue({
   el: '#app',

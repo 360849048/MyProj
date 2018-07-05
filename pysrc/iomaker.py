@@ -137,10 +137,28 @@ if __name__ == '__main__':
     # 功能测试
     iomaker = IOMaker(imm_type='ZEs',
                       main_board_modules=[
-                          ['cto163', {
-                              'o1': DO_VALVE_1_OPEN,
-                              'O3': DO_VALVE_2_OPEN,
-                              'O5': DO_VALVE_3_OPEN
+                          ['cdm163', {
+                              'I1': DI_PROGRAMMABLE_1,
+                              'I2': DI_PROGRAMMABLE_2,
+                              'I3': DI_PROGRAMMABLE_3,
+                              'I4': DI_PROGRAMMABLE_4,
+                              'I5': DI_PROGRAMMABLE_5,
+                              'I6': DI_PROGRAMMABLE_6,
+                              'O1': DO_PROGRAMMABLE_1,
+                              'O2': DO_PROGRAMMABLE_2,
+                              'O3': DO_PROGRAMMABLE_3,
+                              'O4': DO_PROGRAMMABLE_4,
+                              'O5': DO_PROGRAMMABLE_5,
+                              'O6': DO_PROGRAMMABLE_6
+                          }],
+                          ['CDM163', {
+                              'i1': DI_PRESSURE_RELEASE_BTN,
+                              'i2': DI_CORE_2_IN,
+                              'i3': DI_CORE_2_OUT,
+                              'o1': DO_PRESSURE_RELEASE,
+                              'O2': DO_CORE_2_IN_END,
+                              'O3': DO_CORE_2_OUT_END,
+                              'O4': DO_BAD_PRODUCT_2
                           }]
                       ],
                       board_1_modules=[

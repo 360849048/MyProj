@@ -1,6 +1,6 @@
 <template>
     <div id="srcmaker">
-      <div class="container">
+      <div class="container-fluid">
         <div class="row">
           <!-- 左侧导航 -->
           <div class="col-sm-1">
@@ -20,12 +20,12 @@
                 <a class="nav-link" :class="{'active': curPage === eachPage}" href="#">{{eachPage}}</a>
               </li>
             </ul>
-            <!-- 正文 -->
+            <!-- IO显示区 -->
             <div class="row" v-loading="loading">
               <div class="col-sm">
                 <ul>
                   <li v-for="(input, index) in ios" v-if="index < Math.ceil((curPageStartItem + curPageEndItem)/2)">
-                    <div class="alert alert-primary" role="alert">
+                    <div class="alert alert-primary" role="alert" draggable="true" @dragstart="bar">
                       {{index}}&nbsp;&nbsp;&nbsp;{{input}}
                     </div>
                   </li>
@@ -42,68 +42,14 @@
               </div>
             </div>
           </div>
+          <!-- 模块 -->
           <div class="col-sm-4">
-            <div id="accordion">
-              <div class="card">
-                <div class="card-header" id="headingOne">
-                  <h5 class="mb-0">
-                    <button class="btn btn-link" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-                      地址0
-                    </button>
-                  </h5>
-                </div>
-                <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
-                  <div class="card-body">
-                    <button class="btn btn-primary" type="submit" @click="module='cto163'">切换CTO163</button>
-                    <button class="btn btn-primary" type="submit" @click="module='cdm163'">切换CDM163</button>
-                    <module-config
-                      :module-name="module"
-                      :ios="ioForModule">
-                    </module-config>
-                  </div>
-                </div>
-              </div>
-
-              <div class="card">
-                <div class="card-header" id="headingTwo">
-                  <h5 class="mb-0">
-                    <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                      地址1
-                    </button>
-                  </h5>
-                </div>
-                <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
-                  <div class="card-body">
-                    <button class="btn btn-primary" type="submit" @click="module='cto163'">切换CTO163</button>
-                    <button class="btn btn-primary" type="submit" @click="module='cdm163'">切换CDM163</button>
-                    <module-config
-                      :module-name="module"
-                      :ios="ioForModule">
-                    </module-config>
-                  </div>
-                </div>
-              </div>
-
-              <div class="card">
-                <div class="card-header" id="headingThree">
-                  <h5 class="mb-0">
-                    <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-                      地址3
-                    </button>
-                  </h5>
-                </div>
-                <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordion">
-                  <div class="card-body">
-                    <button class="btn btn-primary" type="submit" @click="module='cto163'">切换CTO163</button>
-                    <button class="btn btn-primary" type="submit" @click="module='cdm163'">切换CDM163</button>
-                    <module-config
-                      :module-name="module"
-                      :ios="ioForModule">
-                    </module-config>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <module-selector :module-num="4" @get-active-module="foo">
+            </module-selector>
+            <module-config
+              :module-name="module"
+              :ios="ioForModule">
+            </module-config>
           </div>
         </div>
       </div>
@@ -111,12 +57,14 @@
 </template>
 <script>
   import ModuleConfig from './ModuleConfig'
+  import ModuleSelector from './ModuleSelector'
 
   // 规定一页最多显示的数据
   const pageItemAmount = 32;
 
   export default {
     components:{
+      ModuleSelector,
       ModuleConfig
     },
     data(){
@@ -187,6 +135,12 @@
           }
         });
         return 0;
+      },
+      foo(e){
+        console.log(e);
+      },
+      bar(e){
+        console.log(e.target.innerText);
       }
     },
     watch: {

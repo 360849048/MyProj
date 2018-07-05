@@ -116,7 +116,7 @@
 
 <style scoped lang="scss">
   #module{
-    border: 1px gray dotted;
+    /*border: 1px gray dotted;*/
     width: 300px;
   }
   .io-module{

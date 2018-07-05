@@ -71,9 +71,7 @@
         this.ios = {do1: '阀门1开', do2: '阀门2开'};
       },
       bar(){
-        this.module = 'cdm163';
-        this.ios = {};
-        this.ios = {di1: '可编程io输入1', do1: '可编程io输出1'};
+        console.log('hi');
       },
       useJquery(){
         // console.log($.ajax({
