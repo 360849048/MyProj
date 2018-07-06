@@ -25,7 +25,7 @@
               <div class="col-sm">
                 <ul>
                   <li v-for="(input, index) in ios" v-if="index < Math.ceil((curPageStartItem + curPageEndItem)/2)">
-                    <div class="alert alert-primary" role="alert" draggable="true" :data-name="input" @dragstart="dragIO">
+                    <div class="alert alert-primary" role="alert" draggable="true" :data-index="index" :data-name="input" @dragstart="dragIO">
                       {{index}}&nbsp;&nbsp;&nbsp;{{input}}
                     </div>
                   </li>
@@ -49,9 +49,7 @@
               @modulesupdate="getModuleConfigInfo">
             </module-selector>
             <module-config
-              @dragover.prevent="" @drop="dropIO"
-              :module-name="modules[curSelectedModuleSeq-1]"
-              :ios="modulesIOs[curSelectedModuleSeq-1]">
+              :module-name="modules[curSelectedModuleSeq-1]">
             </module-config>
             <button class="btn btn-primary" @click="bar">change</button>
           </div>
@@ -157,12 +155,9 @@
         }, 2000);
       },
       dragIO(e){
-        e.dataTransfer.setData('ioInfo', this.ioType + '--' + e.target.getAttribute('data-name'));
+        // 通过拖拽的方式向ModuleConfig.vue传递io信息，格式例如："di--1--阀门1开"
+        e.dataTransfer.setData('ioInfo', this.ioType + '--' + e.target.getAttribute('data-index') + '--' + e.target.getAttribute('data-name'));
       },
-      dropIO(e){
-        console.log('entered');
-        console.log(e.dataTransfer.getData(this.ioType));
-      }
     },
     watch: {
       ioType: function(newType, oldType){

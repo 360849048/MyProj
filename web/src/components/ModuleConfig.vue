@@ -1,7 +1,9 @@
 <template>
   <div id="module">
     <ul id="DI" class="io-module">
-      <li class="io-line" v-for="(item, index) in mDI" :key="index" v-if="index <= mDiAmount" @dragover.prevent="" @drop="dropIO">
+      <li class="io-line" v-for="(item, index) in mDI" :key="index" v-if="index <= mDiAmount"
+          :data-index="index" data-type="di"
+          @dragover.prevent="" @drop="dropIO">
         <span class="badge badge-pill badge-success io-sequence">DI&nbsp;&nbsp;{{index}}</span>
         <div class="alert alert-primary io-name" role="alert" v-if="item">
           {{item}}
@@ -9,7 +11,9 @@
       </li>
     </ul>
     <ul id="DO" class="io-module">
-      <li class="io-line" v-for="(item, index) in mDO" :key="index" v-if="index <= mDoAmount">
+      <li class="io-line" v-for="(item, index) in mDO" :key="index" v-if="index <= mDoAmount"
+          :data-index="index" data-type="do"
+          @dragover.prevent="" @drop="dropIO">
         <span class="badge badge-pill badge-danger io-sequence">DO&nbsp;&nbsp;{{index}}</span>
         <div class="alert alert-primary io-name" role="alert" v-if="item">
           {{item}}
@@ -23,8 +27,7 @@
     export default {
       name: "module",
       props: [
-        'moduleName',
-        'ios'                        // 接收从父组件传递过来的json对象，用来配置点位  例如: {'di1': xxx, 'ao2': xxx}
+        'moduleName'
       ],
       data(){
         return{
@@ -50,7 +53,28 @@
           this.mAoAmount = 0;
         },
         dropIO(e){
-          console.log(e.dataTransfer.getData('ioInfo'));
+          let ioInfo = e.dataTransfer.getData('ioInfo').split('--');
+          if(ioInfo.length !== 3){
+            console.log(ioInfo, '---数据格式出错');
+            return;
+          }
+          // 解析从父组件拖拽传递过来的数据
+          let ioType = ioInfo[0];
+          let ioSeq = ioInfo[1];
+          let ioName = ioInfo[2];
+          // 获取拖拽目的地的IO类型
+          let thisType = e.target.getAttribute('data-type');
+          if(ioType.toUpperCase() !== thisType.toUpperCase()){
+            console.log("类型不一致，无法拖放");
+            return;
+          }
+          if(ioType.toUpperCase() === 'DI'){
+            let ioIdx = e.target.getAttribute('data-index');
+            this.mDI[ioIdx] = ioName;
+          }else if(ioType.toUpperCase() === 'DO'){
+            let ioIdx = e.target.getAttribute('data-index');
+            this.mDO[ioIdx] = ioName;
+          }
         }
       },
       watch: {
@@ -77,41 +101,6 @@
           },
           deep: false,
           immediate: true,
-        },
-        ios: {
-          handler(cval){
-            /**
-             * 将传递过来的点位映射到模块点位上
-             */
-            // todo: 首先清空目前已存在的点位
-            this.mDI = {1: '', 2: '', 3: '', 4: '', 5: '', 6: '', 7: '', 8: '', 9: '', 10: '', 11: '', 12: '', 13: '', 14: '', 15: '', 16: ''};
-            this.mDO = {1: '', 2: '', 3: '', 4: '', 5: '', 6: '', 7: '', 8: '', 9: '', 10: '', 11: '', 12: '', 13: '', 14: '', 15: '', 16: ''};
-            this.mAI = {1: '', 2: '', 3: '', 4: '', 5: '', 6: '', 7: '', 8: ''};
-            this.mAO = {1: '', 2: '', 3: '', 4: '', 5: '', 6: '', 7: '', 8: ''};
-            this.mDI[this.mDiAmount + 1] = 'undefined';
-            this.mDO[this.mDoAmount + 1] = 'undefined';
-            this.mAI[this.mAiAmount + 1] = 'undefined';
-            this.mAO[this.mAoAmount + 1] = 'undefined';
-
-            for(let key in cval){
-              if (key.toUpperCase().slice(0, 2) === 'DI' ){
-                this.mDI[key.slice(-1)] = cval[key];
-              }else if(key.toUpperCase().slice(0,2) === 'DO'){
-                this.mDO[key.slice(-1)] = cval[key];
-              }else if(key.toUpperCase().slice(0,2) === 'AI'){
-                this.mAI[key.slice(-1)] = cval[key];
-              }else if(key.toUpperCase().slice(0,2) === 'AO'){
-                this.mAO[key.slice(-1)] = cval[key];
-              }else{
-                console.log('fatal: ', key);
-                console.log('---------- 完整传递数据如下 ----------');
-                console.log(cval);
-                alert('出错了，打开console查看具体信息')
-              }
-            }
-          },
-          deep: true,
-          immediate: true
         }
       }
     }
