@@ -28,20 +28,20 @@
       data(){
         return{
           // 更新数组内容请使用：vm.$set(vm.items, indexOfItem, newValue)
-          modules: ['', '', '', ''],
+          modules: ['未使用', '未使用', '未使用', '未使用'],
           curSelectedModuleSeq: 1,
-          moduleLib: ['CIO021', 'CDM163', 'CTO163', 'CAI888']
+          moduleLib: ['未使用', 'CIO021', 'CDM163', 'CTO163', 'CAI888']
         }
       },
       methods: {
         clickOnModuleBtn(moduleSeq){
           this.curSelectedModuleSeq = moduleSeq;
           // todo: 向父组件发送当前选中的插槽和各插槽配置的模块
-          this.$emit('get-active-module', {curSelected: this.curSelectedModuleSeq, modules: this.modules});
+          this.$emit('modulesupdate', {curSelected: this.curSelectedModuleSeq, modules: this.modules});
         },
         clickOnSelectBtn(moduleSeq, index){
           this.$set(this.modules, moduleSeq-1, this.moduleLib[index]);
-          this.$emit('get-active-module', {curSelected: this.curSelectedModuleSeq, modules: this.modules});
+          this.$emit('modulesupdate', {curSelected: this.curSelectedModuleSeq, modules: this.modules});
         }
       }
     }

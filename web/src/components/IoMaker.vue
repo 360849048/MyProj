@@ -25,7 +25,7 @@
               <div class="col-sm">
                 <ul>
                   <li v-for="(input, index) in ios" v-if="index < Math.ceil((curPageStartItem + curPageEndItem)/2)">
-                    <div class="alert alert-primary" role="alert" draggable="true" @dragstart="bar">
+                    <div class="alert alert-primary" role="alert" draggable="true" :data-name="input" @dragstart="dragIO">
                       {{index}}&nbsp;&nbsp;&nbsp;{{input}}
                     </div>
                   </li>
@@ -42,14 +42,18 @@
               </div>
             </div>
           </div>
-          <!-- 模块 -->
+          <!-- 模块显示区 -->
           <div class="col-sm-4">
-            <module-selector :module-num="4" @get-active-module="foo">
+            <module-selector
+              :module-num="4"
+              @modulesupdate="getModuleConfigInfo">
             </module-selector>
             <module-config
-              :module-name="module"
-              :ios="ioForModule">
+              @dragover.prevent="" @drop="dropIO"
+              :module-name="modules[curSelectedModuleSeq-1]"
+              :ios="modulesIOs[curSelectedModuleSeq-1]">
             </module-config>
+            <button class="btn btn-primary" @click="bar">change</button>
           </div>
         </div>
       </div>
@@ -75,8 +79,10 @@
         curPage: 1,
         loading: true,
 
-        module: 'cto163',
         ioForModule: {di1: '可编程io输入1', do1: '可编程io输出1'},
+        modules: ['', '', '', ''],
+        modulesIOs: [{}, {}, {}, {}],
+        curSelectedModuleSeq: 1
       }
     },
     computed: {
@@ -100,7 +106,7 @@
         if (this.pages.indexOf(curPage) === -1){
           return -1;
         }
-        // 不能在获取到this,ios之前改变当前页面，否则会导致页面切换时候闪屏
+        // 不能在获取到this.ios之前改变当前页面，否则会导致页面切换时候闪屏
         // this.curPage = curPage;
         let curPageStartItem = 1 + (curPage - 1) * pageItemAmount;
         let curPageEndItem = curPage * pageItemAmount < this.ioNum ? curPage * pageItemAmount : this.ioNum;
@@ -136,11 +142,26 @@
         });
         return 0;
       },
-      foo(e){
-        console.log(e);
+      getModuleConfigInfo(e){
+        this.curSelectedModuleSeq = e.curSelected;
+        for(let i=0; i<e.modules.length; i++){
+          let moduleName = e.modules[i] === '未使用' ? '':e.modules[i];
+          this.$set(this.modules, i, moduleName);
+        }
       },
-      bar(e){
-        console.log(e.target.innerText);
+      bar(){
+        this.$set(this.modulesIOs, [this.curSelectedModuleSeq-1], {'di1': '可编程输入1'});
+        window.setTimeout(()=>{
+          this.$set(this.modulesIOs, [this.curSelectedModuleSeq-1], {'di1': '可编程输入2'});
+          console.log(this.modulesIOs);
+        }, 2000);
+      },
+      dragIO(e){
+        e.dataTransfer.setData('ioInfo', this.ioType + '--' + e.target.getAttribute('data-name'));
+      },
+      dropIO(e){
+        console.log('entered');
+        console.log(e.dataTransfer.getData(this.ioType));
       }
     },
     watch: {
