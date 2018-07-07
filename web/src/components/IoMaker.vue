@@ -22,19 +22,23 @@
             </ul>
             <!-- IO显示区 -->
             <div class="row" v-loading="loading">
-              <div class="col-sm">
+              <div class="col-sm-6">
                 <ul>
                   <li v-for="(input, index) in ios" v-if="index < Math.ceil((curPageStartItem + curPageEndItem)/2)">
-                    <div class="alert alert-primary" role="alert" draggable="true" :data-index="index" :data-name="input" @dragstart="dragIO">
+                    <div class="alert alert-primary" role="alert"
+                         :data-index="index" :data-name="input"
+                         draggable="true" @dragstart="dragIO">
                       {{index}}&nbsp;&nbsp;&nbsp;{{input}}
                     </div>
                   </li>
                 </ul>
               </div>
-              <div class="col-sm">
+              <div class="col-sm-6">
                 <ul>
                   <li v-for="(input, index) in ios" v-if="index >= Math.ceil((curPageStartItem + curPageEndItem)/2)">
-                    <div class="alert alert-primary" role="alert">
+                    <div class="alert alert-primary" role="alert"
+                         :data-index="index" :data-name="input"
+                         draggable="true" @dragstart="dragIO">
                       {{index}}&nbsp;&nbsp;&nbsp;{{input}}
                     </div>
                   </li>
@@ -43,23 +47,26 @@
             </div>
           </div>
           <!-- 模块显示区 -->
-          <div class="col-sm-4">
+          <div class="col-sm-4" id="module_area">
+            <!-- 插槽模块选择 -->
             <module-selector
-              :module-num="4"
-              @modulesupdate="getModuleConfigInfo">
+              :module-num="2"
+              @modulesupdate="getModulesConfigInfo">
             </module-selector>
+            <!-- 具体模块IO点显示 -->
             <module-config
-              :module-name="modules[curSelectedModuleSeq-1]">
+              :module-name="modules[curSelectedModuleSeq-1]"
+              :ios="modulesIOs[curSelectedModuleSeq-1]"
+              @moduleiosupdate = "getModuleIoInfo">
             </module-config>
-            <button class="btn btn-primary" @click="bar">change</button>
           </div>
         </div>
       </div>
     </div>
 </template>
 <script>
-  import ModuleConfig from './ModuleConfig'
-  import ModuleSelector from './ModuleSelector'
+  import ModuleConfig from './iomaker/ModuleConfig'
+  import ModuleSelector from './iomaker/ModuleSelector'
 
   // 规定一页最多显示的数据
   const pageItemAmount = 32;
@@ -77,7 +84,6 @@
         curPage: 1,
         loading: true,
 
-        ioForModule: {di1: '可编程io输入1', do1: '可编程io输出1'},
         modules: ['', '', '', ''],
         modulesIOs: [{}, {}, {}, {}],
         curSelectedModuleSeq: 1
@@ -140,19 +146,22 @@
         });
         return 0;
       },
-      getModuleConfigInfo(e){
+      getModulesConfigInfo(e){
         this.curSelectedModuleSeq = e.curSelected;
         for(let i=0; i<e.modules.length; i++){
           let moduleName = e.modules[i] === '未使用' ? '':e.modules[i];
-          this.$set(this.modules, i, moduleName);
+          if(this.modules[i] !== moduleName){
+            this.$set(this.modules, i, moduleName);
+            // 当某个插槽的模块检测到变化时，清空原先模块的IO信息
+            this.$set(this.modulesIOs, i, {});
+          }
         }
       },
-      bar(){
-        this.$set(this.modulesIOs, [this.curSelectedModuleSeq-1], {'di1': '可编程输入1'});
-        window.setTimeout(()=>{
-          this.$set(this.modulesIOs, [this.curSelectedModuleSeq-1], {'di1': '可编程输入2'});
-          console.log(this.modulesIOs);
-        }, 2000);
+      getModuleIoInfo(e){
+        this.$set(this.modulesIOs, this.curSelectedModuleSeq-1, e);
+      },
+      foo(e){
+        console.log(e);
       },
       dragIO(e){
         // 通过拖拽的方式向ModuleConfig.vue传递io信息，格式例如："di--1--阀门1开"
@@ -196,5 +205,11 @@
     padding: .15rem 1.25rem;
     margin-bottom: 0.25rem;
     user-select: none;
+    overflow: hidden;
+    text-overflow:ellipsis;
+    white-space: nowrap;
+  }
+  #module_area{
+    margin-top: 20px;
   }
 </style>

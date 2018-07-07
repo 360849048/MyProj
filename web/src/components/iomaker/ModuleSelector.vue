@@ -22,6 +22,11 @@
 </template>
 
 <script>
+  /**
+   * 数据处理逻辑：
+   * 1.根据props属性moduleNum显示插槽数量（HTML模板列表渲染）
+   * 2.鼠标单击某个模块或选择新模块，都会触发modulesupdate事件，向父组件传递当前应当显示的模块以及各插槽应配置的模块
+   */
     export default {
       name: "module-selector",
       props: ['moduleNum'],
@@ -30,13 +35,12 @@
           // 更新数组内容请使用：vm.$set(vm.items, indexOfItem, newValue)
           modules: ['未使用', '未使用', '未使用', '未使用'],
           curSelectedModuleSeq: 1,
-          moduleLib: ['未使用', 'CIO021', 'CDM163', 'CTO163', 'CAI888']
+          moduleLib: ['未使用', 'CIO021', 'CDM163', 'CTO163', 'CDI163', 'CAI888']
         }
       },
       methods: {
         clickOnModuleBtn(moduleSeq){
           this.curSelectedModuleSeq = moduleSeq;
-          // todo: 向父组件发送当前选中的插槽和各插槽配置的模块
           this.$emit('modulesupdate', {curSelected: this.curSelectedModuleSeq, modules: this.modules});
         },
         clickOnSelectBtn(moduleSeq, index){
