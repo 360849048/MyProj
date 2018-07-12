@@ -58,7 +58,7 @@
    * 注意：只有在“具体”节点发生drop和dblclick事件，该模块才会触发父组件修改IO信息。
    */
     export default {
-      name: "module",
+      name: "module-config",
       props: [
         // 接收父组件传递过来的字符串，
         // 例如："CDM613"
@@ -275,10 +275,19 @@
 <style scoped lang="scss">
   #module{
     width: 400px;
-    height: 700px;
+    height: 600px;
     overflow: auto;
     margin-top: 20px;
+    &::-webkit-scrollbar{
+      width: 6px;
+    }
+    &::-webkit-scrollbar-thumb{
+      border-radius: 10px;
+      -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+      background: #818080;
+    }
   }
+
   .io-module{
     list-style: none;
     padding-left: 10px;

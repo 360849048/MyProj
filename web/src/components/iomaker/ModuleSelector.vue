@@ -1,8 +1,17 @@
 <template>
-    <div class="btn-group btn-group-toggle" data-toggle="buttons" v-if="moduleNum >= 1">
-      <div class="btn-group" v-for="moduleSeq in moduleNum" v-if="moduleNum >= moduleSeq">
+  <div id="module-selector">
+    <!-- 主底板&扩展底板一 -->
+    <ul class="nav nav-tabs">
+      <li class="nav-item" v-for="boardSeq in boardNum" @click="curSelectedBoard=boardSeq">
+        <a class="nav-link" :class="{'active': curSelectedBoard===boardSeq}" href="#">{{boards[boardSeq-1]}}</a>
+      </li>
+    </ul>
+    <!-- 插槽模块选择 -->
+    <div class="btn-group btn-group-toggle" data-toggle="buttons">
+      <!-- 主底板 -->
+      <div class="btn-group" v-for="moduleSeq in moduleNum" v-if="curSelectedBoard===1 && moduleNum >= 1">
         <button type="button" class="btn btn-secondary btn-sm btn-module-name"
-                :class="{active: curSelectedModuleSeq===moduleSeq}"
+                :class="{'active': curSelectedModuleSeq===moduleSeq}"
                 v-model="modules[moduleSeq-1]"
                 @click="clickOnModuleBtn(moduleSeq)">
           {{modules[moduleSeq-1]}}
@@ -18,7 +27,9 @@
           </a>
         </div>
       </div>
+      <!-- 扩展底板一 -->
     </div>
+  </div>
 </template>
 
 <script>
@@ -29,10 +40,12 @@
    */
     export default {
       name: "module-selector",
-      props: ['moduleNum'],
+      props: ['boardNum', 'moduleNum'],
       data(){
         return{
           // 更新数组内容请使用：vm.$set(vm.items, indexOfItem, newValue)
+          boards: ['主底板', '底板二'],
+          curSelectedBoard: 1,
           modules: ['未使用', '未使用', '未使用', '未使用'],
           curSelectedModuleSeq: 1,
           moduleLib: ['未使用', 'CIO021', 'CDM163', 'CTO163', 'CDI163', 'CAI888']
@@ -51,7 +64,14 @@
     }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+  .nav{
+    margin: 10px;
+    .nav-item{
+      width: 100px;
+      text-align: center;
+    }
+  }
   .btn-module-name{
     width: 70px;
   }
