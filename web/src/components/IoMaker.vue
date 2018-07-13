@@ -10,14 +10,14 @@
           <div class="col-sm-4" id="module_area">
             <!-- 插槽模块选择 -->
             <module-selector
-              :boardNum="2"
-              :module-num="4"
+              :board-num="3"
+              :board-slot-num="4"
               @modulesupdate="getModulesConfigInfo">
             </module-selector>
             <!-- 模块IO点显示 -->
             <module-config
-              :module-name="modules[curSelectedModuleSeq-1]"
-              :ios="modulesIOs[curSelectedModuleSeq-1]"
+              :module-name="curActiveModule"
+              :ios="curActiveModuleIOs"
               @moduleiosupdate = "getModuleIoInfo">
             </module-config>
           </div>
@@ -38,25 +38,48 @@
     },
     data() {
       return {
-        modules: ['', '', '', ''],
-        modulesIOs: [{}, {}, {}, {}],
+        // 格式如同： ['CDM163', 'CTO163']
+        boardModules1: ['', '', '', ''],
+        boardModules2: ['', '', '', ''],
+        boardModules3: ['', '', '', ''],
+        // 格式如下：[{'di1': '可编程IO输入1', 'do3': '阀门1'}]
+        boardModulesIOs1: [{}, {}, {}, {}],
+        boardModulesIOs2: [{}, {}, {}, {}],
+        boardModulesIOs3: [{}, {}, {}, {}],
+        curSelectedBoardSeq: 1,
         curSelectedModuleSeq: 1
+      }
+    },
+    computed: {
+      curActiveModule(){
+        let allModules = [this.boardModules1, this.boardModules2, this.boardModules3];
+        return allModules[this.curSelectedBoardSeq - 1][this.curSelectedModuleSeq - 1];
+      },
+      curActiveModuleIOs(){
+        let allModulesIOs = [this.boardModulesIOs1, this.boardModulesIOs2, this.boardModulesIOs3];
+        return allModulesIOs[this.curSelectedBoardSeq - 1][this.curSelectedModuleSeq - 1];
       }
     },
     methods: {
       getModulesConfigInfo(e){
-        this.curSelectedModuleSeq = e.curSelected;
+        // console.log(e);
+        this.curSelectedBoardSeq = e.curSelectedBoardSeq;
+        this.curSelectedModuleSeq = e.curSelectedModuleSeq;
+        let allModules = [this.boardModules1, this.boardModules2, this.boardModules3];
+        let allModulesIOs = [this.boardModulesIOs1, this.boardModulesIOs2, this.boardModulesIOs3];
+
         for(let i=0; i<e.modules.length; i++){
           let moduleName = e.modules[i] === '未使用' ? '':e.modules[i];
-          if(this.modules[i] !== moduleName){
-            this.$set(this.modules, i, moduleName);
+          if(allModules[this.curSelectedBoardSeq - 1][i] !== moduleName){
+            this.$set(allModules[this.curSelectedBoardSeq - 1], i, moduleName);
             // 当某个插槽的模块检测到变化时，清空原先模块的IO信息
-            this.$set(this.modulesIOs, i, {});
+            this.$set(allModulesIOs[this.curSelectedBoardSeq - 1], i, {});
           }
         }
       },
       getModuleIoInfo(e){
-        this.$set(this.modulesIOs, this.curSelectedModuleSeq-1, e);
+        let allModulesIOs = [this.boardModulesIOs1, this.boardModulesIOs2, this.boardModulesIOs3];
+        this.$set(allModulesIOs[this.curSelectedBoardSeq - 1], this.curSelectedModuleSeq - 1, e);
       },
     },
   }
