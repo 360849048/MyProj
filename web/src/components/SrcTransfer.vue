@@ -34,7 +34,7 @@
 <script>
   import ImmType from './ImmType'
   import ImmConfig from './ImmConfig'
-  import ModuleConfig from './iomaker/ModuleConfig'
+  import ModuleConfig from './iomaker/module/ModuleConfig'
 
   export default{
     components:{

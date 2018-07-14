@@ -12,7 +12,6 @@
       <div class="btn-group" v-for="moduleSeq in boardSlotNum" v-if="curSelectedBoardSeq===1">
         <button type="button" class="btn btn-secondary btn-sm btn-module-name"
                 :class="{'active': curSelectedModuleSeq===moduleSeq}"
-                v-model="boardModules1[moduleSeq-1]"
                 @click="clickOnModuleBtn(moduleSeq)">
           {{boardModules1[moduleSeq-1]}}
         </button>
@@ -21,8 +20,8 @@
         </button>
         <div class="dropdown-menu">
           <a class="dropdown-item" href="#"
-             v-for="(module, index) in moduleLib"
-             @click="clickOnSelectBtn(moduleSeq, index)">
+             v-for="(module, index) in diasModules"
+             @click="clickOnSelectDiasModuleBtn(moduleSeq, index)">
             {{module}}
           </a>
         </div>
@@ -30,18 +29,24 @@
       <!-- 扩展底板一 -->
       <div class="btn-group" v-for="moduleSeq in 4" v-if="curSelectedBoardSeq===2">
         <button type="button" class="btn btn-secondary btn-sm btn-module-name"
-                :class="{'active': curSelectedModuleSeq===moduleSeq}"
-                v-model="boardModules2[moduleSeq-1]"
+                :class="{'active': curSelectedModuleSeq===moduleSeq,}"
                 @click="clickOnModuleBtn(moduleSeq)">
           {{boardModules2[moduleSeq-1]}}
         </button>
         <button type="button" class="btn btn-secondary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
           <span class="sr-only">Toggle Dropdown</span>
         </button>
-        <div class="dropdown-menu">
+        <div class="dropdown-menu" v-if="moduleSeq===1">
           <a class="dropdown-item" href="#"
-             v-for="(module, index) in moduleLib"
-             @click="clickOnSelectBtn(moduleSeq, index)">
+             v-for="(module, index) in connModules"
+             @click="clickOnSelectConnModuleBtn(moduleSeq, index)">
+            {{module}}
+          </a>
+        </div>
+        <div class="dropdown-menu" v-if="moduleSeq>=2">
+          <a class="dropdown-item" href="#"
+             v-for="(module, index) in diasModules"
+             @click="clickOnSelectDiasModuleBtn(moduleSeq, index)">
             {{module}}
           </a>
         </div>
@@ -50,17 +55,23 @@
       <div class="btn-group" v-for="moduleSeq in 4" v-if="curSelectedBoardSeq===3">
         <button type="button" class="btn btn-secondary btn-sm btn-module-name"
                 :class="{'active': curSelectedModuleSeq===moduleSeq}"
-                v-model="boardModules3[moduleSeq-1]"
                 @click="clickOnModuleBtn(moduleSeq)">
           {{boardModules3[moduleSeq-1]}}
         </button>
         <button type="button" class="btn btn-secondary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
           <span class="sr-only">Toggle Dropdown</span>
         </button>
-        <div class="dropdown-menu">
+        <div class="dropdown-menu" v-if="moduleSeq===1">
           <a class="dropdown-item" href="#"
-             v-for="(module, index) in moduleLib"
-             @click="clickOnSelectBtn(moduleSeq, index)">
+             v-for="(module, index) in connModules"
+             @click="clickOnSelectConnModuleBtn(moduleSeq, index)">
+            {{module}}
+          </a>
+        </div>
+        <div class="dropdown-menu" v-if="moduleSeq>=2">
+          <a class="dropdown-item" href="#"
+             v-for="(module, index) in diasModules"
+             @click="clickOnSelectDiasModuleBtn(moduleSeq, index)">
             {{module}}
           </a>
         </div>
@@ -72,9 +83,10 @@
 <script>
   /**
    * 数据处理逻辑：
-   * 1.props属性boardSlotNum显示主底板插槽数量，不可超过4，扩展底板的插槽数量一律规定是4，这与父组件耦合，不可轻易修改插槽数量
-   * 2.鼠标单击某个底板或某个模块或选择新模块，都会触发modulesupdate事件，向父组件传递当前应当显示的模块以及各插槽应配置的模块
-   * 3.modulesupdate事件传递一个json格式如下:
+   * 1.props属性boardSlotNum显示主底板插槽数量，不可超过4，扩展底板的插槽数量一律规定是4，这与父组件耦合!不可轻易修改插槽数量。
+   * 2.props属性boardNum显示底板数量，不可超过3块。
+   * 3.鼠标单击某个底板或某个模块或选择新模块，都会触发modulesupdate事件，向父组件传递当前应当显示的模块以及各插槽应配置的模块。
+   * 4.modulesupdate事件传递一个json格式如下:
    *       {
    *         curSelectedBoardSeq: 1,
    *         curSelectedModuleSeq: 1,
@@ -91,7 +103,8 @@
           boardModules1: ['未使用', '未使用', '未使用', '未使用'],
           boardModules2: ['未使用', '未使用', '未使用', '未使用'],
           boardModules3: ['未使用', '未使用', '未使用', '未使用'],
-          moduleLib: ['未使用', 'CIO021', 'CDM163', 'CTO163', 'CDI163', 'CAI888'],
+          connModules: ['未使用', 'CIV512', 'CIV521'],
+          diasModules: ['未使用', 'CIO021', 'CDM163', 'CTO163', 'CDI163', 'CAI888'],
           curSelectedBoardSeq: 1,
           curSelectedModuleSeq: 1,
         }
@@ -114,9 +127,14 @@
           this.curSelectedModuleSeq = moduleSeq;
           this._emit(this);
         },
-        clickOnSelectBtn(moduleSeq, index){
+        clickOnSelectDiasModuleBtn(moduleSeq, index){
           let allModules = [this.boardModules1, this.boardModules2, this.boardModules3];
-          this.$set(allModules[this.curSelectedBoardSeq - 1], moduleSeq - 1, this.moduleLib[index]);
+          this.$set(allModules[this.curSelectedBoardSeq - 1], moduleSeq - 1, this.diasModules[index]);
+          this._emit(this);
+        },
+        clickOnSelectConnModuleBtn(moduleSeq, index){
+          let allModules = [this.boardModules1, this.boardModules2, this.boardModules3];
+          this.$set(allModules[this.curSelectedBoardSeq - 1], moduleSeq - 1, this.connModules[index]);
           this._emit(this);
         }
       }

@@ -40,6 +40,9 @@
         </div>
       </li>
     </ul>
+    <!-- 单独处理CAI888模块的显示问题 -->
+    <!-- 单独处理CIV512等连接模块显示问题 -->
+    <!-- 未选择模块时候显示的内容 -->
   </div>
 </template>
 
@@ -54,6 +57,12 @@
    *  解析drag--drop传递过来的信息，更新mDI,mDO,mAI,mAO。然后触发moduleiosupdate事件，向父组件发送当前模块的IO信息。
    * 4.响应IO点上的dblclick事件：
    *  根据当前模块点的Index，对mDI或mDO或mAI或mAO的相应点进行写入空值''。然后触发moduleiosupdate事件，向父组件发送当前模块的IO信息。
+   * 5.moduleiosupdate事件传递一个json格式如下:
+   *    {
+   *       do1: 43--阀门1开,
+   *       di3: 73--可编程IO输入1,
+   *       ...
+   *    }
    *
    * 注意：只有在“具体”节点发生drop和dblclick事件，该模块才会触发父组件修改IO信息。
    */
