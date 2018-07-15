@@ -40,9 +40,32 @@
         </div>
       </li>
     </ul>
-    <!-- 单独处理CAI888模块的显示问题 -->
-    <!-- 单独处理CIV512等连接模块显示问题 -->
-    <!-- 未选择模块时候显示的内容 -->
+    <ul id="TI" class="io-module">
+      <li class="io-line" v-for="(item, index) in mTi" :key="index" v-if="index <= mTiAmount"
+          :data-index="index" data-type="ti"
+          @dragover.prevent="" @drop="dropIO">
+        <span class="badge badge-pill badge-info io-index">AI&nbsp;&nbsp;{{index}}</span>
+        <div class="alert alert-primary io-name" role="alert" v-if="item" @dblclick="dblclickIO">
+          {{item | nameOnly}}
+        </div>
+      </li>
+    </ul>
+    <ul id="TO" class="io-module">
+      <li class="io-line" v-for="(item, index) in mAO" :key="index" v-if="index <= mAoAmount"
+          :data-index="index" data-type="ao"
+          @dragover.prevent="" @drop="dropIO">
+        <span class="badge badge-pill badge-warning io-index">AO&nbsp;&nbsp;{{index}}</span>
+        <div class="alert alert-primary io-name" role="alert" v-if="item" @dblclick="dblclickIO">
+          {{item | nameOnly}}
+        </div>
+      </li>
+    </ul>
+    <!-- 单独处理CAI888模块的显示问题，考虑在父组件处理CAI888的IO -->
+    <!-- TODO:单独处理CIV512等连接模块显示问题 -->
+    <div class="h1" v-if="moduleName.toUpperCase() === 'CIV512' || moduleName.toUpperCase() === 'CIV521'">
+      您已激活扩展该底板，连接模块是：{{moduleName}}
+    </div>
+    <!-- TODO:未选择模块时候显示的内容 -->
   </div>
 </template>
 
@@ -85,11 +108,15 @@
           mDO: {1: undefined, 2: '', 3: '', 4: '', 5: '', 6: '', 7: '', 8: '', 9: '', 10: '', 11: '', 12: '', 13: '', 14: '', 15: '', 16: ''},
           mAI: {1: undefined, 2: '', 3: '', 4: '', 5: '', 6: '', 7: '', 8: ''},
           mAO: {1: undefined, 2: '', 3: '', 4: '', 5: '', 6: '', 7: '', 8: ''},
+          mTi: {1: undefined, 2: '', 3: '', 4: '', 5: '', 6: '', 7: '', 8: ''},
+          mTo: {1: undefined, 2: '', 3: '', 4: '', 5: '', 6: '', 7: '', 8: ''},
           // 以下变量用来统计模块的IO数量
           mDiAmount: 0,
           mDoAmount: 0,
           mAiAmount: 0,
-          mAoAmount: 0
+          mAoAmount: 0,
+          mTiAmount: 0,
+          mToAmount: 0
         }
       },
       filters: {
@@ -128,6 +155,9 @@
           }
           if(moduleName.toUpperCase() === 'CDI163'){
             this.mDiAmount = 16;
+          }
+          if(moduleName.toUpperCase() === 'CAI888'){
+            this.mTi
           }
           if(this.mDiAmount < 16){
             this.mDI[this.mDiAmount + 1] = undefined;

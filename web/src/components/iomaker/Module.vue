@@ -20,6 +20,7 @@
    * 1.处理并保存各底板模块配置及模块IO配置信息
    * 2.从ModuleSelector获取模块的选择清单，以及当前选中的底板和模块信息
    * 3.将当前选中的模块以及当前模块的IO配置信息传递到ModuleConfig
+   * 4.当某插槽选为CAI888时，自动填充对应的IO配置加热1-8
    */
   import ModuleConfig from './module/ModuleConfig'
   import ModuleSelector from './module/ModuleSelector'
@@ -55,7 +56,6 @@
     },
     methods: {
       getModulesSelectInfo(e){
-        // console.log(e);
         this.curSelectedBoardSeq = e.curSelectedBoardSeq;
         this.curSelectedModuleSeq = e.curSelectedModuleSeq;
         let allModules = [this.boardModules1, this.boardModules2, this.boardModules3];
