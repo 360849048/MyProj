@@ -20,12 +20,15 @@
    * 1.处理并保存各底板模块配置及模块IO配置信息
    * 2.从ModuleSelector获取模块的选择清单，以及当前选中的底板和模块信息
    * 3.将当前选中的模块以及当前模块的IO配置信息传递到ModuleConfig
-   * 4.当某插槽选为CAI888时，自动填充对应的IO配置加热1-8
+   * 4.当某插槽选为CAI888时，AJAX获取相应IO名称后，自动填充对应的IO配置加热1-8
+   * 5.TODO：大机选配CIO021，自动填充对应的IO
    */
   import ModuleConfig from './module/ModuleConfig'
   import ModuleSelector from './module/ModuleSelector'
+
   export default {
     name: "module",
+    props: ['bigImm'],
     components: {
       ModuleSelector,
       ModuleConfig
@@ -65,8 +68,57 @@
           let moduleName = e.modules[i] === '未使用' ? '':e.modules[i];
           if(allModules[this.curSelectedBoardSeq - 1][i] !== moduleName){
             this.$set(allModules[this.curSelectedBoardSeq - 1], i, moduleName);
-            // 当某个插槽的模块检测到变化时，清空原先模块的IO信息
-            this.$set(allModulesIOs[this.curSelectedBoardSeq - 1], i, {});
+            if(allModules[this.curSelectedBoardSeq - 1][i] === 'CAI888'){
+              // ajax获取TI和TO，填充默认的CAI888模块
+              let cai888DefaultIos = {};
+              let _this = this;
+              $.when($.ajax({
+                url: "/io",
+                type: 'GET',
+                dataType: 'json',
+                beforeSend: function(){
+
+                },
+                complete: function(){
+
+                },
+                data: {"type": 'ti', "start": 1, 'end': 8},
+                success: function(data){
+                  for(let key in data.ios){
+                    cai888DefaultIos['ti'+key] = key + '--'+ data.ios[key];
+                  }
+                },
+                error: function(){
+                  console.log('Error!!!');
+
+                }
+              }), $.ajax({
+                url: "/io",
+                type: 'GET',
+                dataType: 'json',
+                beforeSend: function(){
+
+                },
+                complete: function(){
+
+                },
+                data: {"type": 'to', "start": 1, 'end': 8},
+                success: function(data){
+                  for(let key in data.ios){
+                    cai888DefaultIos['to'+key] = key + '--'+ data.ios[key];
+                  }
+                },
+                error: function(){
+                  console.log('Error!!!');
+
+                }
+              })).done(function(){
+                _this.$set(allModulesIOs[_this.curSelectedBoardSeq - 1], i, cai888DefaultIos);
+              });
+            }else {
+              // 其余模块清空IO配点信息
+              this.$set(allModulesIOs[this.curSelectedBoardSeq - 1], i, {});
+            }
           }
         }
       },

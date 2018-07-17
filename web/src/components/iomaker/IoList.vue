@@ -135,7 +135,7 @@
             _this.ios = data.ios;
           },
           error: function(){
-            console.log('Error!!!');
+            console.log('AJAX请求失败，无法获取IO列表');
             _this.ioNum = 120;
             let temp = {};
             for(let i=curPageStartItem; i<=curPageEndItem; i++){

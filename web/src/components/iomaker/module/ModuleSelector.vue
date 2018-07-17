@@ -92,6 +92,7 @@
    *         curSelectedModuleSeq: 1,
    *         modules: ['未使用', 'xxx', 'xxx', 'xxx']
    *       }
+   * 5.扩展底板的在配置前必须首先选择连接模块，否则无法选择第二块及以后的模块
    */
     export default {
       name: "module-selector",
@@ -129,12 +130,28 @@
         },
         clickOnSelectDiasModuleBtn(moduleSeq, index){
           let allModules = [this.boardModules1, this.boardModules2, this.boardModules3];
+          if(this.curSelectedBoardSeq > 1){
+            // 当前在扩展底板时，需要首先配置连接模块
+            if(allModules[this.curSelectedBoardSeq - 1][0] === '未使用'){
+              this.$notify.error({
+                title: '错误',
+                message: '请先配置连接模块'
+              });
+              return;
+            }
+          }
           this.$set(allModules[this.curSelectedBoardSeq - 1], moduleSeq - 1, this.diasModules[index]);
           this._emit(this);
         },
         clickOnSelectConnModuleBtn(moduleSeq, index){
           let allModules = [this.boardModules1, this.boardModules2, this.boardModules3];
           this.$set(allModules[this.curSelectedBoardSeq - 1], moduleSeq - 1, this.connModules[index]);
+          if(allModules[this.curSelectedBoardSeq - 1][0] === '未使用'){
+            // 当连接模块取消后，清空后面的模块配置
+            this.$set(allModules[this.curSelectedBoardSeq - 1], 1, '未使用');
+            this.$set(allModules[this.curSelectedBoardSeq - 1], 2, '未使用');
+            this.$set(allModules[this.curSelectedBoardSeq - 1], 3, '未使用');
+          }
           this._emit(this);
         }
       }

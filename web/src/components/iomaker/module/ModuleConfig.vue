@@ -41,20 +41,20 @@
       </li>
     </ul>
     <ul id="TI" class="io-module">
-      <li class="io-line" v-for="(item, index) in mTi" :key="index" v-if="index <= mTiAmount"
+      <li class="io-line" v-for="(item, index) in mTI" :key="index" v-if="index <= mTiAmount"
           :data-index="index" data-type="ti"
           @dragover.prevent="" @drop="dropIO">
-        <span class="badge badge-pill badge-info io-index">AI&nbsp;&nbsp;{{index}}</span>
+        <span class="badge badge-pill badge-info io-index">TI&nbsp;&nbsp;{{index}}</span>
         <div class="alert alert-primary io-name" role="alert" v-if="item" @dblclick="dblclickIO">
           {{item | nameOnly}}
         </div>
       </li>
     </ul>
     <ul id="TO" class="io-module">
-      <li class="io-line" v-for="(item, index) in mAO" :key="index" v-if="index <= mAoAmount"
-          :data-index="index" data-type="ao"
+      <li class="io-line" v-for="(item, index) in mTO" :key="index" v-if="index <= mToAmount"
+          :data-index="index" data-type="to"
           @dragover.prevent="" @drop="dropIO">
-        <span class="badge badge-pill badge-warning io-index">AO&nbsp;&nbsp;{{index}}</span>
+        <span class="badge badge-pill badge-warning io-index">TO&nbsp;&nbsp;{{index}}</span>
         <div class="alert alert-primary io-name" role="alert" v-if="item" @dblclick="dblclickIO">
           {{item | nameOnly}}
         </div>
@@ -108,8 +108,8 @@
           mDO: {1: undefined, 2: '', 3: '', 4: '', 5: '', 6: '', 7: '', 8: '', 9: '', 10: '', 11: '', 12: '', 13: '', 14: '', 15: '', 16: ''},
           mAI: {1: undefined, 2: '', 3: '', 4: '', 5: '', 6: '', 7: '', 8: ''},
           mAO: {1: undefined, 2: '', 3: '', 4: '', 5: '', 6: '', 7: '', 8: ''},
-          mTi: {1: undefined, 2: '', 3: '', 4: '', 5: '', 6: '', 7: '', 8: ''},
-          mTo: {1: undefined, 2: '', 3: '', 4: '', 5: '', 6: '', 7: '', 8: ''},
+          mTI: {1: undefined, 2: '', 3: '', 4: '', 5: '', 6: '', 7: '', 8: ''},
+          mTO: {1: undefined, 2: '', 3: '', 4: '', 5: '', 6: '', 7: '', 8: ''},
           // 以下变量用来统计模块的IO数量
           mDiAmount: 0,
           mDoAmount: 0,
@@ -136,10 +136,14 @@
           this.mDO = {1: '', 2: '', 3: '', 4: '', 5: '', 6: '', 7: '', 8: '', 9: '', 10: '', 11: '', 12: '', 13: '', 14: '', 15: '', 16: ''};
           this.mAI = {1: '', 2: '', 3: '', 4: '', 5: '', 6: '', 7: '', 8: ''};
           this.mAO = {1: '', 2: '', 3: '', 4: '', 5: '', 6: '', 7: '', 8: ''};
+          this.mTI = {1: '', 2: '', 3: '', 4: '', 5: '', 6: '', 7: '', 8: ''};
+          this.mTO = {1: '', 2: '', 3: '', 4: '', 5: '', 6: '', 7: '', 8: ''};
           this.mDiAmount = 0;
           this.mDoAmount = 0;
           this.mAiAmount = 0;
           this.mAoAmount = 0;
+          this.mTiAmount = 0;
+          this.mToAmount = 0;
           if(moduleName.toUpperCase() === 'CTO163'){
             this.mDoAmount = 16;
           }
@@ -157,7 +161,8 @@
             this.mDiAmount = 16;
           }
           if(moduleName.toUpperCase() === 'CAI888'){
-            this.mTi
+            this.mTiAmount = 8;
+            this.mToAmount = 8;
           }
           if(this.mDiAmount < 16){
             this.mDI[this.mDiAmount + 1] = undefined;
@@ -170,6 +175,12 @@
           }
           if(this.mAoAmount < 16){
             this.mAO[this.mAoAmount + 1] = undefined;
+          }
+          if(this.mTiAmount < 16){
+            this.mTI[this.mTiAmount + 1] = undefined;
+          }
+          if(this.mToAmount < 16){
+            this.mTO[this.mToAmount + 1] = undefined;
           }
         },
         /**
@@ -211,6 +222,22 @@
               ioConfig['ao'+key] = this.mAO[key];
             }
           }
+          for(let key in this.mTI){
+            if(this.mTI[key] === undefined){
+              break;
+            }
+            if(this.mTI[key] !== ''){
+              ioConfig['ti'+key] = this.mTI[key];
+            }
+          }
+          for(let key in this.mTO){
+            if(this.mTO[key] === undefined){
+              break;
+            }
+            if(this.mTO[key] !== ''){
+              ioConfig['to'+key] = this.mTO[key];
+            }
+          }
           return ioConfig;
         },
         /**
@@ -242,7 +269,12 @@
             this.mAI[ioIdx] = ioSeq + '--' + ioName;
           }else if(thisType.toUpperCase() === 'AO'){
             this.mAO[ioIdx] = ioSeq + '--' + ioName;
+          }else if(thisType.toUpperCase() === 'TI'){
+            this.mTI[ioIdx] = ioSeq + '--' + ioName;
+          }else if(thisType.toUpperCase() === 'TO'){
+            this.mTO[ioIdx] = ioSeq + '--' + ioName;
           }
+
           this.$emit('moduleiosupdate', this._getCurIoConfig());
         },
         /**
@@ -265,6 +297,10 @@
             this.mAI[ioIdx] = '';
           }else if(thisType.toUpperCase() === 'AO'){
             this.mAO[ioIdx] = '';
+          }else if(thisType.toUpperCase() === 'TI'){
+            this.mTI[ioIdx] = '';
+          }else if(thisType.toUpperCase() === 'TO'){
+            this.mTO[ioIdx] = '';
           }
           this.$emit('moduleiosupdate', this._getCurIoConfig());
         }
@@ -282,7 +318,7 @@
         },
         ios: {
           /**
-           * 先根据moduleName，初始化模块IO点。然后读取ios的信息，写入到mDI,mDO,mAI,mAO。
+           * 先根据moduleName，初始化模块IO点。然后读取ios的信息，写入到mDI,mDO,mAI,mAO,mTI,mTO。
            */
           handler(cval){
             this._initModuleIO(this.moduleName);
@@ -294,8 +330,12 @@
                 this.mDO[key.slice(2)] = cval[key];
               }else if(key.toUpperCase().slice(0,2) === 'AI'){
                 this.mAI[key.slice(2)] = cval[key];
-              }else if(key.toUpperCase().slice(0,2) === 'AO'){
+              }else if(key.toUpperCase().slice(0,2) === 'AO') {
                 this.mAO[key.slice(2)] = cval[key];
+              }else if(key.toUpperCase().slice(0,2) === 'TI') {
+                this.mTI[key.slice(2)] = cval[key];
+              }else if(key.toUpperCase().slice(0,2) === 'TO'){
+                this.mTO[key.slice(2)] = cval[key];
               }else{
                 console.log('fatal: ', key);
                 console.log('---------- 完整传递数据如下 ----------');

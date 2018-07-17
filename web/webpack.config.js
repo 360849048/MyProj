@@ -62,7 +62,8 @@ module.exports = {
       },
       {
         test: /\.(png|jpg|gif|svg|ttf|woff)$/,
-        loader: 'file-loader',
+        // 原来file-loader会导致element-ui的icon无法显示
+        loader: 'url-loader',
         options: {
           name: '[name].[ext]?[hash]'
         }
