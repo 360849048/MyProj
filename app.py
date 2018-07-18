@@ -1,6 +1,30 @@
 from flask import Flask, request, send_file, jsonify
 from pysrc.sqljob import TableManager
 
+
+# 避免频繁搜索数据库获取IO长度，这里一次性读取万所有IO的数目
+# 通过函数中获取，可能可以尽早销毁这些被创建的TableManager
+def _getIoAmount():
+    t_ios = {
+        'di': TableManager('digital_input', './libfiles/data.db'),
+        'do': TableManager('digital_output', './libfiles/data.db'),
+        'ai': TableManager('analog_input', './libfiles/data.db'),
+        'ao': TableManager('analog_output', './libfiles/data.db'),
+        'ti': TableManager('temperature_input', './libfiles/data.db'),
+        'to': TableManager('temperature_output', './libfiles/data.db')
+    }
+    return {
+        'di': len(t_ios['di'].getAllId()),
+        'do': len(t_ios['do'].getAllId()),
+        'ai': len(t_ios['ai'].getAllId()),
+        'ao': len(t_ios['ao'].getAllId()),
+        'ti': len(t_ios['ti'].getAllId()),
+        'to': len(t_ios['to'].getAllId())
+    }
+
+
+ios_amount = _getIoAmount()
+
 app = Flask(__name__)
 
 @app.route('/', methods=['GET', 'POST'])
@@ -16,10 +40,11 @@ def foo():
     return jsonify(inputs)
 
 @app.route('/io', methods=['GET'])
-def getDi():
+def getIo():
     io_type = request.args.get('type')
     start_id = int(request.args.get('start'))
     end_id = int(request.args.get('end'))
+    # io_type可以是'di', 'do', 'ai', 'ao', 'ti', 'to'
     if io_type == 'di':
         t_io = TableManager('digital_input', './libfiles/data.db')
     elif io_type == 'do':
@@ -33,17 +58,41 @@ def getDi():
     else:
         t_io = TableManager('temperature_output', './libfiles/data.db')
     ret_data = {}
-    ret_data['amount'] = len(t_io.getAllId())           # 每次都会重新查询，性能或许可以优化
+    ret_data['amount'] = ios_amount[io_type]
     ret_data['ios'] = {}
     if start_id > end_id or start_id > ret_data['amount']:
         return jsonify(ret_data)
     if end_id > ret_data['amount']:
         end_id = ret_data['amount']
     for id in range(start_id, end_id + 1):
-        ret_data['ios'][str(id)] = t_io.displayBriefData(id, 'id', 'CName')[1]
+        ret_data['ios'][str(id)] = t_io.displayBriefData(id, 'CName')[0]
 
     return jsonify(ret_data)
 
+@app.route('/big', methods=['GET'])
+def getBigIo():
+    # 获取大机选配CIO021的IO点配置信息
+    # 数据返回格式为{'name': 'CIO021', ios: {'di3': '83--开门', ..., 'do2': '113--润滑马达2'}}
+    cio021_io = {
+        'di3': 83,
+        'di4': 84,
+        'di5': 85,
+        'di6': 97,
+        'di7': 98,
+        'di8': 99,
+        'do1': 97,
+        'do2': 98,
+        'do3': 113
+    }
+    ret_data = {'name': 'CIO021', 'ios': {}}
+    t_di = TableManager('digital_input', './libfiles/data.db')
+    t_do = TableManager('digital_output', './libfiles/data.db')
+    for k, v in cio021_io.items():
+        if k.startswith('di'):
+            ret_data['ios'][k] = str(v) + '--' + t_di.displayBriefData(v, 'CName')[0]
+        if k.startswith('do'):
+            ret_data['ios'][k] = str(v) + '--' + t_do.displayBriefData(v, 'CName')[0]
+    return jsonify(ret_data)
 
 # app.run(host='172.18.71.158', port=8080)
 app.run(debug=True)

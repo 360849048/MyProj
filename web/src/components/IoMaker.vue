@@ -8,7 +8,9 @@
           </div>
           <!-- 模块显示区 -->
           <div class="col-sm-4" id="module_area">
-            <module></module>
+            <module
+              :big-imm="true">
+            </module>
           </div>
         </div>
       </div>

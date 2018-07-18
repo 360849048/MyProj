@@ -324,6 +324,10 @@ class TableManager:
 if __name__ == '__main__':
     inputs = {}
     t_di = TableManager('digital_input', '../libfiles/data.db')
+    t_do = TableManager('digital_output', '../libfiles/data.db')
     for id in t_di.getAllId():
         inputs[str(id)] = t_di.displayBriefData(id, 'id', 'CName')[1]
+    print(inputs)
+    for id in t_do.getAllId():
+        inputs[str(id)] = t_do.displayBriefData(id, 'id', 'CName')[1]
     print(inputs)
