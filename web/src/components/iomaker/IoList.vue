@@ -24,7 +24,8 @@
             <div class="col-sm-6">
               <ul>
                 <li v-for="(input, index) in ios" v-if="index < Math.ceil((curPageStartItem + curPageEndItem)/2)">
-                  <div class="alert alert-primary" role="alert"
+                  <div class="alert" role="alert"
+                       :class="[checkUsed(index) ? 'alert-secondary' : 'alert-primary']"
                        :data-index="index" :data-name="input"
                        draggable="true" @dragstart="dragIO">
                     {{index}}&nbsp;&nbsp;&nbsp;{{input}}
@@ -36,6 +37,7 @@
               <ul>
                 <li v-for="(input, index) in ios" v-if="index >= Math.ceil((curPageStartItem + curPageEndItem)/2)">
                   <div class="alert alert-primary" role="alert"
+                       :class="[checkUsed(index) ? 'alert-secondary' : 'alert-primary']"
                        :data-index="index" :data-name="input"
                        draggable="true" @dragstart="dragIO">
                     {{index}}&nbsp;&nbsp;&nbsp;{{input}}
@@ -56,6 +58,7 @@
    * 2.通过ajax的get方式从后台按需获取当页所需要的数据，并非一次性全部得到所有数据。
    *  第一次ajax请求某类IO时数据量按pageItemAmount来（服务器允许请求数据超过实际服务器数据库容量），
    *  在服务器返回某类IO的数量，即更新了IoNum值以后，页码数才可以正确显示，后续此类IO的请求量也按实际数量来
+   * 3.根据父组件传递过来的模块IO选择信息，将已选择的IO点，CSS样式区别于未选中的IO点。
    *
    */
   // 规定一页最多显示的数据
@@ -63,6 +66,7 @@
 
   export default {
     name: "io-list",
+    props: ['boardModules1', 'boardModules2', 'boardModules3', 'boardModulesIOs1', 'boardModulesIOs2', 'boardModulesIOs3'],
     data(){
       return {
         ioType: 'di',
@@ -115,7 +119,6 @@
         let curPageStartItem = 1 + (curPage - 1) * pageItemAmount;
         let curPageEndItem = curPage * pageItemAmount < this.ioNum ? curPage * pageItemAmount : this.ioNum;
 
-
         let _this = this;
         $.ajax({
           url: "/io",
@@ -154,6 +157,40 @@
         // 通过拖拽的方式向ModuleConfig.vue传递io信息，格式例如："di--1--阀门1开"
         e.dataTransfer.setData('ioInfo', this.ioType + '--' + e.target.getAttribute('data-index') + '--' + e.target.getAttribute('data-name'));
       },
+      /**
+       * 检查某个IO是否已经被选中到Module中
+       * TODO:
+       */
+      checkUsed(ioIdx){
+        for(let i=0; i<=this.boardModulesIOs1.length; i++) {
+          for (let key in this.boardModulesIOs1[i]) {
+            if (key.slice(0, 2).toUpperCase() === this.ioType.toUpperCase()) {
+              if (this.boardModulesIOs1[i][key].split('--')[0] === ioIdx) {
+                return true;
+              }
+            }
+          }
+        }
+        for(let i=0; i<=this.boardModulesIOs2.length; i++) {
+          for (let key in this.boardModulesIOs2[i]) {
+            if (key.slice(0, 2).toUpperCase() === this.ioType.toUpperCase()) {
+              if (this.boardModulesIOs2[i][key].split('--')[0] === ioIdx) {
+                return true;
+              }
+            }
+          }
+        }
+        for(let i=0; i<=this.boardModulesIOs3.length; i++) {
+          for (let key in this.boardModulesIOs3[i]) {
+            if (key.slice(0, 2).toUpperCase() === this.ioType.toUpperCase()) {
+              if (this.boardModulesIOs3[i][key].split('--')[0] === ioIdx) {
+                return true;
+              }
+            }
+          }
+        }
+        return false;
+      }
     },
     watch: {
       /**

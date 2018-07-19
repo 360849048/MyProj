@@ -26,7 +26,7 @@
    * 2.从ModuleSelector获取模块的选择清单，以及当前选中的底板和模块信息
    * 3.将当前选中的模块以及当前模块的IO配置信息传递到ModuleConfig
    * 4.当某插槽选为CAI888时，AJAX获取相应IO名称后，自动填充对应的IO配置加热1-8
-   * 5.自动初始化大机选配的CIO021点位
+   * 5.自动初始化大机选配的CIO021点位，通过AJAX方法从后台获取IO配点信息
    * 6.在watch中，通过modulesupdate事件将模块的选择及io配置信息传给父组件
    * 7.modulesupdate事件传递一个json格式如下:
    *      {
@@ -50,7 +50,7 @@
     },
     data() {
       return {
-        // 格式如同： ['CDM163', 'CTO163']
+        // 格式如同： ['CDM163', 'CTO163', '', '']
         boardModules1: ['', '', '', ''],
         boardModules2: ['', '', '', ''],
         boardModules3: ['', '', '', ''],
@@ -111,6 +111,7 @@
                 complete: function(){
 
                 },
+                // 这里定义了CAI888模块的配点信息为TI的1-8号点，AJAX仅仅用于获取1-8点对应的名称
                 data: {"type": 'ti', "start": 1, 'end': 8},
                 success: function(data){
                   for(let key in data.ios){
@@ -118,7 +119,7 @@
                   }
                 },
                 error: function(){
-                  console.log('AJAX获取CAI888的ti失败');
+                  console.log('AJAX获取CAI888的TI名称失败');
                 }
               }), $.ajax({
                 url: "/io",
@@ -130,6 +131,7 @@
                 complete: function(){
 
                 },
+                // 这里定义了CAI888模块的配点信息为TO的1-8号点，AJAX仅仅用于获取1-8点对应的名称
                 data: {"type": 'to', "start": 1, 'end': 8},
                 success: function(data){
                   for(let key in data.ios){
@@ -137,7 +139,7 @@
                   }
                 },
                 error: function(){
-                  console.log('AJAX获取CAI888的to失败');
+                  console.log('AJAX获取CAI888的TO名称失败');
                 }
               })).done(function(){
                 _this.$set(allModulesIOs[_this.curSelectedBoardSeq - 1], i, cai888DefaultIos);
@@ -152,7 +154,7 @@
                   this.$set(allModulesIOs[this.curSelectedBoardSeq - 1], i, data.ios);
                 },
                 error: ()=>{
-                  console.log('AJAX获取CIO021失败')
+                  console.log('AJAX获取CIO021配点信息失败');
                 }
               });
             }else{
@@ -179,7 +181,7 @@
             this.$set(this.boardModulesIOs1, 0, data.ios);
           },
           error: () => {
-            console.log('AJAX获取CIO021失败')
+            console.log('AJAX获取CIO021配点信息失败');
           }
         });
       }

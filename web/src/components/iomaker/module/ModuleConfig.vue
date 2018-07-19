@@ -60,8 +60,7 @@
         </div>
       </li>
     </ul>
-    <!-- 单独处理CAI888模块的显示问题，考虑在父组件处理CAI888的IO -->
-    <!-- TODO:单独处理CIV512等连接模块显示问题 -->
+    <!-- 单独处理CIV512等连接模块显示问题 -->
     <div class="h1" v-if="moduleName.toUpperCase() === 'CIV512' || moduleName.toUpperCase() === 'CIV521'">
       您已激活扩展该底板，连接模块是：{{moduleName}}
     </div>
