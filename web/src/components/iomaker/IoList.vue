@@ -159,7 +159,7 @@
       },
       /**
        * 检查某个IO是否已经被选中到Module中
-       * TODO:
+       * @param ioIdx 某个IO的序号，这里结合变量ioType，可以定位到具体某个IO点
        */
       checkUsed(ioIdx){
         for(let i=0; i<=this.boardModulesIOs1.length; i++) {

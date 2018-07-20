@@ -22,13 +22,14 @@
 <script>
   /**
    * 数据处理逻辑：
-   * 1.处理并保存各底板模块配置及模块IO配置信息。
-   * 2.从ModuleSelector获取模块的选择清单，以及当前选中的底板和模块信息
-   * 3.将当前选中的模块以及当前模块的IO配置信息传递到ModuleConfig
-   * 4.当某插槽选为CAI888时，AJAX获取相应IO名称后，自动填充对应的IO配置加热1-8
-   * 5.自动初始化大机选配的CIO021点位，通过AJAX方法从后台获取IO配点信息
-   * 6.在watch中，通过modulesupdate事件将模块的选择及io配置信息传给父组件
-   * 7.modulesupdate事件传递一个json格式如下:
+   * 1.处理并保存各底板模块配置及模块IO配置信息
+   *   该组件与两个子组件的数据交换是双向的，即在此模块修改IO信息，数据将会传递下去并实时刷新视图
+   *   从ModuleSelector获取模块的选择清单，以及当前选中的底板和模块信息
+   *   将当前选中的模块以及当前模块的IO配置信息传递到ModuleConfig
+   * 2.当某插槽选为CAI888时，AJAX获取相应IO名称后，自动填充对应的IO配置加热1-8
+   * 3.自动初始化大机选配的CIO021点位，通过AJAX方法从后台获取IO配点信息
+   * 4.在watch中，通过modulesupdate事件将模块的选择及io配置信息传给父组件
+   * 5.modulesupdate事件传递一个json格式如下:
    *      {
    *        'boardModules1': ['CIO021', 'CDM163', '', '']
    *        'boardModules2': ['CIV512', 'CAI888', '', '']

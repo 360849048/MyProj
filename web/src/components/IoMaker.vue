@@ -3,7 +3,42 @@
       <div class="container-fluid">
         <div class="row">
           <!-- IO选择区域 -->
-          <div class="col-sm-8">
+          <transition name="fade-left">
+            <div class="col-sm-4" v-show="curStep === 1">
+              <form>
+                <div class="form-group">
+                  <label for="exampleFormControlInput1">Email address</label>
+                  <input type="email" class="form-control" id="exampleFormControlInput1" placeholder="name@example.com">
+                </div>
+                <div class="form-group">
+                  <label for="exampleFormControlSelect1">Example select</label>
+                  <select class="form-control" id="exampleFormControlSelect1">
+                    <option>1</option>
+                    <option>2</option>
+                    <option>3</option>
+                    <option>4</option>
+                    <option>5</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="exampleFormControlSelect2">Example multiple select</label>
+                  <select multiple class="form-control" id="exampleFormControlSelect2">
+                    <option>1</option>
+                    <option>2</option>
+                    <option>3</option>
+                    <option>4</option>
+                    <option>5</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="exampleFormControlTextarea1">Example textarea</label>
+                  <textarea class="form-control" id="exampleFormControlTextarea1" rows="3"></textarea>
+                </div>
+              </form>
+            </div>
+          </transition>
+
+          <div class="col-sm-8" >
             <io-list
             :boardModules1="boardModules1"
             :boardModules2="boardModules2"
@@ -14,18 +49,19 @@
             </io-list>
           </div>
           <!-- 模块显示区 -->
-          <div class="col-sm-4" id="module_area">
-            <module
-              :big-imm="true"
-              @modulesupdate="getModuleInfo">
-            </module>
-          </div>
+          <transition name="fade-right">
+            <div class="col-sm-4" id="module_area" v-show="curStep === 2" >
+              <module
+                :big-imm="true"
+                @modulesupdate="getModuleInfo">
+              </module>
+            </div>
+          </transition>
         </div>
-        <ul class="dataarea">
-          <li>{{boardModules1}}--{{boardModulesIOs1}}</li>
-          <li>{{boardModules2}}--{{boardModulesIOs2}}</li>
-          <li>{{boardModules3}}--{{boardModulesIOs3}}</li>
-        </ul>
+        <!-- 测试按钮 -->
+        <div class="row">
+          <button @click="curStep=curStep===1?2:1">下一步</button>
+        </div>
       </div>
     </div>
 </template>
@@ -48,6 +84,8 @@
         boardModulesIOs1: [{}, {}, {}, {}],
         boardModulesIOs2: [{}, {}, {}, {}],
         boardModulesIOs3: [{}, {}, {}, {}],
+
+        curStep: 1
       }
     },
     methods:{
@@ -75,5 +113,18 @@
   }
 </script>
 <style scoped>
-
+  .fade-left-enter-active, .fade-left-leave-active{
+    transition: all .5s ease;
+  }
+  .fade-left-enter, .fade-left-leave-to{
+    opacity: 0;
+    margin-left: -33.4%;
+  }
+  .fade-right-enter-active, .fade-right-leave-active{
+    transition: all .5s ease;
+  }
+  .fade-right-enter, .fade-right-leave-to{
+    opacity: 0;
+    margin-right: -40%;
+  }
 </style>
