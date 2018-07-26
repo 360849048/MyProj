@@ -1,23 +1,51 @@
 <template>
   <div id="funcconfig">
-    <h1>Function should be configured here</h1>
-    <div class="list-group">
-      <a class="list-group-item" href="#"><i class="fa fa-home fa-fw"></i>&nbsp; Home</a>
-      <a class="list-group-item" href="#"><i class="fa fa-book fa-fw"></i>&nbsp; Library</a>
-      <a class="list-group-item" href="#"><i class="fa fa-pencil fa-fw"></i>&nbsp; Applications</a>
-      <a class="list-group-item" href="#"><i class="fa fa-cog fa-fw"></i>&nbsp; Settings</a>
+    <div class="row">
+      <div class="col-4">
+        <h2>主底板默认IO修改</h2>
+        <div v-for="(item, index) in funcs" class="p-1">
+          <func-switch
+            :id="index"
+            :name="item.name"
+            :status="item.status"
+            @statusupdate="getFuncStatus">
+          </func-switch>
+        </div>
+      </div>
+      <div class="col-6">
+        <h2>功能配置</h2>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
+  import FuncSwitch from './funcConfig/FuncSwitch'
   export default {
-    name: "function-config"
+    name: "function-config",
+    components: {
+      FuncSwitch
+    },
+    data(){
+      return{
+        funcs: {
+          1: {name: '功能点1注射信号', status: false},
+          2: {name: '功能点2储料信号', status: false},
+          3: {name: 'E73', status: false},
+          4: {name: '喷嘴改阀门1', status: false}
+        }
+      }
+    },
+    methods: {
+      getFuncStatus(e){
+        this.funcs[e.id].status = e.status;
+      }
+    }
   }
 </script>
 
 <style scoped>
   #funcconfig{
-    border: 1px gray dotted;
+    /*border: 1px gray dotted;*/
   }
 </style>

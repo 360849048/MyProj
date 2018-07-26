@@ -40,10 +40,15 @@
           </transition>
         </div>
         <!-- 测试按钮 -->
-        <div class="row">
-          <button @click="curStep=curStep===1?2:1" class="btn btn-success">下一步</button>
-        </div>
+        <!--<div class="row">-->
+          <!--<button @click="curStep=curStep===1?2:1" class="btn btn-success">下一步</button>-->
+        <!--</div>-->
       </div>
+      <footer class="fixed-bottom text-center">
+        <i class="fa fa-angle-left fa-4x" aria-hidden="true" @click="curStep=1"></i>
+        <a href="#" class="fa-3x">提交</a>
+        <i class="fa fa-angle-right fa-4x" aria-hidden="true" @click="curStep=2"></i>
+      </footer>
     </div>
 </template>
 <script>
@@ -97,7 +102,7 @@
     }
   }
 </script>
-<style scoped>
+<style lang="scss" scoped>
   .fade-left-enter-active, .fade-left-leave-active{
     transition: all .5s ease;
   }
@@ -125,5 +130,17 @@
   .vanish-right-enter, .vanish-right-leave-to{
     opacity: 0;
     margin-right: -66.7%;
+  }
+  footer{
+    background-color: #eee;
+    i{
+      color: #666;
+      cursor: pointer;
+    }
+    a{
+      margin: 50px;
+      text-decoration: none;
+      color: #666;
+    }
   }
 </style>

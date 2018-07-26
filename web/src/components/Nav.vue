@@ -9,7 +9,7 @@
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav mr-auto">
         <li class="nav-item active">
-            <router-link class="nav-link" href="#" to="/home">Home <span class="sr-only">(current)</span></router-link>
+            <router-link class="nav-link" href="#" to="/home"><i class="fa fa-home fa-fw"></i>Home <span class="sr-only">(current)</span></router-link>
         </li>
         <li class="nav-item">
             <router-link class="nav-link" href="#" to="/versions">Versions</router-link>
