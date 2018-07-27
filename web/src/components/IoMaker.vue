@@ -5,7 +5,8 @@
           <!-- 信息录入 -->
           <transition name="fade-left">
             <div class="col-sm-4" v-show="curStep === 1">
-              <info-form>
+              <info-form
+                @imminfochange="getImmInfo">
               </info-form>
             </div>
           </transition>
@@ -39,15 +40,13 @@
             </div>
           </transition>
         </div>
-        <!-- 测试按钮 -->
-        <!--<div class="row">-->
-          <!--<button @click="curStep=curStep===1?2:1" class="btn btn-success">下一步</button>-->
-        <!--</div>-->
       </div>
-      <footer class="fixed-bottom text-center">
-        <i class="fa fa-angle-left fa-4x" aria-hidden="true" @click="curStep=1"></i>
-        <a href="#" class="fa-3x">提交</a>
-        <i class="fa fa-angle-right fa-4x" aria-hidden="true" @click="curStep=2"></i>
+      {{immType}}
+      <!-- 底部按钮栏 -->
+      <footer class="fixed-bottom">
+        <i class="fa fa-angle-left fa-3x" :class="{'enable': curStep !== 1}" aria-hidden="true" @click="curStep=1"></i>
+        <a href="#" class="fa-2x enable">提交</a>
+        <i class="fa fa-angle-right fa-3x" :class="{'enable': curStep !== 2}" aria-hidden="true" @click="curStep=2"></i>
       </footer>
     </div>
 </template>
@@ -74,11 +73,28 @@
         boardModulesIOs1: [{}, {}, {}, {}],
         boardModulesIOs2: [{}, {}, {}, {}],
         boardModulesIOs3: [{}, {}, {}, {}],
+        // 机器基础信息
+        evaluationNum: '',
+        productionNum: '',
+        immType: '',
+        customer: '',
+        safetyStandard: '',
+        technicalClause: '',
+        designNote: '',
 
         curStep: 1
       }
     },
     methods:{
+      getImmInfo(e){
+        this.evaluationNum = e.evaluationNum;
+        this.productionNum = e.productionNum;
+        this.immType = e.immType;
+        this.customer = e.customer;
+        this.safetyStandard = e.safetyStandard;
+        this.technicalClause = e.technicalClause;
+        this.designNote = e.designNote;
+      },
       getModuleInfo(e){
         for(let i=0; i<e.boardModules1.length; i++){
           if(e.boardModules1[i] !== this.boardModules1[i]){
@@ -98,6 +114,13 @@
         this.boardModulesIOs1 = e.boardModulesIOs1;
         this.boardModulesIOs2 = e.boardModulesIOs2;
         this.boardModulesIOs3 = e.boardModulesIOs3;
+      },
+      _parseImmType(){
+        let types = ['ZEs', 'ZE', 'VE2s', 'VE2'];
+        let clampForce;
+        let injection;
+
+
       }
     }
   }
@@ -133,14 +156,26 @@
   }
   footer{
     background-color: #eee;
+    display: flex;
+    justify-content: center;
     i{
-      color: #666;
+      color: #ccc;
       cursor: pointer;
     }
     a{
-      margin: 50px;
+      margin:{
+        left: 50px;
+        right: 50px;
+      }
       text-decoration: none;
-      color: #666;
+      color: #ccc;
+      font-family: Microsoft Yahei;
+    }
+    .enable{
+      transition: all .5s;
+      &:hover{
+        color: black;
+      }
     }
   }
 </style>
