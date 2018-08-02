@@ -1,8 +1,9 @@
 from flask import Flask, request, send_file, jsonify
 from pysrc.sqljob import TableManager
+from pysrc.iomaker import IOMaker
 
 
-# 避免频繁搜索数据库获取IO长度，这里一次性读取万所有IO的数目
+# 避免频繁搜索数据库获取IO长度，这里一次性读取掉所有IO的数目
 # 通过函数中获取，可能可以尽早销毁这些被创建的TableManager
 def _getIoAmount():
     t_ios = {
@@ -22,8 +23,6 @@ def _getIoAmount():
         'to': len(t_ios['to'].getAllId())
     }
 
-
-ios_amount = _getIoAmount()
 
 app = Flask(__name__)
 
@@ -94,5 +93,38 @@ def getBigIo():
             ret_data['ios'][k] = str(v) + '--' + t_do.displayBriefData(v, 'CName')[0]
     return jsonify(ret_data)
 
+@app.route('/iomaker', methods=['POST'])
+def createIoFile():
+    # data是一个dict对象
+    data = request.get_json()
+
+    # 将post得到的数据整理成规范格式的数据
+    board_1_modules = []
+    board_1 = data['boardModules1']
+    board_1_ios = data['boardModulesIOs1']
+    for module in board_1:
+        if module != '':
+            idx = board_1.index(module)
+            board_1_modules.append([module, board_1_ios[idx]])
+
+    board_2_modules = []
+    board_2 = data['boardModules2']
+    board_2_ios = data['boardModulesIOs2']
+    for module in board_2:
+        if module != '':
+            idx = board_2.index(module)
+            board_2_modules.append([module, board_2_ios[idx]])
+    print(board_1_modules)
+    print(board_2_modules)
+    print('wait....')
+    iomaker = IOMaker(imm_type=data['type'],
+                      board_1_modules=board_1_modules,
+                      board_2_modules=board_2_modules)
+    iomaker.createIOFile()
+
+    return jsonify({'status': 'ok'})
+
+
+ios_amount = _getIoAmount()
 # app.run(host='172.18.71.158', port=8080)
 app.run(debug=True)

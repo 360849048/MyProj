@@ -14,7 +14,7 @@
       </div>
       <div class="col-6">
         <h2>功能配置</h2>
-        <h3 class="ml-3 mt-3">施工中...</h3>
+        <h3 class="ml-3 mt-3 text-secondary">施工中...</h3>
       </div>
     </div>
   </div>

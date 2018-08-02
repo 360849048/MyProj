@@ -125,7 +125,7 @@ class IOFile:
         self.board1_1_modules = None
         self.board1_1_modules_ioconfig = None
         self.big = big
-        self.src_path = r'../libfiles'
+        self.src_path = r'./libfiles'
         self.std_filename = None
         self.modulelib_filename = os.path.join(self.src_path, '常用硬件表.xlsx')
         self.std_workbook = None

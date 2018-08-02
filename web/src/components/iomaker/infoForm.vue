@@ -11,7 +11,7 @@
           <input type="text" class="form-control" id="validationDefault02" required autocomplete="off" v-model="productionNum">
         </div>
         <div class="col-md-4 mb-3">
-          <label for="validationDefaultUsername"><span class="text-danger">*</span>机型（必填）</label>
+          <label for="validationDefaultUsername"><span class="text-danger">*</span>机型</label>
           <input type="text" class="form-control" id="validationDefaultUsername" required autocomplete="off" v-model="immType">
         </div>
       </div>
@@ -39,9 +39,9 @@
       <div class="input-group-prepend">
         <label class="input-group-text" for="infoArea">设计说明</label>
       </div>
-      <textarea class="form-control" id="infoArea" aria-label="With textarea" placeholder="这里可以不填" v-model="designNote" style="height: 100px;"></textarea>
+      <textarea class="form-control" id="infoArea" aria-label="With textarea" placeholder="这里不用填" v-model="designNote" style="height: 100px;"></textarea>
     </div>
-    <button class="btn btn-secondary" id="autoFillBtn">自动填单</button>
+    <button class="btn btn-secondary" id="autoFillBtn" @click="parseParams">自动填单</button>
   </div>
 </template>
 
@@ -96,6 +96,42 @@
           technicalClause: this.technicalClause,
           evaluationNote: this.designNote,
         });
+      },
+      parseParams(){
+        /**
+         * 从设计说明的文字中提取出合同订单信息
+         */
+        if(this.designNote === ''){
+          return;
+        }
+        let lines = this.designNote.split('\n');
+        for(let line of lines){
+          let temp = line.split('：');
+          if(temp.length !== 2){
+            continue;
+          }
+          let key = temp[0];
+          // 去除首尾空格
+          let value = temp[1].replace(/^\s+/, '');
+          value = value.replace(/\s+$/, '');
+          if(key.indexOf('客户名称') > -1){
+            temp = value.split(' ');
+            if(temp.length === 2){
+              this.customer = temp[0];
+              this.evaluationNum = temp[1];
+            }
+
+          }
+          if(key.indexOf('机型') > -1){
+            this.immType = value;
+          }
+          if(key.indexOf('规格') > -1){
+            this.safetyStandard = value;
+          }
+          if(key.indexOf('生产订单') > -1){
+            this.productionNum = value;
+          }
+        }
       }
     },
   }

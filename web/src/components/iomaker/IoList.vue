@@ -165,7 +165,7 @@
         for(let i=0; i<=this.boardModulesIOs1.length; i++) {
           for (let key in this.boardModulesIOs1[i]) {
             if (key.slice(0, 2).toUpperCase() === this.ioType.toUpperCase()) {
-              if (this.boardModulesIOs1[i][key].split('--')[0] === ioIdx) {
+              if (this.boardModulesIOs1[i][key] === ioIdx) {
                 return true;
               }
             }
@@ -174,7 +174,7 @@
         for(let i=0; i<=this.boardModulesIOs2.length; i++) {
           for (let key in this.boardModulesIOs2[i]) {
             if (key.slice(0, 2).toUpperCase() === this.ioType.toUpperCase()) {
-              if (this.boardModulesIOs2[i][key].split('--')[0] === ioIdx) {
+              if (this.boardModulesIOs2[i][key] === ioIdx) {
                 return true;
               }
             }
@@ -183,7 +183,7 @@
         for(let i=0; i<=this.boardModulesIOs3.length; i++) {
           for (let key in this.boardModulesIOs3[i]) {
             if (key.slice(0, 2).toUpperCase() === this.ioType.toUpperCase()) {
-              if (this.boardModulesIOs3[i][key].split('--')[0] === ioIdx) {
+              if (this.boardModulesIOs3[i][key] === ioIdx) {
                 return true;
               }
             }
@@ -199,7 +199,10 @@
       ioType: {
         handler: function(cval, oval){
           // 切换不同io页面需要重置this.ioNum，确保获取到足够多的数据
-          this.ioNum = pageItemAmount;
+          // 但是不要轻易修改this.ioNum，否则会导致页面闪烁
+          if(this.ioNum < pageItemAmount){
+            this.ioNum = pageItemAmount;
+          }
           this.gotoPage(1)
         },
         immediate: true

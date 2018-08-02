@@ -187,7 +187,6 @@ class TableManager:
         try:
             self.c.close()
             self.conn.close()
-            print()
         except:
             print("Fatal Error: The database: %s can't be closed!!!" % self.table)
 
