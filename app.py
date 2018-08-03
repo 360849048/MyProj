@@ -114,7 +114,12 @@ def createIoFile():
             board_2_modules.append([board_2[idx], board_2_ios[idx]])
 
     evaluation_num = data['evaluationNum']
+    production_num = data['productionNum']
+    type_string = data['immType']
     customer = data['customer']
+    safety_standard = data['safetyStandard']
+    technical_clause = data['technicalClause']
+    dual_inj = data['isDualInj']
     clamp_force = data['clampForce']
     injection = data['injection']
     imm_type = ''
@@ -133,12 +138,19 @@ def createIoFile():
     print('wait....')
     iomaker = IOMaker(imm_type=data['type'],
                       board_1_modules=board_1_modules,
-                      board_2_modules=board_2_modules)
+                      board_2_modules=board_2_modules,
+                      evaluation_num=evaluation_num,
+                      production_num=production_num,
+                      type_string=type_string,
+                      customer=customer,
+                      safety_standard=safety_standard,
+                      technical_clause=technical_clause,
+                      dual_inj=dual_inj)
     iomaker.createIOFile(io_file_path)
 
     return jsonify({'status': 'ok', 'ioFileUrl': io_file_path})
 
 
 ios_amount = _getIoAmount()
-app.run(host='172.18.71.158', port=8080)
-# app.run(debug=True)
+# app.run(host='172.18.71.158', port=8080)
+app.run(debug=True)

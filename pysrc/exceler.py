@@ -93,7 +93,7 @@ def _compareAreas(area1_start_col, area1_start_row, area1_end_col, area1_end_row
 
 
 def searchCells(worksheet, keywords):
-    '''根据关键词返回唯一的Cell对象，注意：只能，必须匹配到唯一的单元格,否则返回None'''
+    '''根据关键词（不区分大小写）返回唯一的Cell对象，注意：只能，必须匹配到唯一的单元格,否则返回None'''
     result = []
     if type(worksheet) != openpyxl.worksheet.worksheet.Worksheet:
         print("Fatal: searchCells--不是有效的worksheet对象")
@@ -114,7 +114,9 @@ def searchCells(worksheet, keywords):
 
 
 class IOFile:
-    def __init__(self, imm_type, main_board_modules=None, board_1_modules=None, big=False):
+    def __init__(self, imm_type, main_board_modules=None, board_1_modules=None, big=False,
+                 evaluation_num=None, production_num=None, type_string=None, customer=None,
+                 safety_standard=None, technical_clause=None, dual_inj=False):
         ''' imm_type:           'ZEs', 'ZE', 'VE2', 'VE2s'
             main_board_modules: [['CTO163', {'O3': ['中文名', 'EnglishName'], ...}], ['CDM163', {'I5': ['中文名', 'EnglishName'], ...}], ...]
             board_1_modules:    [['CTO163', {'O3': ['中文名', 'EnglishName'], ...}], ['CDM163', {'I5': ['中文名', 'EnglishName'], ...}], ...]
@@ -130,6 +132,15 @@ class IOFile:
         self.modulelib_filename = os.path.join(self.src_path, '常用硬件表.xlsx')
         self.std_workbook = None
         self.modulelib_workbook = None
+        # 待填入表“机器信息”的信息
+        self.evaluation_num = evaluation_num
+        self.production_num = production_num
+        self.type_string = type_string
+        self.customer = customer
+        self.safety_standard = safety_standard
+        self.technical_clause = technical_clause
+        # “硬件排布”双注射信息
+        self.dual_inj = dual_inj
 
         if main_board_modules is not None:
             self.main_board_modules = []
@@ -204,12 +215,12 @@ class IOFile:
 
     def _copyAndModifyCellRange(self, src_cell_start, src_cell_end, dst_cell_start, ioconfiguration=None, style=True):
         '''复制并修改一片单元格选区到指定位置
-            ioconfiguration: {'I2': xxx, 'O4': xxx, 'AI1': xxx, 'AO2': xxx}
+            ioconfiguration: {'DI2': xxx, 'DO4': xxx, 'AI1': xxx, 'AO2': xxx}
         '''
         src_ws = src_cell_start.parent
         dst_ws = dst_cell_start.parent
         if src_ws != src_cell_end.parent:
-            print("Fatal: _copyAndModifyCellRange--复制的单元格区域不在同一个sheet中")
+            print("Fatal: _copyAndModifyCellRange--参数src_cell_start和src_cell_end不在同一个sheet")
             return -1
         if src_cell_start.row > src_cell_end.row or src_cell_start.col_idx > src_cell_end.col_idx:
             print("Fatal: _copyAndModifyCellRange--无法构成复制的单元格区域")
@@ -410,6 +421,33 @@ class IOFile:
             board_1_hardware_worksheet.cell(row=cur_work_row, column=cur_work_column).value += str(i - 1)
             cur_work_row += modulelib_worksheets[i].max_row - 1
         return 0
+
+    def modifyImmInfo(self):
+        ''' 填写机器信息以及修改注射keb2信息 '''
+        # 修改表'机器信息'内容
+        imm_info_worksheet = self.std_workbook['机器信息']
+        def _modify(title, value):
+            if value is not None:
+                result = searchCells(imm_info_worksheet, title)
+                if result is None:
+                    print("Fatal: 在 %s->%s 中匹配关键字: %s 失败" % (self.std_filename, imm_info_worksheet.title, title))
+                else:
+                    imm_info_worksheet.cell(row=result.row + 1, column=result.col_idx, value=value)
+        _modify('合同订单编号', self.evaluation_num)
+        _modify('客户', self.customer)
+        _modify('机型', self.type_string)
+        _modify('生产订单号', self.production_num)
+        _modify('安全标准', self.safety_standard)
+        _modify('软件相关条款', self.technical_clause)
+
+        # 修改 注射keb2
+        if self.dual_inj:
+            hardware_sort = self.std_workbook['硬件排布']
+            keb1_cell = searchCells(hardware_sort, '注射KEB1')
+            if keb1_cell is not None:
+                keb2_cell = hardware_sort.cell(row=keb1_cell.row, column=keb1_cell.col_idx + 1)
+                copyCell(keb1_cell, keb2_cell)
+                keb2_cell.value = '注射KEB2'
 
     def saveAs(self, filename):
         self.std_workbook.save(filename)

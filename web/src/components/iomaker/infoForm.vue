@@ -138,6 +138,13 @@
     watch: {
       getInfo(){
         if(this.getInfo === true){
+          if(this.immType === ''){
+            this.$notify.error({
+              title: '漏填了重要信息',
+              message: '注意啦，必须填写机器类型，不信提交一下试试？',
+              position: 'top-left'
+            });
+          }
           this.$emit('imminfochange', {
             evaluationNum: this.evaluationNum,
             productionNum: this.productionNum,
