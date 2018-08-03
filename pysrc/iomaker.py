@@ -73,6 +73,7 @@ class IOMaker:
                     board_1_modules: [['CTO163', {'O3': OutputID, ...}], ['CDM163', {'I5': InputID, ...}], ...]
                     board_2_modules:    [['CTO163', {'O3': OutputID, ...}], ['CDM163', {'I5': InputID, ...}], ...]
         '''
+        # TODO: 数据库位置需要小心
         self.path_db = './libfiles/data.db'
         self.t_di = TableManager('digital_input', self.path_db)
         self.t_do = TableManager('digital_output', self.path_db)
@@ -81,12 +82,12 @@ class IOMaker:
         self.t_ti = TableManager('Temperature_input', self.path_db)
         self.t_to = TableManager('Temperature_output', self.path_db)
         self.imm_type = imm_type
-        self.main_board_modules = None
         self.board_1_modules = None
+        self.board_2_modules = None
         self.big = big
         if board_1_modules is not None:
-            self.main_board_modules = board_1_modules.copy()
-            for module in self.main_board_modules:
+            self.board_1_modules = board_1_modules.copy()
+            for module in self.board_1_modules:
                 for io in module[1]:
                     id = int(module[1][io])
                     if str(io).upper().startswith('DI'):
@@ -103,8 +104,8 @@ class IOMaker:
                         module[1][io] = self.t_to.displayBriefData(id, 'CName', 'EName')
 
         if board_2_modules is not None:
-            self.board_1_modules = board_2_modules.copy()
-            for module in self.board_1_modules:
+            self.board_2_modules = board_2_modules.copy()
+            for module in self.board_2_modules:
                 for io in module[1]:
                     id = int(module[1][io])
                     if str(io).upper().startswith('DI'):
@@ -119,46 +120,30 @@ class IOMaker:
                         module[1][io] = self.t_ti.displayBriefData(id, 'CName', 'EName')
                     if str(io).upper().startswith('TO'):
                         module[1][io] = self.t_to.displayBriefData(id, 'CName', 'EName')
-        print(self.main_board_modules)
 
-    def createIOFile(self):
+    def createIOFile(self, path):
         file = IOFile(imm_type=self.imm_type,
-                      main_board_modules=self.main_board_modules,
-                      board_1_modules=self.board_1_modules,
+                      main_board_modules=self.board_1_modules,
+                      board_1_modules=self.board_2_modules,
                       big=self.big)
         file.copyMainBoardModulesInfo()
         file.copyMainBoardModules()
         file.copyBoard1ModulesInfo()
         file.copyBoard1Modules()
-        file.saveAs('../1.xlsx')
+        file.saveAs(path)
 
 
 if __name__ == '__main__':
     # 功能测试
     iomaker = IOMaker(imm_type='ZEs',
                       board_1_modules=[
-                          ['cdm163', {
-                              'I1': DI_PROGRAMMABLE_1,
-                              'I2': DI_PROGRAMMABLE_2,
-                              'I3': DI_PROGRAMMABLE_3,
-                              'I4': DI_PROGRAMMABLE_4,
-                              'I5': DI_PROGRAMMABLE_5,
-                              'I6': DI_PROGRAMMABLE_6,
-                              'O1': DO_PROGRAMMABLE_1,
-                              'O2': DO_PROGRAMMABLE_2,
-                              'O3': DO_PROGRAMMABLE_3,
-                              'O4': DO_PROGRAMMABLE_4,
-                              'O5': DO_PROGRAMMABLE_5,
-                              'O6': DO_PROGRAMMABLE_6
+                          ['CDM163', {
+                              'DI1': '73',
+                              'DI2': '74',
                           }],
                           ['CDM163', {
-                              'i1': DI_PRESSURE_RELEASE_BTN,
-                              'i2': DI_CORE_2_IN,
-                              'i3': DI_CORE_2_OUT,
-                              'o1': DO_PRESSURE_RELEASE,
-                              'O2': DO_CORE_2_IN_END,
-                              'O3': DO_CORE_2_OUT_END,
-                              'O4': DO_BAD_PRODUCT_2
+                              'DO1': '73',
+                              'DO2': '74',
                           }]
                       ],
                       board_2_modules=[
@@ -166,5 +151,5 @@ if __name__ == '__main__':
                           ['cai888', {}],
                       ],
                       big=False)
-    iomaker.createIOFile()
+    iomaker.createIOFile('./1.xlsx')
 

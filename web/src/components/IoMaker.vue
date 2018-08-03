@@ -1,11 +1,12 @@
 <template>
-    <div id="srcmaker">
+    <div id="srcmaker" v-loading="waiting">
       <div class="container-fluid">
         <div class="row">
           <!-- 信息录入 -->
           <transition name="fade-left">
             <div class="col-sm-4" v-show="curStep === 1">
               <info-form
+                :getInfo="getInfo"
                 @imminfochange="getImmInfo">
               </info-form>
             </div>
@@ -42,18 +43,58 @@
           </transition>
         </div>
       </div>
+      <div id="slidePrev" v-show="curStep === 2" @click="slidePrev">
+        <i class="fa fa-angle-left fa-3x"></i>
+      </div>
+      <div id="slideNext" v-show="curStep === 1" @click="slideNext">
+        <i class="fa fa-angle-right fa-3x"></i>
+      </div>
       <footer class="fixed-bottom">
-        <i class="fa fa-angle-left fa-3x" :class="{'enable': curStep !== 1}" aria-hidden="true" @click="curStep=1"></i>
-        <a href="#" class="fa-2x enable" @click="submitInfo">提交</a>
-        <i class="fa fa-angle-right fa-3x" :class="{'enable': curStep !== 2}" aria-hidden="true" @click="curStep=2"></i>
+        <i class="fa fa-angle-left fa-3x" :class="{'enable': curStep !== 1}" aria-hidden="true" @click="slidePrev"></i>
+        <div id="postInfo">
+          <a href="#exampleModalLong" class="fa-2x enable" @click="getInfo=true" data-toggle="modal">提交</a>
+        </div>
+        <i class="fa fa-angle-right fa-3x" :class="{'enable': curStep !== 2}" aria-hidden="true" @click="slideNext"></i>
       </footer>
+      <!-- 配置信息确认模态框 -->
+      <div class="modal fade" id="exampleModalLong" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="exampleModalLongTitle">请确认配置信息</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              机型：{{immType}}<br>
+              安全：{{safetyStandard}}
+              <hr>
+              主底板模块: {{boardModules1}}<br>
+              IO: {{boardModulesIOs1}}
+              <hr>
+              扩展底板一：{{boardModules2}}<br>
+              IO: {{boardModulesIOs2}}
+              <hr>
+              扩展底板二：{{boardModules3}}<br>
+              IO: {{boardModulesIOs3}}
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+              <button type="button" class="btn btn-primary" data-dismiss="modal" @click="submitInfo">确认提交</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 </template>
 <script>
   /**
    * 数据处理逻辑：
    * 1.从infoForm收集机器基础信息，并根据immType解析机器具体参数信息：机器类型、单双注射、大机选配
-   * 2.从FuncForm获取主底板IO修改信息：功能点12的配置等信息。TODO:功能配置文件信息录入
+   *   为了避免频繁触发imminfochange事件，通过设置this.getInfo=true可以从FuncForm读取一次信息
+   * 2.从FuncForm获取主底板IO修改信息：功能点12的配置等信息。
+   *  TODO:功能配置文件信息录入
    * 3.从Module获取模块和模块上的IO配置信息，并将配置信息传递到IoList组件
    * 4.页脚处放置的一些按钮，用来移动展示页面以及向后台POST机器信息
    */
@@ -96,7 +137,12 @@
         type: '',
 
         // 控制页面的展示内容：信息录入 或 IO选配（左右移动）
-        curStep: 1
+        curStep: 1,
+        // 从InfoForm获取immInfo的标志位，通过prop传递到InfoForm组件，
+        // InfoForm检测到该值为true时，触发imminfochange事件
+        getInfo: false,
+        // POST后等待后台返回数据
+        waiting: false
       }
     },
     methods:{
@@ -108,6 +154,8 @@
         this.safetyStandard = e.safetyStandard;
         this.technicalClause = e.technicalClause;
         this.designNote = e.designNote;
+        // 清除获取信息标志位
+        this.getInfo = false;
       },
       getModuleInfo(e){
         for(let i=0; i<e.boardModules1.length; i++){
@@ -150,20 +198,35 @@
           injection: this.injection,
           type: this.type
         };
+        let _this = this;
         $.ajax({
           type: 'POST',
           url: '/iomaker',
           data: JSON.stringify(dataToPost),
           dataType: 'json',
           contentType: 'application/json',
+          beforeSend: function(){
+            _this.waiting = true;
+          },
           success: function(data){
-            alert('ok');
-            console.log(data);
+            _this.waiting = false;
+            // 下载文件
+            if(data.ioFileUrl){
+              window.open(data.ioFileUrl);
+            }
           },
           error: function(xhr, type){
-            console.log('无法连接服务器');
+            _this.waiting = false;
+            alert('无法连接服务器');
           }
         });
+      },
+      slideNext(){
+        this.curStep = 2;
+        this.getInfo = true;
+      },
+      slidePrev(){
+        this.curStep = 1;
       }
     },
     watch: {
@@ -265,6 +328,38 @@
     opacity: 0;
     margin-right: -66.7%;
   }
+  #slidePrev, #slideNext{
+    $height: 25rem;
+    position: absolute;
+    top: 50%;
+    transform: translateY(- ($height / 2));
+    width: 3rem;
+    height: $height;
+    background-color: #ccc;
+    opacity: 0.2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all .2s;
+  }
+  #slidePrev{
+    left: -2.5rem;
+    border-radius: 0 20px 20px 0;
+    &:hover{
+      opacity: .5;
+      left: 0;
+      cursor: pointer;
+    }
+  }
+  #slideNext{
+    right: -2.5rem;
+    border-radius: 20px 0 0 20px;
+    &:hover{
+      opacity: .5;
+      right: 0;
+      cursor: pointer;
+    }
+  }
   footer{
     background-color: #eee;
     display: flex;
@@ -280,6 +375,7 @@
       }
       text-decoration: none;
       color: #ccc;
+      outline: none;
     }
     .enable{
       transition: all .5s;

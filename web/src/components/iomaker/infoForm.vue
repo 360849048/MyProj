@@ -30,10 +30,10 @@
         <textarea id="techInfo" class="form-control" aria-label="With textarea" v-model="technicalClause"></textarea>
       </div>
     </form>
-    <div id="BtnBox">
-      <button class="btn btn-danger ml-1 mr-1" @click="resetInfo">清空</button>
-      <button class="btn btn-primary ml-1 mr-1" @click="saveInfo">提交</button>
-    </div>
+    <!--<div id="BtnBox">-->
+      <!--<button class="btn btn-danger ml-1 mr-1" @click="resetInfo">清空</button>-->
+      <!--<button class="btn btn-primary ml-1 mr-1" @click="saveInfo">提交</button>-->
+    <!--</div>-->
     <hr>
     <div class="input-group">
       <div class="input-group-prepend">
@@ -48,6 +48,7 @@
 <script>
   export default {
     name: "info-form",
+    props: ['getInfo'],
     data(){
       return{
         evaluationNum: '',
@@ -99,7 +100,7 @@
       },
       parseParams(){
         /**
-         * 从设计说明的文字中提取出合同订单信息
+         * 从设计说明的文字this.designNote中提取出合同订单信息
          */
         if(this.designNote === ''){
           return;
@@ -134,6 +135,21 @@
         }
       }
     },
+    watch: {
+      getInfo(){
+        if(this.getInfo === true){
+          this.$emit('imminfochange', {
+            evaluationNum: this.evaluationNum,
+            productionNum: this.productionNum,
+            immType: this.immType,
+            customer: this.customer,
+            safetyStandard: this.safetyStandard,
+            technicalClause: this.technicalClause,
+            designNote: this.designNote,
+          });
+        }
+      }
+    }
   }
 </script>
 

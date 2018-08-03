@@ -102,29 +102,43 @@ def createIoFile():
     board_1_modules = []
     board_1 = data['boardModules1']
     board_1_ios = data['boardModulesIOs1']
-    for module in board_1:
-        if module != '':
-            idx = board_1.index(module)
-            board_1_modules.append([module, board_1_ios[idx]])
+    for idx in range(len(board_1)):
+        if board_1[idx] != '':
+            board_1_modules.append([board_1[idx], board_1_ios[idx]])
 
     board_2_modules = []
     board_2 = data['boardModules2']
     board_2_ios = data['boardModulesIOs2']
-    for module in board_2:
-        if module != '':
-            idx = board_2.index(module)
-            board_2_modules.append([module, board_2_ios[idx]])
-    print(board_1_modules)
-    print(board_2_modules)
+    for idx in range(len(board_2)):
+        if board_2[idx] != '':
+            board_2_modules.append([board_2[idx], board_2_ios[idx]])
+
+    evaluation_num = data['evaluationNum']
+    customer = data['customer']
+    clamp_force = data['clampForce']
+    injection = data['injection']
+    imm_type = ''
+
+    if data['type'].upper() == 'ZES':
+        imm_type = 'ZE' + clamp_force + 's-' + injection
+    elif data['type'].upper() == 'ZE':
+        imm_type = 'ZE' + clamp_force + '-' + injection
+    elif data['type'].upper() == 'VE2S':
+        imm_type = 'VE' + clamp_force + 'IIs-' + injection
+    elif data['type'].upper() == 'VE2':
+        imm_type = 'VE' + clamp_force + 'II-' + injection
+
+    io_file_path = './static/cache/' + evaluation_num + customer + imm_type + '.xlsx'
+
     print('wait....')
     iomaker = IOMaker(imm_type=data['type'],
                       board_1_modules=board_1_modules,
                       board_2_modules=board_2_modules)
-    iomaker.createIOFile()
+    iomaker.createIOFile(io_file_path)
 
-    return jsonify({'status': 'ok'})
+    return jsonify({'status': 'ok', 'ioFileUrl': io_file_path})
 
 
 ios_amount = _getIoAmount()
-# app.run(host='172.18.71.158', port=8080)
-app.run(debug=True)
+app.run(host='172.18.71.158', port=8080)
+# app.run(debug=True)
