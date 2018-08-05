@@ -95,6 +95,10 @@ def getBigIo():
 
 @app.route('/iomaker', methods=['POST'])
 def createIoFile():
+    '''
+        根据网页POST数据格式，进行数据处理。
+        必须严格参照网页传输的数据进行编程
+    '''
     # data是一个dict对象
     data = request.get_json()
 
@@ -122,7 +126,13 @@ def createIoFile():
     dual_inj = data['isDualInj']
     clamp_force = data['clampForce']
     injection = data['injection']
+    # 这个是改造后规范显示的immType字符串，json中的immType值不适合取文件名
     imm_type = ''
+    # 默认的主底板IO是否修改
+    func1_to_inj_signal = data['funcConfig']['1']['status']
+    func2_to_charge_signal = data['funcConfig']['2']['status']
+    nozzle_to_valve = data['funcConfig']['3']['status']
+    e73_safety = data['funcConfig']['4']['status']
 
     if data['type'].upper() == 'ZES':
         imm_type = 'ZE' + clamp_force + 's-' + injection
@@ -146,6 +156,14 @@ def createIoFile():
                       safety_standard=safety_standard,
                       technical_clause=technical_clause,
                       dual_inj=dual_inj)
+    if func1_to_inj_signal:
+        iomaker.func1ToInjSignal()
+    if func2_to_charge_signal:
+        iomaker.func2ToChargeSignal()
+    if nozzle_to_valve:
+        iomaker.nozzleToValve()
+    if e73_safety:
+        iomaker.e73Safety()
     iomaker.createIOFile(io_file_path)
 
     return jsonify({'status': 'ok', 'ioFileUrl': io_file_path})

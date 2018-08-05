@@ -27,7 +27,8 @@
                   <div class="alert" role="alert"
                        :class="[checkUsed(index) ? 'alert-secondary' : 'alert-primary']"
                        :data-index="index" :data-name="input"
-                       draggable="true" @dragstart="dragIO">
+                       draggable="true" @dragstart="dragIO"
+                       @dblclick="dblClickIO">
                     {{index}}&nbsp;&nbsp;&nbsp;{{input}}
                   </div>
                 </li>
@@ -39,7 +40,8 @@
                   <div class="alert alert-primary" role="alert"
                        :class="[checkUsed(index) ? 'alert-secondary' : 'alert-primary']"
                        :data-index="index" :data-name="input"
-                       draggable="true" @dragstart="dragIO">
+                       draggable="true" @dragstart="dragIO"
+                       @dblclick="dblClickIO">
                     {{index}}&nbsp;&nbsp;&nbsp;{{input}}
                   </div>
                 </li>
@@ -77,11 +79,11 @@
       }
     },
     computed: {
-      /**
-       * 根据服务器返回的正确ioNum计算得到实际应显示的页码
-       * @return {Array}   例如[1,2,3,4]
-       */
       pages: function(){
+        /**
+         * 根据服务器返回的正确ioNum计算得到实际应显示的页码
+         * @return {Array}   例如[1,2,3,4]
+         */
         let pageAmount = Math.ceil( this.ioNum / pageItemAmount );
         let pgs = [];
         for(let i=1; i<= pageAmount; i++){
@@ -89,28 +91,28 @@
         }
         return pgs
       },
-      /**
-       * 根据curPage值计算当前页面的起始IO序号
-       * @return {number}
-       */
       curPageStartItem: function(){
+        /**
+         * 根据curPage值计算当前页面的起始IO序号
+         * @return {number}
+         */
         return 1 + (this.curPage - 1) * pageItemAmount
       },
-      /**
-       * 根据curPage和ioNum值计算当前页面的最后一个IO序号
-       * @return {number}
-       */
       curPageEndItem: function(){
+        /**
+         * 根据curPage和ioNum值计算当前页面的最后一个IO序号
+         * @return {number}
+         */
         return this.curPage * pageItemAmount < this.ioNum ? this.curPage * pageItemAmount : this.ioNum;
       }
     },
     methods: {
-      /**
-       * 点击某个页码后跳转到相应的IO显示
-       * @param curPage
-       * @return {number}
-       */
       gotoPage(curPage){
+        /**
+         * 点击某个页码后跳转到相应的IO显示
+         * @param curPage
+         * @return {number}
+         */
         if (this.pages.indexOf(curPage) === -1){
           return -1;
         }
@@ -149,19 +151,19 @@
         });
         return 0;
       },
-      /**
-       * 响应HTML5的dragstart事件，这个事件发送的数据可以在其他任意组件通过ondrop等事件接收
-       * @param e
-       */
       dragIO(e){
+        /**
+         * 响应HTML5的dragstart事件，这个事件发送的数据可以在其他任意组件通过ondrop等事件接收
+         * @param e
+         */
         // 通过拖拽的方式向ModuleConfig.vue传递io信息，格式例如："di--1--阀门1开"
         e.dataTransfer.setData('ioInfo', this.ioType + '--' + e.target.getAttribute('data-index') + '--' + e.target.getAttribute('data-name'));
       },
-      /**
-       * 检查某个IO是否已经被选中到Module中
-       * @param ioIdx 某个IO的序号，这里结合变量ioType，可以定位到具体某个IO点
-       */
       checkUsed(ioIdx){
+        /**
+         * 检查某个IO是否已经被选中到Module中
+         * @param ioIdx 某个IO的序号，这里结合变量ioType，可以定位到具体某个IO点
+         */
         for(let i=0; i<=this.boardModulesIOs1.length; i++) {
           for (let key in this.boardModulesIOs1[i]) {
             if (key.slice(0, 2).toUpperCase() === this.ioType.toUpperCase()) {
@@ -190,13 +192,20 @@
           }
         }
         return false;
+      },
+      dblClickIO(e){
+        /**
+         * 触发newioappend事件，向父组件发送当前发生鼠标双击的IO
+         */
+        // 格式例如："di--1--阀门1开" （与上面的drag事件传递数据格式一致）
+        this.$emit('newioappend',  this.ioType + '--' + e.target.getAttribute('data-index') + '--' + e.target.getAttribute('data-name'));
       }
     },
     watch: {
-      /**
-       * 当左侧IO类型导航栏发生点击导致IO类型切换时，执行这个函数
-       */
       ioType: {
+        /**
+         * 当左侧IO类型导航栏发生点击导致IO类型切换时，执行这个函数
+         */
         handler: function(cval, oval){
           // 切换不同io页面需要重置this.ioNum，确保获取到足够多的数据
           // 但是不要轻易修改this.ioNum，否则会导致页面闪烁

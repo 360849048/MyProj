@@ -71,9 +71,10 @@ class IOMaker:
     def __init__(self, imm_type, board_1_modules=None, board_2_modules=None, big=False,
                  evaluation_num=None, production_num=None, type_string=None, customer=None,
                  safety_standard=None, technical_clause=None, dual_inj=False):
-        ''' imm_type:           'ZEs', 'ZE', 'VE2', 'VE2s'
-                    board_1_modules: [['CTO163', {'DO3': OutputID, ...}], ['CDM163', {'DI5': InputID, ...}], ...]
-                    board_2_modules:    [['CTO163', {'DO3': OutputID, ...}], ['CDM163', {'DI5': InputID, ...}], ...]
+        '''
+            imm_type:           'ZEs', 'ZE', 'VE2', 'VE2s'
+            board_1_modules: [['CTO163', {'DO3': OutputID, ...}], ['CDM163', {'DI5': InputID, ...}], ...]
+            board_2_modules:    [['CTO163', {'DO3': OutputID, ...}], ['CDM163', {'DI5': InputID, ...}], ...]
         '''
         # TODO: 数据库位置需要小心
         self.path_db = './libfiles/data.db'
@@ -101,56 +102,102 @@ class IOMaker:
             self.board_1_modules = board_1_modules.copy()
             for module in self.board_1_modules:
                 for io in module[1]:
-                    id = int(module[1][io])
+                    io_id = int(module[1][io])
                     if str(io).upper().startswith('DI'):
-                        module[1][io] = self.t_di.displayBriefData(id, 'CName', 'EName')
+                        module[1][io] = self.t_di.displayBriefData(io_id, 'CName', 'EName')
                     if str(io).upper().startswith('DO'):
-                        module[1][io] = self.t_do.displayBriefData(id, 'CName', 'EName')
+                        module[1][io] = self.t_do.displayBriefData(io_id, 'CName', 'EName')
                     if str(io).upper().startswith('AI'):
-                        module[1][io] = self.t_ai.displayBriefData(id, 'CName', 'EName')
+                        module[1][io] = self.t_ai.displayBriefData(io_id, 'CName', 'EName')
                     if str(io).upper().startswith('AO'):
-                        module[1][io] = self.t_ao.displayBriefData(id, 'CName', 'EName')
+                        module[1][io] = self.t_ao.displayBriefData(io_id, 'CName', 'EName')
                     if str(io).upper().startswith('TI'):
-                        module[1][io] = self.t_ti.displayBriefData(id, 'CName', 'EName')
+                        module[1][io] = self.t_ti.displayBriefData(io_id, 'CName', 'EName')
                     if str(io).upper().startswith('TO'):
-                        module[1][io] = self.t_to.displayBriefData(id, 'CName', 'EName')
-
+                        module[1][io] = self.t_to.displayBriefData(io_id, 'CName', 'EName')
         if board_2_modules is not None:
             self.board_2_modules = board_2_modules.copy()
             for module in self.board_2_modules:
                 for io in module[1]:
-                    id = int(module[1][io])
+                    io_id = int(module[1][io])
                     if str(io).upper().startswith('DI'):
-                        module[1][io] = self.t_di.displayBriefData(id, 'CName', 'EName')
+                        module[1][io] = self.t_di.displayBriefData(io_id, 'CName', 'EName')
                     if str(io).upper().startswith('DO'):
-                        module[1][io] = self.t_do.displayBriefData(id, 'CName', 'EName')
+                        module[1][io] = self.t_do.displayBriefData(io_id, 'CName', 'EName')
                     if str(io).upper().startswith('AI'):
-                        module[1][io] = self.t_ai.displayBriefData(id, 'CName', 'EName')
+                        module[1][io] = self.t_ai.displayBriefData(io_id, 'CName', 'EName')
                     if str(io).upper().startswith('AO'):
-                        module[1][io] = self.t_ao.displayBriefData(id, 'CName', 'EName')
+                        module[1][io] = self.t_ao.displayBriefData(io_id, 'CName', 'EName')
                     if str(io).upper().startswith('TI'):
-                        module[1][io] = self.t_ti.displayBriefData(id, 'CName', 'EName')
+                        module[1][io] = self.t_ti.displayBriefData(io_id, 'CName', 'EName')
                     if str(io).upper().startswith('TO'):
-                        module[1][io] = self.t_to.displayBriefData(id, 'CName', 'EName')
+                        module[1][io] = self.t_to.displayBriefData(io_id, 'CName', 'EName')
+
+
+        self.xlsxObj = IOFile(imm_type=self.imm_type,
+                              main_board_modules=self.board_1_modules,
+                              board_1_modules=self.board_2_modules,
+                              big=self.big,
+                              evaluation_num=self.evaluation_num,
+                              production_num=self.production_num,
+                              type_string=self.type_string,
+                              customer=self.customer,
+                              safety_standard=self.safety_standard,
+                              technical_clause=self.technical_clause,
+                              dual_inj=self.dual_inj)
+
+    # 修改主底板默认点位，每个点位的修改都用一个方法特殊处理
+    def func1ToInjSignal(self):
+        io_type = 'DO'
+        origin_io_name = '功能点1'
+        new_io_cname, new_io_ename = ('注射开始', 'Inject Start')
+        self.xlsxObj.modifyDefaultIO(io_type=io_type, origin_io_name=origin_io_name,
+                                     new_io_cname=new_io_cname, new_io_ename=new_io_ename)
+
+    def func2ToChargeSignal(self):
+        io_type = 'DO'
+        origin_io_name = '功能点2'
+        new_io_cname, new_io_ename = ('储料开始', 'Charge Start')
+        self.xlsxObj.modifyDefaultIO(io_type=io_type, origin_io_name=origin_io_name,
+                                     new_io_cname=new_io_cname, new_io_ename=new_io_ename)
+
+    def nozzleToValve(self):
+        io_type = 'DO'
+
+        io_id1 = 41
+        origin_io_name1 = '喷嘴开'
+        new_io_cname1, new_io_ename1 = self.t_do.displayBriefData(io_id1, 'CName', 'EName')
+        self.xlsxObj.modifyDefaultIO(io_type=io_type, origin_io_name=origin_io_name1,
+                                     new_io_cname=new_io_cname1, new_io_ename=new_io_ename1)
+        io_id2 = 42
+        origin_io_name2 = '喷嘴关'
+        new_io_cname2, new_io_ename2 = self.t_do.displayBriefData(io_id2, 'CName', 'EName')
+        self.xlsxObj.modifyDefaultIO(io_type=io_type, origin_io_name=origin_io_name2,
+                                     new_io_cname=new_io_cname2, new_io_ename=new_io_ename2)
+
+
+    def e73Safety(self):
+        io_type = 'DI'
+
+        io_id1 = 110
+        origin_io_name1 = '模内压'
+        new_io_cname1, new_io_ename1 = self.t_di.displayBriefData(io_id1, 'CName', 'EName')
+        self.xlsxObj.modifyDefaultIO(io_type=io_type, origin_io_name=origin_io_name1,
+                                     new_io_cname=new_io_cname1, new_io_ename=new_io_ename1)
+        io_id2 = 111
+        origin_io_name2 = '开门止'
+        new_io_cname2, new_io_ename2 = self.t_di.displayBriefData(io_id2, 'CName', 'EName')
+        self.xlsxObj.modifyDefaultIO(io_type=io_type, origin_io_name=origin_io_name2,
+                                     new_io_cname=new_io_cname2, new_io_ename=new_io_ename2)
 
     def createIOFile(self, path):
-        file = IOFile(imm_type=self.imm_type,
-                      main_board_modules=self.board_1_modules,
-                      board_1_modules=self.board_2_modules,
-                      big=self.big,
-                      evaluation_num=self.evaluation_num,
-                      production_num=self.production_num,
-                      type_string=self.type_string,
-                      customer=self.customer,
-                      safety_standard=self.safety_standard,
-                      technical_clause=self.technical_clause,
-                      dual_inj=self.dual_inj)
-        file.modifyImmInfo()
-        file.copyMainBoardModulesInfo()
-        file.copyMainBoardModules()
-        file.copyBoard1ModulesInfo()
-        file.copyBoard1Modules()
-        file.saveAs(path)
+        self.xlsxObj.modifyImmInfo()
+
+        self.xlsxObj.copyMainBoardModulesInfo()
+        self.xlsxObj.copyMainBoardModules()
+        self.xlsxObj.copyBoard1ModulesInfo()
+        self.xlsxObj.copyBoard1Modules()
+        self.xlsxObj.saveAs(path)
 
 
 if __name__ == '__main__':
@@ -170,6 +217,11 @@ if __name__ == '__main__':
                           ['civ512', {}],
                           ['cai888', {}],
                       ],
-                      big=False)
+                      big=False
+                      )
+    iomaker.func1ToInjSignal()
+    iomaker.func2ToChargeSignal()
+    iomaker.nozzleToValve()
+    iomaker.e73Safety()
     iomaker.createIOFile('./1.xlsx')
 

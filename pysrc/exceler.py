@@ -92,8 +92,13 @@ def _compareAreas(area1_start_col, area1_start_row, area1_end_col, area1_end_row
     return -1
 
 
-def searchCells(worksheet, keywords):
-    '''根据关键词（不区分大小写）返回唯一的Cell对象，注意：只能，必须匹配到唯一的单元格,否则返回None'''
+def searchCells(worksheet, keywords, strict=False):
+    '''
+    根据搜索词返回唯一的Cell对象
+    普通匹配时候，不区分大小写，单元格内容包含keywords即OK
+    严格模式下，单元格内容必须与keywords一模一样，大小写敏感，但前后单元格前后的空格不会影响结果
+    注意：只能，任何模式工作下必须只匹配到唯一的单元格,否则返回None
+    '''
     result = []
     if type(worksheet) != openpyxl.worksheet.worksheet.Worksheet:
         print("Fatal: searchCells--不是有效的worksheet对象")
@@ -105,10 +110,14 @@ def searchCells(worksheet, keywords):
         for column in range(1, max_column + 1):
             cell = worksheet.cell(row=row, column=column)
             if cell.value is not None:
-                if str_keywords.upper() in cell.value.upper():
-                    result.append(cell)
+                if not strict:
+                    if str_keywords.upper() in cell.value.upper():
+                        result.append(cell)
+                else:
+                    if str_keywords == cell.value.strip(' '):
+                        result.append(cell)
     if len(result) != 1:
-        print("Fatal: searchCells--匹配失败，搜索结果是 ", result)
+        print("Fatal: searchCells--匹配失败，因为匹配到多个单元格，搜索结果是 ", result)
         return None
     return result[0]
 
@@ -188,7 +197,7 @@ class IOFile:
 
     def _copyAndModifyCell(self, src_cell, dst_cell, ioconfiguration=None, style=True):
         '''复制并修改单元格内容，只能修改是 '/空' 或 '/Empty' 单元格
-            ioconfiguration: {'I2': xxx, 'O4': xxx, 'AI1': xxx, 'AO2': xxx, 'TI1': xxx, 'TO1': xxx}
+            ioconfiguration: {'DI2': (中文名, EnglishName), 'DO4': (中文名, EnglishName), ...}
         '''
         if type(src_cell) != openpyxl.cell.cell.Cell or type(dst_cell) != openpyxl.cell.cell.Cell:
             print("Fatal: copyCell--传入的不是单元格对象")
@@ -215,7 +224,7 @@ class IOFile:
 
     def _copyAndModifyCellRange(self, src_cell_start, src_cell_end, dst_cell_start, ioconfiguration=None, style=True):
         '''复制并修改一片单元格选区到指定位置
-            ioconfiguration: {'DI2': xxx, 'DO4': xxx, 'AI1': xxx, 'AO2': xxx}
+            ioconfiguration: {'DI2': (中文名, EnglishName), 'DO4': (中文名, EnglishName), ...}
         '''
         src_ws = src_cell_start.parent
         dst_ws = dst_cell_start.parent
@@ -448,6 +457,44 @@ class IOFile:
                 keb2_cell = hardware_sort.cell(row=keb1_cell.row, column=keb1_cell.col_idx + 1)
                 copyCell(keb1_cell, keb2_cell)
                 keb2_cell.value = '注射KEB2'
+
+    def modifyDefaultIO(self, io_type, origin_io_name, new_io_cname, new_io_ename):
+        ''' 修改主底板或主底板扩展槽(VE2)上默认的IO
+            io_type: IO的类型，可以是DI, DO, AI, AO, TI, TO
+            origin_io_name: -默认IO的中文名，为提高定位精准度，IO的中文名必须与单元格内容全词匹配
+            new_io_cname: 替换后的IO中文名
+            new_io_ename: 替换后的IO英文名
+        '''
+        if self.imm_type.upper() == 'VE2':
+            default_io_ws = self.std_workbook['主底板扩展槽IO']
+        else:
+            default_io_ws = self.std_workbook['主底板IO']
+        # 定位到需要替换的IO点(中文)
+        target_cio_cell = searchCells(default_io_ws, origin_io_name, strict=True)
+        if target_cio_cell is None:
+            print("Fatal: modifyDefaultIO修改主底板默认IO时，无法定位到具体的IO点")
+            return -1
+        # 验证io类型是否一致
+        act_io_type = default_io_ws.cell(row=target_cio_cell.row, column=target_cio_cell.col_idx - 1).value
+        act_1st_letter = act_io_type.upper()[0]
+        if act_1st_letter != io_type.upper()[0]:
+            if act_1st_letter == 'I' and io_type.upper() == 'DI':
+                pass
+            elif act_1st_letter == 'O' and io_type.upper() == 'DO':
+                pass
+            else:
+                print("Fatal: modifyDefaultIO搜索到的IO类型与要求不符，无法定位到具体的IO点")
+                return -2
+        target_cio_cell.value = new_io_cname
+        # 修改IO点的英文名
+        default_io_ws.cell(row=target_cio_cell.row, column=target_cio_cell.col_idx + 1, value=new_io_ename)
+        # 从别的地方复制样式(红色背景)后修改 '更改' 列的内容('√')
+        modify_check_cell = default_io_ws.cell(row=target_cio_cell.row, column=target_cio_cell.col_idx + 2)
+        src_style_cell = searchCells(default_io_ws, '更改', strict=True)
+        copyCell(src_cell=src_style_cell, dst_cell=modify_check_cell, style=True)
+        modify_check_cell.value = '√'
+        return 0
+
 
     def saveAs(self, filename):
         self.std_workbook.save(filename)

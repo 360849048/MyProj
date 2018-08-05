@@ -40,6 +40,7 @@
     methods: {
       getFuncStatus(e){
         this.funcs[e.id].status = e.status;
+        this.$emit('functionsupdate', this.funcs);
       }
     }
   }

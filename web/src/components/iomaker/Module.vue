@@ -12,6 +12,7 @@
     <module-config
       :module-name="curActiveModule"
       :ios="curActiveModuleIOs"
+      :new-io-to-append="newIoToAppend"
       @moduleiosupdate = "getModuleIoInfo">
     </module-config>
     <!-- 为了激活computed属性，从而触发modulesupdate事件 -->
@@ -44,7 +45,7 @@
 
   export default {
     name: "module",
-    props: ['bigImm', 'type'],
+    props: ['bigImm', 'type', 'newIoToAppend'],
     components: {
       ModuleSelector,
       ModuleConfig

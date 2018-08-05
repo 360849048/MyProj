@@ -64,7 +64,6 @@
     <div class="h1" v-if="moduleName.toUpperCase() === 'CIV512' || moduleName.toUpperCase() === 'CIV521'">
       您已激活扩展该底板，连接模块是：{{moduleName}}
     </div>
-    <!-- TODO:未选择模块时候显示的内容 -->
   </div>
 </template>
 
@@ -77,6 +76,7 @@
    *  先根据moduleName，初始化模块IO点。然后读取ios的信息，写入到mDI,mDO,mAI,mAO。
    * 3.响应HTML5的drop事件：
    *  解析drag--drop传递过来的信息，更新mDI,mDO,mAI,mAO。然后触发moduleiosupdate事件，向父组件发送当前模块的IO信息。
+   *  TODO: 通过dragover反馈，改善使用体验
    * 4.响应IO点上的dblclick事件：
    *  根据当前模块点的Index，对mDI或mDO或mAI或mAO的相应点进行写入空值''。然后触发moduleiosupdate事件，向父组件发送当前模块的IO信息。
    * 5.moduleiosupdate事件传递一个json格式如下:
@@ -96,7 +96,9 @@
         'moduleName',
         // 接收从父组件传递过来的json对象，用来配置点位
         // 例如: {'do1': 43--阀门1开, 'di2': 73--可编程IO输出1}
-        'ios'
+        'ios',
+        // 从IoList鼠标双击触发传递过来的IO信息
+        'newIoToAppend'
       ],
       data(){
         return{
@@ -345,6 +347,91 @@
           },
           deep: true,
           immediate: true
+        },
+        newIoToAppend(cval, oval){
+          if(cval === ''){
+            return;
+          }
+          if(oval !== ''){
+            console.log('警告： newIoToAppend可能有错误！检测到IoMaker未将其清空');
+          }
+          let temp = cval.split('--');
+          if(temp.length !== 3){
+            console.log("newIoToAppend数据格式不对，参考格式为 di-1-阀门1开，这里收到了:", cval);
+            return;
+          }
+          let io_type = temp[0];
+          let io_seq = temp[1];
+          let io_name = temp[2];
+
+          if(io_type.toUpperCase() === 'DI'){
+            for(let ioIdx in this.mDI){
+              if(this.mDI[ioIdx] === undefined){
+                break;
+              }
+              if(this.mDI[ioIdx] === ''){
+                this.mDI[ioIdx] = io_seq + '--' + io_name;
+                break;
+              }
+            }
+          }
+          if(io_type.toUpperCase() === 'DO'){
+            for(let ioIdx in this.mDO){
+              if(this.mDO[ioIdx] === undefined){
+                break;
+              }
+              if(this.mDO[ioIdx] === ''){
+                this.mDO[ioIdx] = io_seq + '--' + io_name;
+                break;
+              }
+            }
+          }
+          if(io_type.toUpperCase() === 'AI'){
+            for(let ioIdx in this.mAI){
+              if(this.mAI[ioIdx] === undefined){
+                break;
+              }
+              if(this.mAI[ioIdx] === ''){
+                this.mAI[ioIdx] = io_seq + '--' + io_name;
+                break;
+              }
+            }
+          }
+          if(io_type.toUpperCase() === 'AO'){
+            for(let ioIdx in this.mAO){
+              if(this.mAO[ioIdx] === undefined){
+                break;
+              }
+              if(this.mAO[ioIdx] === ''){
+                this.mAO[ioIdx] = io_seq + '--' + io_name;
+                break;
+              }
+            }
+          }
+          if(io_type.toUpperCase() === 'TI'){
+            for(let ioIdx in this.mTI){
+              if(this.mTI[ioIdx] === undefined){
+                break;
+              }
+              if(this.mTI[ioIdx] === ''){
+                this.mTI[ioIdx] = io_seq + '--' + io_name;
+                break;
+              }
+            }
+          }
+          if(io_type.toUpperCase() === 'TO'){
+            for(let ioIdx in this.mTO){
+              if(this.mTO[ioIdx] === undefined){
+                break;
+              }
+              if(this.mTO[ioIdx] === ''){
+                this.mTO[ioIdx] = io_seq + '--' + io_name;
+                break;
+              }
+            }
+          }
+
+          this.$emit('moduleiosupdate', this._getCurIoConfig());
         }
       }
     }

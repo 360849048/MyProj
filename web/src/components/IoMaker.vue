@@ -14,7 +14,8 @@
           <!-- 功能配置 -->
           <transition name="vanish-left">
             <div class="col-sm-8" v-show="curStep === 1">
-              <func-config>
+              <func-config
+              @functionsupdate="getFuncConfig">
               </func-config>
             </div>
           </transition>
@@ -27,7 +28,8 @@
                 :boardModules="boardModules3"
                 :boardModulesIOs1="boardModulesIOs1"
                 :boardModulesIOs2="boardModulesIOs2"
-                :boardModulesIOs3="boardModulesIOs3">
+                :boardModulesIOs3="boardModulesIOs3"
+                @newioappend="getNewIoAppend">
               </io-list>
             </div>
           </transition>
@@ -37,6 +39,7 @@
               <module
                 :big-imm="isBigImm"
                 :type="type"
+                :new-io-to-append="newIoToAppend"
                 @modulesupdate="getModuleInfo">
               </module>
             </div>
@@ -97,6 +100,8 @@
    *  TODO:功能配置文件信息录入
    * 3.从Module获取模块和模块上的IO配置信息，并将配置信息传递到IoList组件
    * 4.页脚处放置的一些按钮，用来移动展示页面以及向后台POST机器信息
+   * 5.IoList接受HTML5的drag事件，ModuleConfig接受HTML5的drop事件，通过鼠标拖拽的方法可实现模块点位的配置
+   * 6.TODO: 在IoList的IO列表上某项双击，自动将该IO填充到模块的最靠前空余的IO点上
    */
 
   import IoList from './iomaker/IoList'
@@ -129,6 +134,13 @@
         safetyStandard: '',
         technicalClause: '',
         designNote: '',
+        // 机器功能配置信息，包括主底板默认IO修改信息
+        funcConfig: {
+          1: {name: '功能点1注射信号', status: false},
+          2: {name: '功能点2储料信号', status: false},
+          3: {name: 'E73', status: false},
+          4: {name: '喷嘴改阀门1', status: false}
+        },
         // 解析immType后得到的数据
         isBigImm: false,
         isDualInj: false,
@@ -141,6 +153,9 @@
         // 从InfoForm获取immInfo的标志位，通过prop传递到InfoForm组件，
         // InfoForm检测到该值为true时，触发imminfochange事件
         getInfo: false,
+        // 从IoList组件鼠标双击获取过来的IO，将由Module组件获取该IO信息并添加到当前模块的按顺序排列的可用空余点位
+        // 正常情况下，该值应该为 ''
+        newIoToAppend: '',
         // POST后等待后台返回数据
         waiting: false
       }
@@ -176,6 +191,15 @@
         this.boardModulesIOs1 = e.boardModulesIOs1;
         this.boardModulesIOs2 = e.boardModulesIOs2;
         this.boardModulesIOs3 = e.boardModulesIOs3;
+
+        // 及时清空新加IO信息，防止重复添加该IO
+        this.newIoToAppend = '';
+      },
+      getFuncConfig(e){
+        this.funcConfig = e;
+      },
+      getNewIoAppend(e){
+        this.newIoToAppend = e;
       },
       submitInfo(){
         let dataToPost = {
@@ -192,6 +216,7 @@
           safetyStandard: this.safetyStandard,
           technicalClause: this.technicalClause,
           designNote: this.designNote,
+          funcConfig: this.funcConfig,
           isBigImm: this.isBigImm,
           isDualInj: this.isDualInj,
           clampForce: this.clampForce,
