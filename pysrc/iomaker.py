@@ -70,7 +70,8 @@ DI_CORE_2_IN = 114
 class IOMaker:
     def __init__(self, imm_type, board_1_modules=None, board_2_modules=None, big=False,
                  evaluation_num=None, production_num=None, type_string=None, customer=None,
-                 safety_standard=None, technical_clause=None, dual_inj=False):
+                 safety_standard=None, technical_clause=None, dual_inj=False, external_hotrunner_num=0,
+                 energy_dee=False):
         '''
             imm_type:           'ZEs', 'ZE', 'VE2', 'VE2s'
             board_1_modules: [['CTO163', {'DO3': OutputID, ...}], ['CDM163', {'DI5': InputID, ...}], ...]
@@ -95,7 +96,10 @@ class IOMaker:
         self.customer = customer
         self.safety_standard = safety_standard
         self.technical_clause = technical_clause
+
         self.dual_inj = dual_inj
+        self.external_hotrunner_num = external_hotrunner_num
+        self.energy_dee = energy_dee
 
         # 根据IO的id，在数据库中查找出对应IO的中英文名称
         if board_1_modules is not None:
@@ -144,7 +148,9 @@ class IOMaker:
                               customer=self.customer,
                               safety_standard=self.safety_standard,
                               technical_clause=self.technical_clause,
-                              dual_inj=self.dual_inj)
+                              dual_inj=self.dual_inj,
+                              external_hotrunner_num=self.external_hotrunner_num,
+                              energy_dee=self.energy_dee)
 
     # 修改主底板默认点位，每个点位的修改都用一个方法特殊处理
     def func1ToInjSignal(self):
@@ -197,6 +203,9 @@ class IOMaker:
         self.xlsxObj.copyMainBoardModules()
         self.xlsxObj.copyBoard1ModulesInfo()
         self.xlsxObj.copyBoard1Modules()
+        self.xlsxObj.copyExternalHotrunnerInfo()
+        self.xlsxObj.copyExternalHotrunnerModule()
+        self.xlsxObj.copyEnergyModuleInfo()
         self.xlsxObj.saveAs(path)
 
 

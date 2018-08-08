@@ -16,7 +16,7 @@
           <!-- 上方页码标签 -->
           <ul class="nav nav-tabs">
             <li class="nav-item" v-for="eachPage in pages" @click="gotoPage(eachPage)">
-              <a class="nav-link" :class="{'active': curPage === eachPage}" href="#">{{eachPage}}</a>
+              <a class="nav-link" :class="{'active': curPage === eachPage}" href="##">{{eachPage}}</a>
             </li>
           </ul>
           <!-- IO显示区 -->

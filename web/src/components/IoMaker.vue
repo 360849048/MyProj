@@ -15,7 +15,8 @@
           <transition name="vanish-left">
             <div class="col-sm-8" v-show="curStep === 1">
               <func-config
-              @functionsupdate="getFuncConfig">
+              @functionsupdate="getFuncConfig"
+              @exthotrunnerchange="getExtHotrunnerNum">
               </func-config>
             </div>
           </transition>
@@ -74,13 +75,13 @@
               安全：{{safetyStandard}}
               <hr>
               主底板模块: {{boardModules1}}<br>
-              IO: {{boardModulesIOs1}}
               <hr>
               扩展底板一：{{boardModules2}}<br>
-              IO: {{boardModulesIOs2}}
               <hr>
               扩展底板二：{{boardModules3}}<br>
-              IO: {{boardModulesIOs3}}
+              <hr>
+              外置热流道：{{funcConfig[5].status}}
+              <div v-show="funcConfig[5].status">{{extHotrunnerNum}}</div>
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
@@ -139,8 +140,11 @@
           1: {name: '功能点1注射信号', status: false},
           2: {name: '功能点2储料信号', status: false},
           3: {name: 'E73', status: false},
-          4: {name: '喷嘴改阀门1', status: false}
+          4: {name: '喷嘴改阀门1', status: false},
+          5: {name: 'DEE能耗模块', status: false},
+          6: {name: '外置热流道', status: false}
         },
+        extHotrunnerNum: 3,
         // 解析immType后得到的数据
         isBigImm: false,
         isDualInj: false,
@@ -198,6 +202,9 @@
       getFuncConfig(e){
         this.funcConfig = e;
       },
+      getExtHotrunnerNum(e){
+        this.extHotrunnerNum = e;
+      },
       getNewIoAppend(e){
         this.newIoToAppend = e;
       },
@@ -217,6 +224,7 @@
           technicalClause: this.technicalClause,
           designNote: this.designNote,
           funcConfig: this.funcConfig,
+          extHotrunnerNum: this.extHotrunnerNum,
           isBigImm: this.isBigImm,
           isDualInj: this.isDualInj,
           clampForce: this.clampForce,

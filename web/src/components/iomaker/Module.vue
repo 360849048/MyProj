@@ -39,6 +39,7 @@
    *        'boardModulesIOs2': [{}, {}, {}, {}]
    *        'boardModulesIOs3': [{}, {}, {}, {}]
    *      }
+   * 6.接收父组件传递过来的newIoToAppend，再将它传递给子组件ModuleConfig处理
    */
   import ModuleConfig from './module/ModuleConfig'
   import ModuleSelector from './module/ModuleSelector'

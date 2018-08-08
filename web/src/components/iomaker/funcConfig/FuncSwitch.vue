@@ -1,11 +1,19 @@
 <template>
   <div id="funcSwitch">
-    <button type="button" class="btn btn-lg"
-            :class="[status ? 'btn-outline-success' : 'btn-outline-danger']"
-            @click="toggleStatus">
-      <i class="fa" :class="[status ? 'fa-check' : 'fa-times']" aria-hidden="true"></i>&nbsp;&nbsp;{{status | toChinese}}
-    </button>
-    <span>{{name}}</span>
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-xl-3">
+            <button type="button" class="btn btn-lg"
+                    :class="[status ? 'btn-outline-success' : 'btn-outline-danger']"
+                    @click="toggleStatus">
+              <i class="fa" :class="[status ? 'fa-check' : 'fa-times']" aria-hidden="true"></i>&nbsp;&nbsp;{{status | toChinese}}
+            </button>
+        </div>
+        <div class="col-xl-9">
+          <span>{{name}}</span>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 

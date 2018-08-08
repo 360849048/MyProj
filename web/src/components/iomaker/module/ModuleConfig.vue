@@ -85,6 +85,7 @@
    *       di3: 73--可编程IO输入1,
    *       ...
    *    }
+   * 6.接收父组件newIoToAppend，watch该变量变动，并触发moduleioupdate事件
    *
    * 注意：只有在“具体”节点发生drop和dblclick事件，该模块才会触发父组件修改IO信息。
    */
@@ -129,10 +130,10 @@
         }
       },
       methods: {
-        /**
-         * 根据当前的模块名，初始化模块信息（清空IO配点信息）
-         */
         _initModuleIO(moduleName){
+          /**
+           * 根据当前的模块名，初始化模块信息（清空IO配点信息）
+           */
           this.mDI = {1: '', 2: '', 3: '', 4: '', 5: '', 6: '', 7: '', 8: '', 9: '', 10: '', 11: '', 12: '', 13: '', 14: '', 15: '', 16: ''};
           this.mDO = {1: '', 2: '', 3: '', 4: '', 5: '', 6: '', 7: '', 8: '', 9: '', 10: '', 11: '', 12: '', 13: '', 14: '', 15: '', 16: ''};
           this.mAI = {1: '', 2: '', 3: '', 4: '', 5: '', 6: '', 7: '', 8: ''};
@@ -184,12 +185,12 @@
             this.mTO[this.mToAmount + 1] = undefined;
           }
         },
-        /**
-         * 获取当前模块的IO配置信息。
-         * 返回数据的格式例如：
-         * {do1: 43--阀门1开, ...}
-         */
         _getCurIoConfig(){
+          /**
+           * 获取当前模块的IO配置信息。
+           * 返回数据的格式例如：
+           * {do1: 43--阀门1开, ...}
+           */
           let ioConfig = {};
           for(let key in this.mDI){
             if(this.mDI[key] === undefined){
@@ -241,10 +242,10 @@
           }
           return ioConfig;
         },
-        /**
-         * 解析drag--drop传递过来的信息，更新mDI,mDO,mAI,mAO。然后触发moduleiosupdate事件，向父组件发送当前模块的IO信息。
-         */
         dropIO(e){
+          /**
+           * 解析drag--drop传递过来的信息，更新mDI,mDO,mAI,mAO。然后触发moduleiosupdate事件，向父组件发送当前模块的IO信息。
+           */
           let ioInfo = e.dataTransfer.getData('ioInfo').split('--');
           if(ioInfo.length !== 3){
             console.log(ioInfo, '---数据格式出错');
@@ -278,10 +279,10 @@
 
           this.$emit('moduleiosupdate', this._getCurIoConfig());
         },
-        /**
-         * 根据当前模块点的Index，对mDI或mDO或mAI或mAO的相应点进行写入空值''。然后触发moduleiosupdate事件，向父组件发送当前模块的IO信息。
-         */
         dblclickIO(e){
+          /**
+           * 根据当前模块点的Index，对mDI或mDO或mAI或mAO的相应点进行写入空值''。然后触发moduleiosupdate事件，向父组件发送当前模块的IO信息。
+           */
           let dstNode = e.target.parentNode;
           let ioIdx = dstNode.getAttribute('data-index');
           let thisType = dstNode.getAttribute('data-type');
@@ -349,6 +350,9 @@
           immediate: true
         },
         newIoToAppend(cval, oval){
+          /**
+           * 当发现该值变为非空字符串时，为Module添加这个IO点。添加的位置为同一IO类型的最靠前空余点位。
+           */
           if(cval === ''){
             return;
           }
@@ -430,7 +434,6 @@
               }
             }
           }
-
           this.$emit('moduleiosupdate', this._getCurIoConfig());
         }
       }
@@ -452,7 +455,6 @@
       background: #818080;
     }
   }
-
   .io-module{
     list-style: none;
     padding-left: 10px;

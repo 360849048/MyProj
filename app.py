@@ -133,6 +133,15 @@ def createIoFile():
     func2_to_charge_signal = data['funcConfig']['2']['status']
     nozzle_to_valve = data['funcConfig']['3']['status']
     e73_safety = data['funcConfig']['4']['status']
+    # 能耗模块DEE是否启用
+    energy_dee = data['funcConfig']['5']
+    # 外置热流道是否激活，及组数
+    # 注意网页端提交的功能序号可能随功能增加而改变，注意 data['funcConfig']['?']['status]中的序号('?')需要随之更新
+    activate_external_hotrunner = data['funcConfig']['6']['status']
+    if activate_external_hotrunner:
+        external_hotrunner_num = int(data['extHotrunnerNum'])
+    else:
+        external_hotrunner_num = 0
 
     if data['type'].upper() == 'ZES':
         imm_type = 'ZE' + clamp_force + 's-' + injection
@@ -155,7 +164,9 @@ def createIoFile():
                       customer=customer,
                       safety_standard=safety_standard,
                       technical_clause=technical_clause,
-                      dual_inj=dual_inj)
+                      dual_inj=dual_inj,
+                      external_hotrunner_num=external_hotrunner_num,
+                      energy_dee=energy_dee)
     if func1_to_inj_signal:
         iomaker.func1ToInjSignal()
     if func2_to_charge_signal:
@@ -170,5 +181,5 @@ def createIoFile():
 
 
 ios_amount = _getIoAmount()
-# app.run(host='172.18.71.158', port=8080)
-app.run(debug=True)
+app.run(host='172.18.71.158', port=8080)
+# app.run(debug=True)

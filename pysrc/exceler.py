@@ -125,7 +125,8 @@ def searchCells(worksheet, keywords, strict=False):
 class IOFile:
     def __init__(self, imm_type, main_board_modules=None, board_1_modules=None, big=False,
                  evaluation_num=None, production_num=None, type_string=None, customer=None,
-                 safety_standard=None, technical_clause=None, dual_inj=False):
+                 safety_standard=None, technical_clause=None, dual_inj=False, external_hotrunner_num=0,
+                 energy_dee=False):
         ''' imm_type:           'ZEs', 'ZE', 'VE2', 'VE2s'
             main_board_modules: [['CTO163', {'O3': ['中文名', 'EnglishName'], ...}], ['CDM163', {'I5': ['中文名', 'EnglishName'], ...}], ...]
             board_1_modules:    [['CTO163', {'O3': ['中文名', 'EnglishName'], ...}], ['CDM163', {'I5': ['中文名', 'EnglishName'], ...}], ...]
@@ -150,6 +151,10 @@ class IOFile:
         self.technical_clause = technical_clause
         # “硬件排布”双注射信息
         self.dual_inj = dual_inj
+        # 外置热流道组数
+        self.external_hotrunner_num = external_hotrunner_num
+        # 能耗模块DEE
+        self.energy_dee = energy_dee
 
         if main_board_modules is not None:
             self.main_board_modules = []
@@ -432,7 +437,7 @@ class IOFile:
         return 0
 
     def modifyImmInfo(self):
-        ''' 填写机器信息以及修改注射keb2信息 '''
+        ''' 填写机器信息以及修改注射keb2信息和DEE信息 '''
         # 修改表'机器信息'内容
         imm_info_worksheet = self.std_workbook['机器信息']
         def _modify(title, value):
@@ -457,6 +462,19 @@ class IOFile:
                 keb2_cell = hardware_sort.cell(row=keb1_cell.row, column=keb1_cell.col_idx + 1)
                 copyCell(keb1_cell, keb2_cell)
                 keb2_cell.value = '注射KEB2'
+        # 修改 DEE021，插入到顶出KEB之前
+        if self.energy_dee:
+            hardware_sort = self.std_workbook['硬件排布']
+            if self.imm_type.upper() == 'VE2' or self.imm_type.upper() == 'VE2S':
+                ejekeb_cell = searchCells(hardware_sort, '顶出KEB')
+            else:
+                ejekeb_cell = searchCells(hardware_sort, '液压伺服KEB1')
+            if ejekeb_cell is not None:
+                cur_work_col = ejekeb_cell.col_idx
+                hardware_sort.insert_cols(cur_work_col)
+                dee_cell = hardware_sort.cell(row=ejekeb_cell.row, column=cur_work_col)
+                copyCell(ejekeb_cell, dee_cell)
+                dee_cell.value = 'DEE021'
 
     def modifyDefaultIO(self, io_type, origin_io_name, new_io_cname, new_io_ename):
         ''' 修改主底板或主底板扩展槽(VE2)上默认的IO
@@ -495,6 +513,123 @@ class IOFile:
         modify_check_cell.value = '√'
         return 0
 
+    def copyExternalHotrunnerInfo(self):
+        ''' 往 硬件配置 中复制外置热流道信息 '''
+        if self.external_hotrunner_num == 0:
+            return 0
+        module_content_worksheet = self.modulelib_workbook['硬件检索']
+        hardware_info_worksheet = self.std_workbook['硬件配置']
+        # 定位“热流道箱”单元格
+        result = searchCells(hardware_info_worksheet, '热流道箱')
+        if result is None:
+            print("Fatal: 在%s中匹配关键字: '热流道箱' 失败" % self.std_filename)
+            return -1
+        first_cell = hardware_info_worksheet.cell(row=result.row + 1, column=result.col_idx)
+        # 获取开始工作的单元格行位置
+        cur_work_column = first_cell.col_idx
+        if first_cell.value is None or first_cell.value == '特殊功能模块':
+            cur_work_row = first_cell.row
+        else:
+            cur_work_row = first_cell.row
+            cur_work_row += 1
+            first_cell = hardware_info_worksheet.cell(row=cur_work_row, column=cur_work_column)
+            while first_cell.value is not None and first_cell.value != '特殊功能模块':
+                cur_work_row += 1
+                first_cell = hardware_info_worksheet.cell(row=cur_work_row, column=cur_work_column)
+        # 向 '硬件配置' 表复制外置热流道箱所需要的模块
+        hardware_info_worksheet.insert_rows(cur_work_row)
+        # 复制CCP521模块信息
+        src_end_cell = searchCells(module_content_worksheet, 'CCP521')
+        if src_end_cell is None:
+            print("Fatal: 在 %s->%s 中匹配关键字'CCP521'失败 " % (self.modulelib_filename, module_content_worksheet.title))
+            return -2
+        src_start_cell = module_content_worksheet.cell(row=src_end_cell.row, column=1)
+        dst_start_cell = hardware_info_worksheet.cell(row=cur_work_row, column=cur_work_column)
+        if self._copyAndModifyCellRange(src_start_cell, src_end_cell, dst_start_cell, style=False) != 0:
+            print("Fatal: 单元格区域复制失败")
+            return -3
+        hardware_info_worksheet.cell(row=cur_work_row, column=cur_work_column + 3, value='+1')
+        cur_work_row += 1
+        # 复制CAI888模块信息
+        src_end_cell = searchCells(module_content_worksheet, 'CAI888')
+        if src_end_cell is None:
+            print("Fatal: 在 %s->%s 中匹配关键字'CAI888'失败 " % (self.modulelib_filename, module_content_worksheet.title))
+            return -2
+        src_start_cell = module_content_worksheet.cell(row=src_end_cell.row, column=1)
+        dst_start_cell = hardware_info_worksheet.cell(row=cur_work_row, column=cur_work_column)
+        if self._copyAndModifyCellRange(src_start_cell, src_end_cell, dst_start_cell, style=False) != 0:
+            print("Fatal: 单元格区域复制失败")
+            return -3
+        hardware_info_worksheet.cell(row=cur_work_row, column=cur_work_column + 3, value='+' + str(self.external_hotrunner_num))
+        return 0
+
+    def copyExternalHotrunnerModule(self):
+        ''' 往 热流道箱IO 复制CAI888模块 '''
+        if self.external_hotrunner_num == 0:
+            return 0
+        hotrunner_io_worksheet = self.std_workbook['热流道箱IO']
+        cur_work_row = hotrunner_io_worksheet.max_row + 1
+        cur_work_column = 1
+        # 获取CAI888模块所在的Worksheet对象
+        cai888_worksheets = None
+        for sheetname in self.modulelib_workbook.sheetnames:
+            temp_sheetname = ''.join([a for a in sheetname if a != ' '])
+            if 'CAI888' == temp_sheetname.upper():
+                if cai888_worksheets is None:
+                    cai888_worksheets = self.modulelib_workbook[sheetname]
+                else:
+                    print("Fatal: 在'%s'中找到了多个匹配CAI888的标签" % self.modulelib_workbook)
+                    return -1
+        if cai888_worksheets is None:
+            print("Fatal: 在'%s'中寻找CAI888模块对应标签失败" % self.modulelib_workbook)
+            return -1
+        # 向‘热流道箱IO’复制CAI888模块
+        src_start_cell = cai888_worksheets.cell(row=2, column=1)
+        src_end_cell = cai888_worksheets.cell(row=cai888_worksheets.max_row, column=4)
+        for i in range(self.external_hotrunner_num):
+            dst_start_cell = hotrunner_io_worksheet.cell(row=cur_work_row, column=cur_work_column)
+            if self._copyAndModifyCellRange(src_start_cell, src_end_cell, dst_start_cell) != 0:
+                print("Fatal: 单元格区域复制失败")
+                return -2
+            hotrunner_io_worksheet.cell(row=cur_work_row, column=cur_work_column).value += str(i)
+            cur_work_row += cai888_worksheets.max_row - 1
+        return 0
+
+    def copyEnergyModuleInfo(self):
+        ''' 往 硬件配置 中复制DEE模块信息(DEE模块的 硬件排布 修改在modifyImmInfo方法中) '''
+        if not self.energy_dee:
+            return 0
+        module_content_worksheet = self.modulelib_workbook['硬件检索']
+        hardware_info_worksheet = self.std_workbook['硬件配置']
+        # 定位“特殊功能模块”单元格
+        result = searchCells(hardware_info_worksheet, '特殊功能模块')
+        if result is None:
+            print("Fatal: 在%s中匹配关键字: '特殊功能模块' 失败" % self.std_filename)
+            return -1
+        first_cell = hardware_info_worksheet.cell(row=result.row + 1, column=result.col_idx)
+        # 获取开始工作的单元格行位置
+        cur_work_column = first_cell.col_idx
+        if first_cell.value is None:
+            cur_work_row = first_cell.row
+        else:
+            cur_work_row = first_cell.row
+            cur_work_row += 1
+            first_cell = hardware_info_worksheet.cell(row=cur_work_row, column=cur_work_column)
+            while first_cell.value is not None:
+                cur_work_row += 1
+                first_cell = hardware_info_worksheet.cell(row=cur_work_row, column=cur_work_column)
+        # 向 '硬件配置' 表复制DEE021模块信息
+        hardware_info_worksheet.insert_rows(cur_work_row)
+        src_end_cell = searchCells(module_content_worksheet, 'DEE021')
+        if src_end_cell is None:
+            print("Fatal: 在 %s->%s 中匹配关键字'DEE021'失败 " % (self.modulelib_filename, module_content_worksheet.title))
+            return -2
+        src_start_cell = module_content_worksheet.cell(row=src_end_cell.row, column=1)
+        dst_start_cell = hardware_info_worksheet.cell(row=cur_work_row, column=cur_work_column)
+        if self._copyAndModifyCellRange(src_start_cell, src_end_cell, dst_start_cell, style=False) != 0:
+            print("Fatal: 单元格区域复制失败")
+            return -3
+        hardware_info_worksheet.cell(row=cur_work_row, column=cur_work_column + 3, value='+1')
 
     def saveAs(self, filename):
         self.std_workbook.save(filename)
