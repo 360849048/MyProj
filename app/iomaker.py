@@ -1,5 +1,5 @@
-from pysrc.sqljob import TableManager
-from pysrc.exceler import IOFile
+from app.sqljob import TableManager
+from app.exceler import IOFile
 
 
 DO_VALVE_1_OPEN = 41
@@ -78,7 +78,7 @@ class IOMaker:
             board_2_modules:    [['CTO163', {'DO3': OutputID, ...}], ['CDM163', {'DI5': InputID, ...}], ...]
         '''
         # TODO: 数据库位置需要小心
-        self.path_db = './libfiles/data.db'
+        self.path_db = './app/libfiles/data.db'
         self.t_di = TableManager('digital_input', self.path_db)
         self.t_do = TableManager('digital_output', self.path_db)
         self.t_ai = TableManager('Analog_input', self.path_db)

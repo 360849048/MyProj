@@ -1,42 +1,12 @@
-from flask import Flask, request, send_file, jsonify
-from pysrc.sqljob import TableManager
-from pysrc.iomaker import IOMaker
+from flask import request, send_file, jsonify
+from app import app
+from app.sqljob import TableManager
+from app.iomaker import IOMaker
 
-
-# 避免频繁搜索数据库获取IO长度，这里一次性读取掉所有IO的数目
-# 通过函数中获取，可能可以尽早销毁这些被创建的TableManager
-def _getIoAmount():
-    t_ios = {
-        'di': TableManager('digital_input', './libfiles/data.db'),
-        'do': TableManager('digital_output', './libfiles/data.db'),
-        'ai': TableManager('analog_input', './libfiles/data.db'),
-        'ao': TableManager('analog_output', './libfiles/data.db'),
-        'ti': TableManager('temperature_input', './libfiles/data.db'),
-        'to': TableManager('temperature_output', './libfiles/data.db')
-    }
-    return {
-        'di': len(t_ios['di'].getAllId()),
-        'do': len(t_ios['do'].getAllId()),
-        'ai': len(t_ios['ai'].getAllId()),
-        'ao': len(t_ios['ao'].getAllId()),
-        'ti': len(t_ios['ti'].getAllId()),
-        'to': len(t_ios['to'].getAllId())
-    }
-
-
-app = Flask(__name__)
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
     return send_file("./static/index.html")
-
-@app.route('/foo', methods=['GET'])
-def foo():
-    inputs = {}
-    t_di = TableManager('digital_input', './libfiles/data.db')
-    for id in t_di.getAllId():
-        inputs[str(id)] = t_di.displayBriefData(id, 'id', 'EName')[1]
-    return jsonify(inputs)
 
 @app.route('/io', methods=['GET'])
 def getIo():
@@ -45,17 +15,17 @@ def getIo():
     end_id = int(request.args.get('end'))
     # io_type可以是'di', 'do', 'ai', 'ao', 'ti', 'to'
     if io_type == 'di':
-        t_io = TableManager('digital_input', './libfiles/data.db')
+        t_io = TableManager('digital_input', './app/libfiles/data.db')
     elif io_type == 'do':
-        t_io = TableManager('digital_output', './libfiles/data.db')
+        t_io = TableManager('digital_output', './app/libfiles/data.db')
     elif io_type == 'ai':
-        t_io = TableManager('analog_input', './libfiles/data.db')
+        t_io = TableManager('analog_input', './app/libfiles/data.db')
     elif io_type == 'ao':
-        t_io = TableManager('analog_output', './libfiles/data.db')
+        t_io = TableManager('analog_output', './app/libfiles/data.db')
     elif io_type == 'ti':
-        t_io = TableManager('temperature_input', './libfiles/data.db')
+        t_io = TableManager('temperature_input', './app/libfiles/data.db')
     else:
-        t_io = TableManager('temperature_output', './libfiles/data.db')
+        t_io = TableManager('temperature_output', './app/libfiles/data.db')
     ret_data = {}
     ret_data['amount'] = ios_amount[io_type]
     ret_data['ios'] = {}
@@ -84,8 +54,8 @@ def getBigIo():
         'do3': 113
     }
     ret_data = {'name': 'CIO021', 'ios': {}}
-    t_di = TableManager('digital_input', './libfiles/data.db')
-    t_do = TableManager('digital_output', './libfiles/data.db')
+    t_di = TableManager('digital_input', './app/libfiles/data.db')
+    t_do = TableManager('digital_output', './app/libfiles/data.db')
     for k, v in cio021_io.items():
         if k.startswith('di'):
             ret_data['ios'][k] = str(v) + '--' + t_di.displayBriefData(v, 'CName')[0]
@@ -152,7 +122,10 @@ def createIoFile():
     elif data['type'].upper() == 'VE2':
         imm_type = 'VE' + clamp_force + 'II-' + injection
 
-    io_file_path = './static/cache/' + evaluation_num + customer + imm_type + '.xlsx'
+    # 对于python运行环境来说，此时工作路径为  /MyProj
+    io_file_path = './app/static/cache/' + evaluation_num + customer + imm_type + '.xlsx'
+    # 对于Flask框架来说，此时工作路径为  /app   且所有HTTP请求的文件必须位于 /app/static目录之下
+    io_url = './static/cache/' + evaluation_num + customer + imm_type + '.xlsx'
 
     print('wait....')
     iomaker = IOMaker(imm_type=data['type'],
@@ -177,9 +150,28 @@ def createIoFile():
         iomaker.e73Safety()
     iomaker.createIOFile(io_file_path)
 
-    return jsonify({'status': 'ok', 'ioFileUrl': io_file_path})
+    return jsonify({'status': 'ok', 'ioFileUrl': io_url})
+
+
+# 避免频繁搜索数据库获取IO长度，这里一次性读取掉所有IO的数目
+# 通过函数中获取，可能可以尽早销毁这些被创建的TableManager
+def _getIoAmount():
+    t_ios = {
+        'di': TableManager('digital_input', './app/libfiles/data.db'),
+        'do': TableManager('digital_output', './app/libfiles/data.db'),
+        'ai': TableManager('analog_input', './app/libfiles/data.db'),
+        'ao': TableManager('analog_output', './app/libfiles/data.db'),
+        'ti': TableManager('temperature_input', './app/libfiles/data.db'),
+        'to': TableManager('temperature_output', './app/libfiles/data.db')
+    }
+    return {
+        'di': len(t_ios['di'].getAllId()),
+        'do': len(t_ios['do'].getAllId()),
+        'ai': len(t_ios['ai'].getAllId()),
+        'ao': len(t_ios['ao'].getAllId()),
+        'ti': len(t_ios['ti'].getAllId()),
+        'to': len(t_ios['to'].getAllId())
+    }
 
 
 ios_amount = _getIoAmount()
-app.run(host='172.18.71.158', port=8080)
-# app.run(debug=True)
