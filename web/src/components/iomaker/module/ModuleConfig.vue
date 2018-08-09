@@ -166,6 +166,12 @@
             this.mTiAmount = 8;
             this.mToAmount = 8;
           }
+          if(moduleName.toUpperCase() === 'CIO011'){
+            this.mDiAmount = 8;
+            this.mDoAmount = 8;
+            this.mAiAmount = 2;
+            this.mAoAmount = 1;
+          }
           if(this.mDiAmount < 16){
             this.mDI[this.mDiAmount + 1] = undefined;
           }

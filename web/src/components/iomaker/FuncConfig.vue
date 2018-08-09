@@ -12,8 +12,7 @@
           </func-switch>
         </div>
         <transition name="fade">
-          <!-- TODO: 新增功能时注意序号的变动 -->
-          <form v-show="funcs[6].status">
+          <form v-show="funcs[666].status">
             <label id="extHotrunnerLabel">外置热流道组数</label>
             <el-input-number :min="1" :max="10" label="热流道组数"
                              v-model="extHotrunnerNum"
@@ -44,12 +43,14 @@
     data(){
       return{
         funcs: {
+          // 新增功能序号依次从小往大增加
+          // 不要去修改外置热流道序号，极易出bug
           1: {name: '功能点1注射信号', status: false},
           2: {name: '功能点2储料信号', status: false},
           3: {name: 'E73', status: false},
           4: {name: '喷嘴改阀门1', status: false},
           5: {name: 'DEE能耗模块', status: false},
-          6: {name: '外置热流道', status: false}
+          666: {name: '外置热流道', status: false}
         },
         extHotrunnerNum: 3
       }
