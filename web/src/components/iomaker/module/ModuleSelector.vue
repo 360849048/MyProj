@@ -105,7 +105,7 @@
         boardModules2: ['未使用', '未使用', '未使用', '未使用'],
         boardModules3: ['未使用', '未使用', '未使用', '未使用'],
         connModules: ['未使用', 'CIV512', 'CIV521'],
-        diasModules: ['未使用', 'CIO021', 'CDM163', 'CTO163', 'CDI163', 'CAI888'],
+        diasModules: ['未使用', 'CIO021', 'CDM163', 'CTO163', 'CDI163', 'CAI888', 'CIO011'],
         curSelectedBoardSeq: 1,
         curSelectedModuleSeq: 1,
       }

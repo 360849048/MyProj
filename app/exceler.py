@@ -536,9 +536,8 @@ class IOFile:
             while first_cell.value is not None and first_cell.value != '特殊功能模块':
                 cur_work_row += 1
                 first_cell = hardware_info_worksheet.cell(row=cur_work_row, column=cur_work_column)
-        # 向 '硬件配置' 表复制外置热流道箱所需要的模块
-        hardware_info_worksheet.insert_rows(cur_work_row)
         # 复制CCP521模块信息
+        hardware_info_worksheet.insert_rows(cur_work_row)
         src_end_cell = searchCells(module_content_worksheet, 'CCP521')
         if src_end_cell is None:
             print("Fatal: 在 %s->%s 中匹配关键字'CCP521'失败 " % (self.modulelib_filename, module_content_worksheet.title))
@@ -551,6 +550,7 @@ class IOFile:
         hardware_info_worksheet.cell(row=cur_work_row, column=cur_work_column + 3, value='+1')
         cur_work_row += 1
         # 复制CAI888模块信息
+        hardware_info_worksheet.insert_rows(cur_work_row)
         src_end_cell = searchCells(module_content_worksheet, 'CAI888')
         if src_end_cell is None:
             print("Fatal: 在 %s->%s 中匹配关键字'CAI888'失败 " % (self.modulelib_filename, module_content_worksheet.title))

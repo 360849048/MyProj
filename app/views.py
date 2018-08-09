@@ -40,8 +40,8 @@ def getIo():
 
 @app.route('/big', methods=['GET'])
 def getBigIo():
-    # 获取大机选配CIO021的IO点配置信息
-    # 数据返回格式为{'name': 'CIO021', ios: {'di3': '83--开门', ..., 'do2': '113--润滑马达2'}}
+    # 获取大机选配CIO021或CIO011的IO点配置信息
+    # 数据返回格式为{'name': 'CIO021(或CIO011)', ios: {'di3': '83--开门', ..., 'do2': '113--润滑马达2'}}
     cio021_io = {
         'di3': 83,
         'di4': 84,
@@ -53,7 +53,10 @@ def getBigIo():
         'do2': 98,
         'do3': 113
     }
-    ret_data = {'name': 'CIO021', 'ios': {}}
+    if request.args.get('type').upper() == 'VE2':
+        ret_data = {'name': 'CIO011', 'ios': {}}
+    else:
+        ret_data = {'name': 'CIO021', 'ios': {}}
     t_di = TableManager('digital_input', './app/libfiles/data.db')
     t_do = TableManager('digital_output', './app/libfiles/data.db')
     for k, v in cio021_io.items():
@@ -101,13 +104,13 @@ def createIoFile():
     # 默认的主底板IO是否修改
     func1_to_inj_signal = data['funcConfig']['1']['status']
     func2_to_charge_signal = data['funcConfig']['2']['status']
-    nozzle_to_valve = data['funcConfig']['3']['status']
-    e73_safety = data['funcConfig']['4']['status']
+    e73_safety = data['funcConfig']['3']['status']
+    nozzle_to_valve = data['funcConfig']['4']['status']
     # 能耗模块DEE是否启用
-    energy_dee = data['funcConfig']['5']
+    energy_dee = data['funcConfig']['5']['status']
     # 外置热流道是否激活，及组数
     # 注意网页端提交的功能序号可能随功能增加而改变，注意 data['funcConfig']['?']['status]中的序号('?')需要随之更新
-    activate_external_hotrunner = data['funcConfig']['6']['status']
+    activate_external_hotrunner = data['funcConfig']['666']['status']
     if activate_external_hotrunner:
         external_hotrunner_num = int(data['extHotrunnerNum'])
     else:

@@ -80,8 +80,10 @@
               <hr>
               扩展底板二：{{boardModules3}}<br>
               <hr>
-              外置热流道：{{funcConfig[5].status}}
-              <div v-show="funcConfig[5].status">{{extHotrunnerNum}}</div>
+              能耗模块：{{funcConfig[5].status}}
+              <hr>
+              外置热流道：{{funcConfig[666].status}}
+              <div v-show="funcConfig[666].status">{{extHotrunnerNum}}</div>
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
@@ -142,7 +144,7 @@
           3: {name: 'E73', status: false},
           4: {name: '喷嘴改阀门1', status: false},
           5: {name: 'DEE能耗模块', status: false},
-          6: {name: '外置热流道', status: false}
+          666: {name: '外置热流道', status: false}
         },
         extHotrunnerNum: 3,
         // 解析immType后得到的数据

@@ -28,7 +28,7 @@
    *   从ModuleSelector获取模块的选择清单，以及当前选中的底板和模块信息
    *   将当前选中的模块以及当前模块的IO配置信息传递到ModuleConfig
    * 2.当某插槽选为CAI888时，AJAX获取相应IO名称后，自动填充对应的IO配置加热1-8
-   * 3.自动初始化大机选配的CIO021点位，通过AJAX方法从后台获取IO配点信息
+   * 3.自动初始化大机选配的CIO021(或CIO011)点位，通过AJAX方法从后台获取IO配点信息
    * 4.为了检测任意底板任意模块变动，在computed下的_emitData属性，通过modulesupdate事件将模块的选择及io配置信息传给父组件
    * 5.modulesupdate事件传递一个json格式如下:
    *      {
@@ -44,6 +44,30 @@
   import ModuleConfig from './module/ModuleConfig'
   import ModuleSelector from './module/ModuleSelector'
 
+  function getBigImmStdIO(_this){
+    /**
+     * 通过ajax方法获取大机选配的IO点
+     * 为了减少重复代码以及调用以及后期维护的方便，这里单独拎出来作为函数
+     */
+    if(_this.bigImm){
+      // 配置大机选配模块CIO021的IO点，CIO021选择需要在子模块ModuleSeletor中进行
+      $.ajax({
+        url: '/big',
+        type: 'GET',
+        dataType: 'json',
+        data: {"type": _this.type},
+        success: (data) => {
+          _this.$set(_this.boardModules1, 0, data.name);
+          _this.$set(_this.boardModulesIOs1, 0, data.ios);
+        },
+        error: () => {
+          console.log('AJAX获取大机配点信息失败');
+        }
+      });
+    }else{
+      _this.$set(_this.boardModules1, 0, '');
+    }
+  }
   export default {
     name: "module",
     props: ['bigImm', 'type', 'newIoToAppend'],
@@ -89,14 +113,14 @@
       },
       // _emitData用来向父组件发送消息，但必须在template中使用该属性才有效
       _emitData(){
-        // 去除boardModulesIOs1中IO信息的冗余部分
+        // 去除boardModulesIOs1中IO信息的冗余部分(去除IO点的中文名称，只留下IO的序号)
         let boardModulesIOs1 = JSON.parse(JSON.stringify(this.boardModulesIOs1));    // 深拷贝
         for(let moduleIOs of boardModulesIOs1){
           if(moduleIOs === {}){
             continue;
           }
           for(let key in moduleIOs){
-            moduleIOs[key] = moduleIOs[key].split('--')[0]
+            moduleIOs[key] = moduleIOs[key].split('--')[0]                            // 对对象的值进行了修改，为了不影响其他使用，上面进行了深拷贝
           }
         }
         let boardModulesIOs2 = JSON.parse(JSON.stringify(this.boardModulesIOs2));    // 深拷贝
@@ -187,21 +211,12 @@
               })).done(function(){
                 _this.$set(allModulesIOs[_this.curSelectedBoardSeq - 1], i, cai888DefaultIos);
               });
-            }else if(this.bigImm && i === 0 && allModules[this.curSelectedBoardSeq - 1][i] === 'CIO021'){
-              // 配置大机选配模块
-              $.ajax({
-                url: '/big',
-                type: 'GET',
-                dataType: 'json',
-                success: (data)=>{
-                  this.$set(allModulesIOs[this.curSelectedBoardSeq - 1], i, data.ios);
-                },
-                error: ()=>{
-                  console.log('AJAX获取CIO021配点信息失败');
-                }
-              });
+            }else if(this.bigImm && this.curSelectedBoardSeq === 1){
+              if( (this.type.toUpperCase() === 'VE2' && this.boardModules1[0] === 'CIO011') ||
+                (this.type.toUpperCase() !== 'VE2' && this.boardModules1[0] === 'CIO021') )
+                getBigImmStdIO(this);
             }else{
-              // 其余模块清空IO配点信息
+              // 当模块选择发生变动时，除上述两种情况外，清空这个模块的配点信息
               this.$set(allModulesIOs[this.curSelectedBoardSeq - 1], i, {});
             }
           }
@@ -214,25 +229,12 @@
     },
     watch: {
       bigImm(){
-        if(this.bigImm){
-          // 配置大机选配模块CIO021的IO点，CIO021选择需要在子模块ModuleSeletor中进行
-          this.$set(this.boardModules1, 0, 'CIO021');
-          $.ajax({
-            url: '/big',
-            type: 'GET',
-            dataType: 'json',
-            success: (data) => {
-              this.$set(this.boardModulesIOs1, 0, data.ios);
-            },
-            error: () => {
-              console.log('AJAX获取CIO021配点信息失败');
-            }
-          });
-        }else{
-          this.$set(this.boardModules1, 0, '');
-        }
+        getBigImmStdIO(this);
+      },
+      type(){
+        getBigImmStdIO(this);
       }
-    }
+    },
   }
 </script>
 
