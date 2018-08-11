@@ -88,6 +88,7 @@
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
               <button type="button" class="btn btn-primary" data-dismiss="modal" @click="submitInfo">确认提交</button>
+              <button type="button" class="btn btn-danger" data-dismiss="modal" @click="testNewFunc">新功能测试</button>
             </div>
           </div>
         </div>
@@ -249,6 +250,50 @@
             if(data.ioFileUrl){
               window.open(data.ioFileUrl);
             }
+          },
+          error: function(xhr, type){
+            _this.waiting = false;
+            alert('无法连接服务器');
+          }
+        });
+      },
+      // TODO: 新功能测试
+      testNewFunc(){
+        let dataToPost = {
+          boardModules1: this.boardModules1,
+          boardModules2: this.boardModules2,
+          boardModules3: this.boardModules3,
+          boardModulesIOs1: this.boardModulesIOs1,
+          boardModulesIOs2: this.boardModulesIOs2,
+          boardModulesIOs3: this.boardModulesIOs3,
+          evaluationNum: this.evaluationNum,
+          productionNum: this.productionNum,
+          immType: this.immType,
+          customer: this.customer,
+          safetyStandard: this.safetyStandard,
+          technicalClause: this.technicalClause,
+          designNote: this.designNote,
+          funcConfig: this.funcConfig,
+          extHotrunnerNum: this.extHotrunnerNum,
+          isBigImm: this.isBigImm,
+          isDualInj: this.isDualInj,
+          clampForce: this.clampForce,
+          injection: this.injection,
+          type: this.type
+        };
+        let _this = this;
+        $.ajax({
+          type: 'POST',
+          url: '/createhkfile',
+          data: JSON.stringify(dataToPost),
+          dataType: 'json',
+          contentType: 'application/json',
+          beforeSend: function(){
+            _this.waiting = true;
+          },
+          success: function(data){
+            _this.waiting = false;
+            alert('ok')
           },
           error: function(xhr, type){
             _this.waiting = false;

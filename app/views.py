@@ -2,6 +2,7 @@ from flask import request, send_file, jsonify
 from app import app
 from app.sqljob import TableManager
 from app.iomaker import IOMaker
+from app.configfile import HardwareConfigFile
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -69,6 +70,8 @@ def getBigIo():
 @app.route('/createxlxs', methods=['POST'])
 def createIoFile():
     '''
+        生成IO表文件(.xlsx)
+        目前后台只支持主底板和扩展底板一的编辑
         根据网页POST数据格式，进行数据处理。
         必须严格参照网页传输的数据进行编程
     '''
@@ -154,6 +157,106 @@ def createIoFile():
     iomaker.createIOFile(io_file_path)
 
     return jsonify({'status': 'ok', 'ioFileUrl': io_url})
+
+@app.route('/createhkfile', methods=['POST'])
+def createHkFile():
+    '''
+        生成硬件配置文件(.hk)
+        同样只支持主底板和扩展底板一的编辑，更多的配置请自行特殊制作支持
+        对POST过来的数据进行处理，
+        必须严格按照网页传输数据进行编程
+    '''
+    # 整理POST得到的数据，目标格式如下：
+    #   io_config_info = {'DI':{41: 41, 73: 81}, 'DO': {}, 'AI': {}, ... }    key是IO的序号(io_seq)，value是IO的位置(io_pos)
+    io_config_info = {'DI': {}, 'DO': {}, 'AI': {}, 'AO': {}, 'TI': {}, 'TO': {}}
+    data = request.get_json()
+    # 统计选配模块的出现次数
+    # 统计结果的格式如：modules_count = {'CDM163': 2, 'CTO163': 1}
+    modules_count = {}
+    all_modules = data['boardModules1'] + data['boardModules2']
+    all_modules_ios = data['boardModulesIOs1'] + data['boardModulesIOs2']
+    for idx in range(len(all_modules)):
+        module = all_modules[idx]
+        if module != '':
+            # IO位置的偏移量
+            io_pos_offset = {'DI': 0, 'DO': 0, 'AI': 0, 'AO': 0, 'TI': 0, 'TO': 0}
+            if module not in modules_count:
+                modules_count[module] = 1
+            else:
+                modules_count[module] += 1
+            # 根据不同的模块，对应不同的起始位置，比如第一块CTO163，DO从41开始
+            if module.upper() == 'CTO163':
+                # 标准程序支持至多2块CTO163
+                if modules_count[module] == 1:
+                    io_pos_offset['DO'] = 41 - 1
+                elif modules_count[module] == 2:
+                    io_pos_offset['DO'] = 57 - 1
+                else:
+                    print('Error: 标准程序支持至多2块CTO163')
+                    io_config_info = {'DI': {}, 'DO': {}, 'AI': {}, 'AO': {}, 'TI': {}, 'TO': {}}
+                    break
+            if module.upper == 'CDI163':
+                # 标准程序只支持至多1块CDI163
+                if modules_count[module] == 1:
+                    io_pos_offset['DI'] = 57 - 1
+                else:
+                    print('Error: 标准程序支持至多1块CDI163')
+                    io_config_info = {'DI': {}, 'DO': {}, 'AI': {}, 'AO': {}, 'TI': {}, 'TO': {}}
+                    break
+            if module.upper() == 'CDM163':
+                # 标准程序只支持至多4块CDM163
+                if modules_count[module] == 1:
+                    io_pos_offset['DI'] = 81 - 1
+                    io_pos_offset['DO'] = 81 - 1
+                elif modules_count[module] == 2:
+                    io_pos_offset['DI'] = 89 - 1
+                    io_pos_offset['DO'] = 89 - 1
+                elif modules_count[module] == 3:
+                    io_pos_offset['DI'] = 97 - 1
+                    io_pos_offset['DO'] = 97 - 1
+                elif modules_count[module] == 4:
+                    io_pos_offset['DI'] = 105 - 1
+                    io_pos_offset['DO'] = 105 - 1
+                else:
+                    print('Error: 标注程序只支持至多4块CDM163')
+                    io_config_info = {'DI': {}, 'DO': {}, 'AI': {}, 'AO': {}, 'TI': {}, 'TO': {}}
+                    break
+            if module.upper() == 'CIO021':
+                # 标准程序只支持至多1块CIO021
+                if modules_count[module] == 1:
+                    io_pos_offset['DI'] = 73 - 1
+                    io_pos_offset['DO'] = 73 - 1
+                    io_pos_offset['AI'] = 5 - 1
+                    # AO起始位置未知
+                else:
+                    print('Error: 标注程序只支持至多1块CIO021')
+                    io_config_info = {'DI': {}, 'DO': {}, 'AI': {}, 'AO': {}, 'TI': {}, 'TO': {}}
+                    break
+            if module.upper() == 'CIO011':
+                # 标准程序只支持至多1块CIO011
+                if modules_count[module] == 1:
+                    io_pos_offset['DI'] = 113 - 1
+                    io_pos_offset['DO'] = 129 - 1
+                    io_pos_offset['AI'] = 3 - 1
+                else:
+                    print('Error: 标注程序只支持至多1块CIO011')
+                    io_config_info = {'DI': {}, 'DO': {}, 'AI': {}, 'AO': {}, 'TI': {}, 'TO': {}}
+                    break
+
+            for key, value in all_modules_ios[idx].items():
+                # TODO: 这样简陋的解析数据容易出BUG
+                io_type = key[:2].upper()
+                io_seq = int(value)
+                io_pos = int(key[2:]) + io_pos_offset[io_type]
+                io_config_info[io_type][io_seq] = io_pos
+    print(io_config_info)
+    hwmaker = HardwareConfigFile(imm_type=data['type'],
+                                 io_config_info=io_config_info)
+    hwmaker.modifyDstFile()
+
+    return jsonify({'status': 'ok'})
+
+
 
 
 # 避免频繁搜索数据库获取IO长度，这里一次性读取掉所有IO的数目
