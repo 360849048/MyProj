@@ -60,9 +60,22 @@
         </div>
       </li>
     </ul>
-    <!-- 单独处理CIV512等连接模块显示问题 -->
-    <div class="h1" v-if="moduleName.toUpperCase() === 'CIV512' || moduleName.toUpperCase() === 'CIV521'">
-      您已激活扩展该底板，连接模块是：{{moduleName}}
+    <!-- 单独处理CIV512等连接模块 -->
+    <div v-if="moduleName.toUpperCase() === 'CIV512' || moduleName.toUpperCase() === 'CIV521'">
+      <p class="h1">
+        您已激活扩展该底板，连接模块是：{{moduleName}}
+      </p>
+      <hr>
+      <p class="h5">{{moduleName}}位置选择</p>
+      <div class="custom-control custom-radio">
+        <input type="radio" id="beforeKeb" name='varanPosSet' class="custom-control-input" value="0" v-model="varanConnModulePos">
+        <label class="custom-control-label" for="beforeKeb">KEB之后</label>
+      </div>
+      <div class="custom-control custom-radio">
+        <input type="radio" id="afterKeb" name='varanPosSet' class="custom-control-input" value="1" v-model="varanConnModulePos">
+        <label class="custom-control-label" for="afterKeb">KEB之前</label>
+      </div>
+      <hr>
     </div>
   </div>
 </template>
@@ -86,6 +99,7 @@
    *       ...
    *    }
    * 6.接收父组件newIoToAppend，watch该变量变动，并触发moduleioupdate事件
+   * 7.varanposupdate事件传递CIV512等Varan连接模块的安装位置信息。0：KEB之后； 1：KEB之前
    *
    * 注意：只有在“具体”节点发生drop和dblclick事件，该模块才会触发父组件修改IO信息。
    */
@@ -118,7 +132,10 @@
           mAiAmount: 0,
           mAoAmount: 0,
           mTiAmount: 0,
-          mToAmount: 0
+          mToAmount: 0,
+
+          // CIV512或者CIV521这种Varan连接模块的安装位置
+          varanConnModulePos: 0
         }
       },
       filters: {
@@ -441,6 +458,12 @@
             }
           }
           this.$emit('moduleiosupdate', this._getCurIoConfig());
+        },
+        varanConnModulePos: {
+          handler(cval){
+            this.$emit('varanposupdate', cval);
+          },
+          immediate: true
         }
       }
     }
@@ -484,5 +507,8 @@
         display: inline-block;
       }
     }
+  }
+  .custom-control.custom-radio{
+    margin-left: 5px;
   }
 </style>

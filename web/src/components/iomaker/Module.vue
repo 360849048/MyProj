@@ -13,7 +13,8 @@
       :module-name="curActiveModule"
       :ios="curActiveModuleIOs"
       :new-io-to-append="newIoToAppend"
-      @moduleiosupdate = "getModuleIoInfo">
+      @moduleiosupdate = "getModuleIoInfo"
+      @varanposupdate = 'getVaranPos'>
     </module-config>
     <!-- 为了激活computed属性，从而触发modulesupdate事件 -->
     <div v-show="false">{{_emitData}}</div>
@@ -40,6 +41,8 @@
    *        'boardModulesIOs3': [{}, {}, {}, {}]
    *      }
    * 6.接收父组件传递过来的newIoToAppend，再将它传递给子组件ModuleConfig处理
+   * 7.透传子组件ModuleConfig的varanposupdate事件，将以同名事件触发并传递数据到父组件
+   * 注意：为了少动脑子，这里底板2和底板3的Varan连接模块顺序只能设置成一样，用到了底板3属于超特殊程序，不建议用这软件配置
    */
   import ModuleConfig from './module/ModuleConfig'
   import ModuleSelector from './module/ModuleSelector'
@@ -50,7 +53,6 @@
      * 为了减少重复代码以及调用以及后期维护的方便，这里单独拎出来作为函数
      */
     if(_this.bigImm){
-      // 配置大机选配模块CIO021的IO点，CIO021选择需要在子模块ModuleSeletor中进行
       $.ajax({
         url: '/big',
         type: 'GET',
@@ -225,6 +227,9 @@
       getModuleIoInfo(e){
         let allModulesIOs = [this.boardModulesIOs1, this.boardModulesIOs2, this.boardModulesIOs3];
         this.$set(allModulesIOs[this.curSelectedBoardSeq - 1], this.curSelectedModuleSeq - 1, e);
+      },
+      getVaranPos(e){
+        this.$emit('varanposupdate', e);
       }
     },
     watch: {

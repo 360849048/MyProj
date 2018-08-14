@@ -68,14 +68,14 @@ DI_CORE_2_IN = 114
 
 
 class IOMaker:
-    def __init__(self, imm_type, board_1_modules=None, board_2_modules=None, big=False,
+    def __init__(self, imm_type, board_1_modules_ios=None, board_2_modules_ios=None, big=False,
                  evaluation_num=None, production_num=None, type_string=None, customer=None,
                  safety_standard=None, technical_clause=None, dual_inj=False, external_hotrunner_num=0,
-                 energy_dee=False):
+                 energy_dee=False, varan_conn_module_pos=0):
         '''
             imm_type:           'ZEs', 'ZE', 'VE2', 'VE2s'
-            board_1_modules: [['CTO163', {'DO3': OutputID, ...}], ['CDM163', {'DI5': InputID, ...}], ...]
-            board_2_modules:    [['CTO163', {'DO3': OutputID, ...}], ['CDM163', {'DI5': InputID, ...}], ...]
+            board_1_modules_ios: [['CTO163', {'DO3': OutputID, ...}], ['CDM163', {'DI5': InputID, ...}], ...]
+            board_2_modules_ios:    [['CTO163', {'DO3': OutputID, ...}], ['CDM163', {'DI5': InputID, ...}], ...]
         '''
         # TODO: 数据库位置需要小心
         self.path_db = './app/libfiles/data.db'
@@ -87,8 +87,8 @@ class IOMaker:
         self.t_to = TableManager('Temperature_output', self.path_db)
 
         self.imm_type = imm_type
-        self.board_1_modules = None
-        self.board_2_modules = None
+        self.board_1_modules_ios = None
+        self.board_2_modules_ios = None
         self.big = big
         self.evaluation_num = evaluation_num
         self.production_num = production_num
@@ -100,11 +100,12 @@ class IOMaker:
         self.dual_inj = dual_inj
         self.external_hotrunner_num = external_hotrunner_num
         self.energy_dee = energy_dee
+        self.varan_conn_module_pos = varan_conn_module_pos
 
         # 根据IO的id，在数据库中查找出对应IO的中英文名称
-        if board_1_modules is not None:
-            self.board_1_modules = board_1_modules.copy()
-            for module in self.board_1_modules:
+        if board_1_modules_ios is not None:
+            self.board_1_modules_ios = board_1_modules_ios.copy()
+            for module in self.board_1_modules_ios:
                 for io in module[1]:
                     io_id = int(module[1][io])
                     if str(io).upper().startswith('DI'):
@@ -119,9 +120,9 @@ class IOMaker:
                         module[1][io] = self.t_ti.displayBriefData(io_id, 'CName', 'EName')
                     if str(io).upper().startswith('TO'):
                         module[1][io] = self.t_to.displayBriefData(io_id, 'CName', 'EName')
-        if board_2_modules is not None:
-            self.board_2_modules = board_2_modules.copy()
-            for module in self.board_2_modules:
+        if board_2_modules_ios is not None:
+            self.board_2_modules_ios = board_2_modules_ios.copy()
+            for module in self.board_2_modules_ios:
                 for io in module[1]:
                     io_id = int(module[1][io])
                     if str(io).upper().startswith('DI'):
@@ -139,8 +140,8 @@ class IOMaker:
 
 
         self.xlsxObj = IOFile(imm_type=self.imm_type,
-                              main_board_modules=self.board_1_modules,
-                              board_1_modules=self.board_2_modules,
+                              main_board_modules=self.board_1_modules_ios,
+                              board_1_modules=self.board_2_modules_ios,
                               big=self.big,
                               evaluation_num=self.evaluation_num,
                               production_num=self.production_num,
@@ -150,7 +151,8 @@ class IOMaker:
                               technical_clause=self.technical_clause,
                               dual_inj=self.dual_inj,
                               external_hotrunner_num=self.external_hotrunner_num,
-                              energy_dee=self.energy_dee)
+                              energy_dee=self.energy_dee,
+                              varan_conn_module_pos=varan_conn_module_pos)
 
     # 修改主底板默认点位，每个点位的修改都用一个方法特殊处理
     def func1ToInjSignal(self):
@@ -212,7 +214,7 @@ class IOMaker:
 if __name__ == '__main__':
     # 功能测试
     iomaker = IOMaker(imm_type='ZEs',
-                      board_1_modules=[
+                      board_1_modules_ios=[
                           ['CDM163', {
                               'DI1': '73',
                               'DI2': '74',
@@ -222,7 +224,7 @@ if __name__ == '__main__':
                               'DO2': '74',
                           }]
                       ],
-                      board_2_modules=[
+                      board_2_modules_ios=[
                           ['civ512', {}],
                           ['cai888', {}],
                       ],

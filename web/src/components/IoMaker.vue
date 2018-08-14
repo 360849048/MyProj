@@ -41,7 +41,8 @@
                 :big-imm="isBigImm"
                 :type="type"
                 :new-io-to-append="newIoToAppend"
-                @modulesupdate="getModuleInfo">
+                @modulesupdate="getModuleInfo"
+                @varanposupdate="getVaranConnModulePosInfo">
               </module>
             </div>
           </transition>
@@ -71,8 +72,8 @@
               </button>
             </div>
             <div class="modal-body">
-              机型：{{immType}}<br>
-              安全：{{safetyStandard}}
+              机型：{{type}}&nbsp;{{injection}}-{{clampForce}}<br>
+              是否CE：{{ceStandard}}
               <hr>
               主底板模块: {{boardModules1}}<br>
               <hr>
@@ -130,6 +131,8 @@
         boardModulesIOs1: [{}, {}, {}, {}],
         boardModulesIOs2: [{}, {}, {}, {}],
         boardModulesIOs3: [{}, {}, {}, {}],
+        // Varan连接模块安装位置，0代表在KEB之后，1代表在KEB之前
+        varanConnModulePos: 0,
         // 机器基础信息
         evaluationNum: '',
         productionNum: '',
@@ -154,6 +157,7 @@
         clampForce: 0,
         injection: 0,
         type: '',
+        ceStandard: false,
 
         // 控制页面的展示内容：信息录入 或 IO选配（左右移动）
         curStep: 1,
@@ -219,6 +223,7 @@
           boardModulesIOs1: this.boardModulesIOs1,
           boardModulesIOs2: this.boardModulesIOs2,
           boardModulesIOs3: this.boardModulesIOs3,
+          varanConnModulePos: this.varanConnModulePos,
           evaluationNum: this.evaluationNum,
           productionNum: this.productionNum,
           immType: this.immType,
@@ -232,7 +237,8 @@
           isDualInj: this.isDualInj,
           clampForce: this.clampForce,
           injection: this.injection,
-          type: this.type
+          type: this.type,
+          ceStandard: this.ceStandard
         };
         let _this = this;
         $.ajax({
@@ -266,6 +272,7 @@
           boardModulesIOs1: this.boardModulesIOs1,
           boardModulesIOs2: this.boardModulesIOs2,
           boardModulesIOs3: this.boardModulesIOs3,
+          varanConnModulePos: this.varanConnModulePos,
           evaluationNum: this.evaluationNum,
           productionNum: this.productionNum,
           immType: this.immType,
@@ -279,7 +286,8 @@
           isDualInj: this.isDualInj,
           clampForce: this.clampForce,
           injection: this.injection,
-          type: this.type
+          type: this.type,
+          ceStandard: this.ceStandard
         };
         let _this = this;
         $.ajax({
@@ -307,6 +315,9 @@
       },
       slidePrev(){
         this.curStep = 1;
+      },
+      getVaranConnModulePosInfo(e){
+        this.varanConnModulePos = e;
       }
     },
     watch: {
@@ -374,6 +385,16 @@
           if(this.injection >= 1400){
             this.isDualInj = true;
           }
+        }
+      },
+      safetyStandard(){
+        this.ceStandard = true;
+        console.log(this.safetyStandard);
+        if(this.safetyStandard.search(/亚洲|非CE|not|国标/i) > -1) {
+          this.ceStandard = false;
+        }
+        if(this.safetyStandard === ''){
+          this.ceStandard = false;
         }
       }
     }

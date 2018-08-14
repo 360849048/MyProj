@@ -126,16 +126,18 @@ class IOFile:
     def __init__(self, imm_type, main_board_modules=None, board_1_modules=None, big=False,
                  evaluation_num=None, production_num=None, type_string=None, customer=None,
                  safety_standard=None, technical_clause=None, dual_inj=False, external_hotrunner_num=0,
-                 energy_dee=False):
+                 energy_dee=False, varan_conn_module_pos=0):
         ''' imm_type:           'ZEs', 'ZE', 'VE2', 'VE2s'
             main_board_modules: [['CTO163', {'O3': ['中文名', 'EnglishName'], ...}], ['CDM163', {'I5': ['中文名', 'EnglishName'], ...}], ...]
-            board_1_modules:    [['CTO163', {'O3': ['中文名', 'EnglishName'], ...}], ['CDM163', {'I5': ['中文名', 'EnglishName'], ...}], ...]
+            board_1_modules:    [['CIV512', {}], ['CTO163', {'O3': ['中文名', 'EnglishName'], ...}], ['CDM163', {'I5': ['中文名', 'EnglishName'], ...}], ...]
+            varan_conn_module_pos:  0：如果有Varan连接模块，则配置在KEB之后；   1：如果有Varan连接模块，则配置在KEB之前
         '''
         self.imm_type = imm_type
         self.main_board_modules = None
         self.main_board_modules_ioconfig = None
         self.board1_1_modules = None
         self.board1_1_modules_ioconfig = None
+        self.varan_conn_module_pos = int(varan_conn_module_pos)
         self.big = big
         self.src_path = r'./app/libfiles'
         self.std_filename = None
@@ -437,7 +439,7 @@ class IOFile:
         return 0
 
     def modifyImmInfo(self):
-        ''' 填写机器信息以及修改注射keb2信息和DEE信息 '''
+        ''' 填写机器信息以及修改注射keb2信息和DEE信息和Varan连接模块信息 '''
         # 修改表'机器信息'内容
         imm_info_worksheet = self.std_workbook['机器信息']
         def _modify(title, value):
@@ -462,7 +464,21 @@ class IOFile:
                 keb2_cell = hardware_sort.cell(row=keb1_cell.row, column=keb1_cell.col_idx + 1)
                 copyCell(keb1_cell, keb2_cell)
                 keb2_cell.value = '注射KEB2'
-        # 修改 DEE021，插入到顶出KEB之前
+            if self.board1_1_modules is not None and len(self.board1_1_modules) >= 1 and self.varan_conn_module_pos == 0:
+                # 在注射KEB2之后添加CIV
+                varan_conn_module_cell = hardware_sort.cell(row=keb1_cell.row, column=keb1_cell.col_idx + 2)
+                copyCell(keb1_cell, varan_conn_module_cell)
+                varan_conn_module_cell.value = self.board1_1_modules[0].upper()
+        else:
+            if self.board1_1_modules is not None and len(self.board1_1_modules) >= 1 and self.varan_conn_module_pos == 0:
+                # 在注射KEB1之后添加CIV
+                hardware_sort = self.std_workbook['硬件排布']
+                keb1_cell = searchCells(hardware_sort, '注射KEB1')
+                if keb1_cell is not None:
+                    varan_conn_module_cell = hardware_sort.cell(row=keb1_cell.row, column=keb1_cell.col_idx + 1)
+                    copyCell(keb1_cell, varan_conn_module_cell)
+                    varan_conn_module_cell.value = self.board1_1_modules[0].upper()
+        # 修改 DEE021，插入到顶出KEB(VE)/液压伺服KEB1(ZE)之前
         if self.energy_dee:
             hardware_sort = self.std_workbook['硬件排布']
             if self.imm_type.upper() == 'VE2' or self.imm_type.upper() == 'VE2S':
@@ -475,6 +491,18 @@ class IOFile:
                 dee_cell = hardware_sort.cell(row=ejekeb_cell.row, column=cur_work_col)
                 copyCell(ejekeb_cell, dee_cell)
                 dee_cell.value = 'DEE021'
+        if self.board1_1_modules is not None and len(self.board1_1_modules) >= 1 and self.varan_conn_module_pos == 1:
+            hardware_sort = self.std_workbook['硬件排布']
+            if self.imm_type.upper() == 'VE2' or self.imm_type.upper() == 'VE2S':
+                ejekeb_cell = searchCells(hardware_sort, '顶出KEB')
+            else:
+                ejekeb_cell = searchCells(hardware_sort, '液压伺服KEB1')
+            if ejekeb_cell is not None:
+                cur_work_col = ejekeb_cell.col_idx
+                hardware_sort.insert_cols(cur_work_col)
+                varan_conn_module_cell = hardware_sort.cell(row=ejekeb_cell.row, column=cur_work_col)
+                copyCell(ejekeb_cell, varan_conn_module_cell)
+                varan_conn_module_cell.value = self.board1_1_modules[0].upper()
 
     def modifyDefaultIO(self, io_type, origin_io_name, new_io_cname, new_io_ename):
         ''' 修改主底板或主底板扩展槽(VE2)上默认的IO
