@@ -478,6 +478,19 @@ class IOFile:
                     varan_conn_module_cell = hardware_sort.cell(row=keb1_cell.row, column=keb1_cell.col_idx + 1)
                     copyCell(keb1_cell, varan_conn_module_cell)
                     varan_conn_module_cell.value = self.board1_1_modules[0].upper()
+        # 在KEB之前添加CIV（self.varan_conn_module_pos == 1）
+        if self.board1_1_modules is not None and len(self.board1_1_modules) >= 1 and self.varan_conn_module_pos == 1:
+            hardware_sort = self.std_workbook['硬件排布']
+            if self.imm_type.upper() == 'VE2' or self.imm_type.upper() == 'VE2S':
+                ejekeb_cell = searchCells(hardware_sort, '顶出KEB')
+            else:
+                ejekeb_cell = searchCells(hardware_sort, '液压伺服KEB1')
+            if ejekeb_cell is not None:
+                cur_work_col = ejekeb_cell.col_idx
+                hardware_sort.insert_cols(cur_work_col)
+                varan_conn_module_cell = hardware_sort.cell(row=ejekeb_cell.row, column=cur_work_col)
+                copyCell(ejekeb_cell, varan_conn_module_cell)
+                varan_conn_module_cell.value = self.board1_1_modules[0].upper()
         # 修改 DEE021，插入到顶出KEB(VE)/液压伺服KEB1(ZE)之前
         if self.energy_dee:
             hardware_sort = self.std_workbook['硬件排布']
@@ -491,18 +504,6 @@ class IOFile:
                 dee_cell = hardware_sort.cell(row=ejekeb_cell.row, column=cur_work_col)
                 copyCell(ejekeb_cell, dee_cell)
                 dee_cell.value = 'DEE021'
-        if self.board1_1_modules is not None and len(self.board1_1_modules) >= 1 and self.varan_conn_module_pos == 1:
-            hardware_sort = self.std_workbook['硬件排布']
-            if self.imm_type.upper() == 'VE2' or self.imm_type.upper() == 'VE2S':
-                ejekeb_cell = searchCells(hardware_sort, '顶出KEB')
-            else:
-                ejekeb_cell = searchCells(hardware_sort, '液压伺服KEB1')
-            if ejekeb_cell is not None:
-                cur_work_col = ejekeb_cell.col_idx
-                hardware_sort.insert_cols(cur_work_col)
-                varan_conn_module_cell = hardware_sort.cell(row=ejekeb_cell.row, column=cur_work_col)
-                copyCell(ejekeb_cell, varan_conn_module_cell)
-                varan_conn_module_cell.value = self.board1_1_modules[0].upper()
 
     def modifyDefaultIO(self, io_type, origin_io_name, new_io_cname, new_io_ename):
         ''' 修改主底板或主底板扩展槽(VE2)上默认的IO

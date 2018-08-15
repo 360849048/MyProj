@@ -5,22 +5,29 @@ import re
 
 class HwFileMaker:
     def __init__(self, imm_type, ce_standard=False, board_1_modules_ios=None, board_2_modules_ios=None, energy_dee=False,
+                 varan_module_pos=0, e73=False,
                  std_file_dir='./app/libfiles/配置文件/硬件配置文件/',
                  dst_file_dir='./app/static/cache/'):
         '''
             imm_type:           'ZEs', 'ZE', 'VE2', 'VE2s'
             board_1_modules_ios: [['CTO163', {'DO3': OutputID, ...}], ['CDM163', {'DI5': InputID, ...}], ...]
             board_2_modules_ios:    [['CTO163', {'DO3': OutputID, ...}], ['CDM163', {'DI5': InputID, ...}], ...]
+            varan_module_pos:   0：CIV512等连接模块放在KEB之后； 1：CIV512等连接模块放在KEB之前
         '''
         self.imm_type = imm_type
         self.board_1_modules_ios = board_1_modules_ios
         self.board_2_modules_ios = board_2_modules_ios
         self.dee = energy_dee
+        self.varan_module_pos = int(varan_module_pos)
+        self.e73 = e73
 
         if imm_type.endswith('s'):
             self.ce_standard = ce_standard
         else:
             self.ce_standard = False
+
+        # 为了生成文件的可靠性，只有status==0才允许某些操作
+        self.status = 0
 
         # 根据机型以及安全标准确定 “标准硬件配置” 和 修改后的 “特殊硬件配置” 文件路径
         self.std_file_path = ''
@@ -33,6 +40,7 @@ class HwFileMaker:
                         self.dst_file_path = os.path.join(dst_file_dir, file_name)
                     else:
                         print("找到了好几份符合标准的硬件配置文件")
+                        self.status = -1
                         break
             else:
                 if self.imm_type in file_name and 'BCD' not in file_name:
@@ -41,6 +49,7 @@ class HwFileMaker:
                         self.dst_file_path = os.path.join(dst_file_dir, file_name)
                     else:
                         print("找到了好几份符合标准的硬件配置文件")
+                        self.status = -1
                         break
 
         self.io_config_info = {'DI': {}, 'DO': {}, 'AI': {}, 'AO': {}, 'TI': {}, 'TO': {}}
@@ -50,7 +59,8 @@ class HwFileMaker:
         else:
             self.varan_config_info = [0, 0, 5]
 
-        self._getConfigInfo()
+        if self.status == 0:
+            self._getConfigInfo()
 
     def _getConfigInfo(self):
         '''
@@ -59,290 +69,310 @@ class HwFileMaker:
             module_config_info = {'1': [], '2': [], '3': [1, 3, 0, 0], '4': [5, 3, 0]}     key是board的序号，value是底板上的模块序号数，这里不显示Varan模块
             varan_config_info = [3, 5]   Varan总线上依次的模块名： 0:未配置  1:CIV512  2:CIV521  3:CMM10X  4:DEE021  5:F6
         '''
-        # 统计选配模块的出现次数，格式如
-        #  board_1_modules_count = {'CDM163': 2, 'CTO163': 1}
-        board_1_modules_count = {}
-        for idx in range(len(self.board_1_modules_ios)):
-            module = self.board_1_modules_ios[idx][0].upper()
-            # 非VE2机的主底板扩展槽内容检测
-            if module != '':
-                # IO位置的偏移量
-                board_1_io_pos_offset = {'DI': 0, 'DO': 0, 'AI': 0, 'AO': 0, 'TI': 0, 'TO': 0}
-                if module not in board_1_modules_count:
-                    board_1_modules_count[module] = 1
-                else:
-                    board_1_modules_count[module] += 1
-                # 根据不同的模块，对应不同的起始位置，比如第一块CTO163，DO从41开始
-                if self.imm_type != 'VE2':
-                    if module == 'CTO163':
-                        if board_1_modules_count[module] == 1:
-                            board_1_io_pos_offset['DO'] = 41 - 1
-                            self.module_config_info['3'][idx] = 2
-                        elif board_1_modules_count[module] == 2:
-                            board_1_io_pos_offset['DO'] = 57 - 1
-                            self.module_config_info['3'][idx] = 3
-                        else:
-                            print('Error: 标准程序CMM102主底板支持至多2块CTO163')
-                            break
-                    if module == 'CDI163':
-                        if board_1_modules_count[module] == 1:
-                            board_1_io_pos_offset['DI'] = 57 - 1
-                            self.module_config_info['3'][idx] = 1
-                        else:
-                            print('Error: 标准程序CMM102主底板支持至多1块CDI163')
-                            break
-                    if module == 'CDM163':
-                        if board_1_modules_count[module] == 1:
-                            board_1_io_pos_offset['DI'] = 81 - 1
-                            board_1_io_pos_offset['DO'] = 81 - 1
-                            self.module_config_info['3'][idx] = 7
-                        elif board_1_modules_count[module] == 2:
-                            board_1_io_pos_offset['DI'] = 89 - 1
-                            board_1_io_pos_offset['DO'] = 89 - 1
-                            self.module_config_info['3'][idx] = 8
-                        elif board_1_modules_count[module] == 3:
-                            board_1_io_pos_offset['DI'] = 97 - 1
-                            board_1_io_pos_offset['DO'] = 97 - 1
-                            self.module_config_info['3'][idx] = 9
-                        elif board_1_modules_count[module] == 4:
-                            board_1_io_pos_offset['DI'] = 105 - 1
-                            board_1_io_pos_offset['DO'] = 105 - 1
-                            self.module_config_info['3'][idx] = 10
-                        else:
-                            print('Error: 标注程序CMM102主底板只支持至多4块CDM163')
-                            break
-                    if module == 'CIO021':
-                        if board_1_modules_count[module] == 1:
-                            board_1_io_pos_offset['DI'] = 73 - 1
-                            board_1_io_pos_offset['DO'] = 73 - 1
-                            board_1_io_pos_offset['AI'] = 5 - 1
-                            # TODO: AO起始位置未知
-                            self.module_config_info['3'][idx] = 12
-                        else:
-                            print('Error: 标注程序CMM102主底板只支持至多1块CIO021')
-                            break
-                    if module == 'CIO011':
-                        if board_1_modules_count[module] == 1:
-                            board_1_io_pos_offset['DI'] = 113 - 1
-                            board_1_io_pos_offset['DO'] = 129 - 1
-                            board_1_io_pos_offset['AI'] = 3 - 1
-                            # TODO: AO起始位置未知
-                            self.module_config_info['3'][idx] = 4
-                        else:
-                            print('Error: 标注程序CMM102主底板只支持至多1块CIO011')
-                            break
-                    if module == 'CAI888':
-                        if board_1_modules_count[module] == 1:
-                            self.module_config_info['3'][idx] = 5
-                        elif board_1_modules_count[module] == 2:
-                            self.module_config_info['3'][idx] = 6
-                        elif board_1_modules_count[module] == 2:
-                            self.module_config_info['3'][idx] = 13
-                        else:
-                            print('Error: 标准程序CMM102主底板只支持3块CAI888')
-                else:
-                    if module == 'CTO163':
-                        if board_1_modules_count[module] == 1:
-                            board_1_io_pos_offset['DO'] = 49 - 1
-                            self.module_config_info['1'][0] = 4
-                        else:
-                            print('Error: 标准程序CIPC主底板支持至多1块CTO163')
-                            break
-                    if module == 'CDI163':
-                        if board_1_modules_count[module] == 1:
-                            board_1_io_pos_offset['DI'] = 57 - 1
-                            self.module_config_info['1'][0] = 5
-                        else:
-                            print('Error: 标准程序CIPC主底板支持至多1块CDI163')
-                            break
-                    if module == 'CDM163':
-                        if board_1_modules_count[module] == 1:
-                            board_1_io_pos_offset['DI'] = 73 - 1
-                            board_1_io_pos_offset['DO'] = 41 - 1
-                            self.module_config_info['1'][0] = 3
-                        else:
-                            print('Error: 标准程序CIPC主底板只支持至多1块CDM163')
-                            break
-                    if module == 'CIO011' or module == 'CIO021':
-                        # 标准程序CIPC主底板只有CIO011
-                        if board_1_modules_count[module] == 1:
-                            board_1_io_pos_offset['DI'] = 81 - 1
-                            board_1_io_pos_offset['DO'] = 65 - 1
-                            # TODO: AI和AO起始位置未知
-                            self.module_config_info['1'][0] = 6
-                        else:
-                            print('Error: 标准程序CIPC主底板只支持至多1块CIO011')
-                            break
-                    if module == 'CAI888':
-                        # 标准程序只支持3块CAI888
-                        if board_1_modules_count[module] == 1:
-                            self.module_config_info['1'][0] = 2
-                        else:
-                            print('Error: 标准程序CIPC主底板只支持1块CAI888')
+        if self.board_1_modules_ios is not None:
+            #  board_1_modules_count = {'CDM163': 2, 'CTO163': 1}
+            board_1_modules_count = {}
+            for idx in range(len(self.board_1_modules_ios)):
+                module = self.board_1_modules_ios[idx][0].upper()
+                if module != '':
+                    # IO位置的偏移量
+                    board_1_io_pos_offset = {'DI': 0, 'DO': 0, 'AI': 0, 'AO': 0, 'TI': 0, 'TO': 0}
+                    if module not in board_1_modules_count:
+                        board_1_modules_count[module] = 1
+                    else:
+                        board_1_modules_count[module] += 1
+                    # 根据不同的模块，对应不同的起始位置，比如第一块CTO163，DO从41开始
+                    if self.imm_type != 'VE2':
+                        if module == 'CTO163':
+                            if board_1_modules_count[module] == 1:
+                                board_1_io_pos_offset['DO'] = 41 - 1
+                                self.module_config_info['3'][idx] = 2
+                            elif board_1_modules_count[module] == 2:
+                                board_1_io_pos_offset['DO'] = 57 - 1
+                                self.module_config_info['3'][idx] = 3
+                            else:
+                                print('Error: 标准程序CMM102主底板支持至多2块CTO163')
+                                self.status = -2
+                                break
+                        if module == 'CDI163':
+                            if board_1_modules_count[module] == 1:
+                                board_1_io_pos_offset['DI'] = 57 - 1
+                                self.module_config_info['3'][idx] = 1
+                            else:
+                                print('Error: 标准程序CMM102主底板支持至多1块CDI163')
+                                self.status = -2
+                                break
+                        if module == 'CDM163':
+                            if board_1_modules_count[module] == 1:
+                                board_1_io_pos_offset['DI'] = 81 - 1
+                                board_1_io_pos_offset['DO'] = 81 - 1
+                                self.module_config_info['3'][idx] = 7
+                            elif board_1_modules_count[module] == 2:
+                                board_1_io_pos_offset['DI'] = 89 - 1
+                                board_1_io_pos_offset['DO'] = 89 - 1
+                                self.module_config_info['3'][idx] = 8
+                            elif board_1_modules_count[module] == 3:
+                                board_1_io_pos_offset['DI'] = 97 - 1
+                                board_1_io_pos_offset['DO'] = 97 - 1
+                                self.module_config_info['3'][idx] = 9
+                            elif board_1_modules_count[module] == 4:
+                                board_1_io_pos_offset['DI'] = 105 - 1
+                                board_1_io_pos_offset['DO'] = 105 - 1
+                                self.module_config_info['3'][idx] = 10
+                            else:
+                                print('Error: 标准程序CMM102主底板只支持至多4块CDM163')
+                                self.status = -2
+                                break
+                        if module == 'CIO021':
+                            if board_1_modules_count[module] == 1:
+                                board_1_io_pos_offset['DI'] = 73 - 1
+                                board_1_io_pos_offset['DO'] = 73 - 1
+                                board_1_io_pos_offset['AI'] = 5 - 1
+                                # TODO: AO起始位置未知
+                                self.module_config_info['3'][idx] = 12
+                            else:
+                                print('Error: 标准程序CMM102主底板只支持至多1块CIO021')
+                                self.status = -2
+                                break
+                        if module == 'CIO011':
+                            if board_1_modules_count[module] == 1:
+                                board_1_io_pos_offset['DI'] = 113 - 1
+                                board_1_io_pos_offset['DO'] = 129 - 1
+                                board_1_io_pos_offset['AI'] = 3 - 1
+                                # TODO: AO起始位置未知
+                                self.module_config_info['3'][idx] = 4
+                            else:
+                                print('Error: 标准程序CMM102主底板只支持至多1块CIO011')
+                                self.status = -2
+                                break
+                        if module == 'CAI888':
+                            if board_1_modules_count[module] == 1:
+                                self.module_config_info['3'][idx] = 5
+                            elif board_1_modules_count[module] == 2:
+                                self.module_config_info['3'][idx] = 6
+                            elif board_1_modules_count[module] == 2:
+                                self.module_config_info['3'][idx] = 13
+                            else:
+                                print('Error: 标准程序CMM102主底板只支持3块CAI888')
+                    else:
+                        if module == 'CTO163':
+                            if board_1_modules_count[module] == 1:
+                                board_1_io_pos_offset['DO'] = 49 - 1
+                                self.module_config_info['1'][0] = 4
+                            else:
+                                print('Error: 标准程序CIPC主底板支持至多1块CTO163')
+                                self.status = -2
+                                break
+                        if module == 'CDI163':
+                            if board_1_modules_count[module] == 1:
+                                board_1_io_pos_offset['DI'] = 57 - 1
+                                self.module_config_info['1'][0] = 5
+                            else:
+                                print('Error: 标准程序CIPC主底板支持至多1块CDI163')
+                                self.status = -2
+                                break
+                        if module == 'CDM163':
+                            if board_1_modules_count[module] == 1:
+                                board_1_io_pos_offset['DI'] = 73 - 1
+                                board_1_io_pos_offset['DO'] = 41 - 1
+                                self.module_config_info['1'][0] = 3
+                            else:
+                                print('Error: 标准程序CIPC主底板只支持至多1块CDM163')
+                                self.status = -2
+                                break
+                        if module == 'CIO011' or module == 'CIO021':
+                            # 标准程序CIPC主底板只有CIO011
+                            if board_1_modules_count[module] == 1:
+                                board_1_io_pos_offset['DI'] = 81 - 1
+                                board_1_io_pos_offset['DO'] = 65 - 1
+                                # TODO: AI和AO起始位置未知
+                                self.module_config_info['1'][0] = 6
+                            else:
+                                print('Error: 标准程序CIPC主底板只支持至多1块CIO011')
+                                self.status = -2
+                                break
+                        if module == 'CAI888':
+                            # 标准程序只支持3块CAI888
+                            if board_1_modules_count[module] == 1:
+                                self.module_config_info['1'][0] = 2
+                            else:
+                                print('Error: 标准程序CIPC主底板只支持1块CAI888')
 
-                for key, value in self.board_1_modules_ios[idx][1].items():
-                    # TODO: 这样简陋的解析数据容易出BUG
-                    io_type = key[:2].upper()
-                    io_seq = int(value)
-                    io_pos = int(key[2:]) + board_1_io_pos_offset[io_type]
-                    self.io_config_info[io_type][io_seq] = io_pos
+                    for key, value in self.board_1_modules_ios[idx][1].items():
+                        # TODO: 这样简陋的解析数据容易出BUG
+                        io_type = key[:2].upper()
+                        io_seq = int(value)
+                        io_pos = int(key[2:]) + board_1_io_pos_offset[io_type]
+                        self.io_config_info[io_type][io_seq] = io_pos
 
-        board_2_modules_count = {}
-        # 去掉扩展底板一的Varan连接模块
-        board_2_normal_modules_ios = self.board_2_modules_ios[1:]
-        for idx in range(len(board_2_normal_modules_ios)):
-            module = board_2_normal_modules_ios[idx][0].upper()
-            # 非VE2机的主底板扩展槽内容检测
-            if module != '':
-                # IO位置的偏移量
-                board_2_io_pos_offset = {'DI': 0, 'DO': 0, 'AI': 0, 'AO': 0, 'TI': 0, 'TO': 0}
-                if module not in board_2_modules_count:
-                    board_2_modules_count[module] = 1
-                else:
-                    board_2_modules_count[module] += 1
-                # 根据不同的模块，对应不同的起始位置，比如第一块CTO163，DO从41开始
-                if self.imm_type != 'VE2':
-                    if module == 'CTO163':
-                        if board_2_modules_count[module] == 1:
-                            board_2_io_pos_offset['DO'] = 153 - 1
-                            self.module_config_info['4'][idx] = 2
-                        elif board_2_modules_count[module] == 2:
-                            board_2_io_pos_offset['DO'] = 169 - 1
-                            self.module_config_info['4'][idx] = 3
-                        else:
-                            print('Error: 标准程序CMM102扩展底板一支持至多2块CTO163')
-                            break
-                    if module == 'CDI163':
-                        if board_2_modules_count[module] == 1:
-                            board_2_io_pos_offset['DI'] = 169 - 1
-                            self.module_config_info['4'][idx] = 1
-                        elif board_2_modules_count[module] == 2:
-                            board_2_io_pos_offset['DI'] = 217 - 1
-                            self.module_config_info['4'][idx] = 14
-                        else:
-                            print('Error: 标准程序CMM102扩展底板一支持至多2块CDI163')
-                            break
-                    if module == 'CDM163':
-                        if board_2_modules_count[module] == 1:
-                            board_2_io_pos_offset['DI'] = 185 - 1
-                            board_2_io_pos_offset['DO'] = 185 - 1
-                            self.module_config_info['4'][idx] = 4
-                        elif board_2_modules_count[module] == 2:
-                            board_2_io_pos_offset['DI'] = 209 - 1
-                            board_2_io_pos_offset['DO'] = 209 - 1
-                            self.module_config_info['4'][idx] = 13
-                        else:
-                            print('Error: 标注程序CMM102扩展底板一只支持至多2块CDM163')
-                            break
-                    if module == 'CIO021':
-                        if board_2_modules_count[module] == 1:
-                            board_2_io_pos_offset['DI'] = 193 - 1
-                            board_2_io_pos_offset['DO'] = 193 - 1
-                            # TODO: AI,AO起始位置未知
-                            self.module_config_info['4'][idx] = 11
-                        else:
-                            print('Error: 标注程序CMM102扩展底板一只支持至多1块CIO021')
-                            break
-                    if module == 'CIO011':
-                        if board_2_modules_count[module] == 1:
-                            board_2_io_pos_offset['DI'] = 201 - 1
-                            board_2_io_pos_offset['DO'] = 201 - 1
-                            # TODO: AI,AO起始位置未知
-                            self.module_config_info['4'][idx] = 12
-                        else:
-                            print('Error: 标注程序CMM102扩展底板一只支持至多1块CIO011')
-                            break
-                    if module == 'CAI888':
-                        if board_2_modules_count[module] == 1:
-                            self.module_config_info['4'][idx] = 5
-                        elif board_2_modules_count[module] == 2:
-                            self.module_config_info['4'][idx] = 6
-                        elif board_2_modules_count[module] == 3:
-                            self.module_config_info['4'][idx] = 7
-                        elif board_2_modules_count[module] == 4:
-                            self.module_config_info['4'][idx] = 8
-                        elif board_2_modules_count[module] == 5:
-                            self.module_config_info['4'][idx] = 9
-                        else:
-                            print('Error: 标准程序CMM102扩展底板一只支持5块CAI888')
-                else:
-                    if module == 'CTO163':
-                        if board_2_modules_count[module] == 1:
-                            board_2_io_pos_offset['DO'] = 73 - 1
-                            self.module_config_info['2'][idx] = 3
-                        elif board_2_modules_count[module] == 2:
-                            board_2_io_pos_offset['DO'] = 89 - 1
-                            self.module_config_info['2'][idx] = 4
-                        else:
-                            print('Error: 标准程序CIPC扩展底板一支持至多2块CTO163')
-                            break
-                    if module == 'CDI163':
-                        if board_2_modules_count[module] == 1:
-                            board_2_io_pos_offset['DI'] = 89 - 1
-                            self.module_config_info['2'][idx] = 1
-                        elif board_2_modules_count[module] == 2:
-                            board_2_io_pos_offset['DI'] = 105 - 1
-                            self.module_config_info['2'][idx] = 2
-                        else:
-                            print('Error: 标准程序CIPC扩展底板一支持至多2块CDI163')
-                            break
-                    if module == 'CDM163':
-                        if board_2_modules_count[module] == 1:
-                            board_2_io_pos_offset['DI'] = 121 - 1
-                            board_2_io_pos_offset['DO'] = 105 - 1
-                            self.module_config_info['2'][idx] = 5
-                        elif board_2_modules_count[module] == 2:
-                            board_2_io_pos_offset['DI'] = 137 - 1
-                            board_2_io_pos_offset['DO'] = 121 - 1
-                            self.module_config_info['2'][idx] = 13
-                        elif board_2_modules_count[module] == 3:
-                            board_2_io_pos_offset['DI'] = 145 - 1
-                            board_2_io_pos_offset['DO'] = 129 - 1
-                            self.module_config_info['2'][idx] = 14
-                        else:
-                            print('Error: 标注程序CIPC扩展底板一只支持至多3块CDM163')
-                            break
-                    if module == 'CIO011' or module == 'CIO021':
-                        # 标准程序CIPC主底板只有CIO011
-                        if board_2_modules_count[module] == 1:
-                            board_2_io_pos_offset['DI'] = 129 - 1
-                            board_2_io_pos_offset['DO'] = 113 - 1
-                            # TODO: AI和AO起始位置未知
-                            self.module_config_info['2'][idx] = 7
-                        elif board_2_modules_count[module] == 2:
-                            board_2_io_pos_offset['DI'] = 153 - 1
-                            board_2_io_pos_offset['DO'] = 137 - 1
-                            # TODO: AI和AO起始位置未知
-                            self.module_config_info['2'][idx] = 15
-                        elif board_2_modules_count[module] == 3:
-                            board_2_io_pos_offset['DI'] = 161 - 1
-                            board_2_io_pos_offset['DO'] = 145 - 1
-                            # TODO: AI和AO起始位置未知
-                            self.module_config_info['2'][idx] = 16
-                        else:
-                            print('Error: 标准程序CIPC扩展底板一只支持至多3块CIO011')
-                            break
-                    if module == 'CAI888':
-                        if board_2_modules_count[module] == 1:
-                            self.module_config_info['2'][idx] = 8
-                        elif board_2_modules_count[module] == 2:
-                            self.module_config_info['2'][idx] = 9
-                        elif board_2_modules_count[module] == 3:
-                            self.module_config_info['2'][idx] = 10
-                        elif board_2_modules_count[module] == 4:
-                            self.module_config_info['2'][idx] = 11
-                        elif board_2_modules_count[module] == 5:
-                            self.module_config_info['2'][idx] = 12
-                        else:
-                            print('Error: 标准程序CMM102扩展底板一只支持5块CAI888')
-                    pass
+        if self.board_2_modules_ios is not None and len(self.board_2_modules_ios) > 0:
+            board_2_modules_count = {}
+            # 去掉扩展底板一的Varan连接模块
+            board_2_normal_modules_ios = self.board_2_modules_ios[1:]
+            for idx in range(len(board_2_normal_modules_ios)):
+                module = board_2_normal_modules_ios[idx][0].upper()
+                # 非VE2机的主底板扩展槽内容检测
+                if module != '':
+                    # IO位置的偏移量
+                    board_2_io_pos_offset = {'DI': 0, 'DO': 0, 'AI': 0, 'AO': 0, 'TI': 0, 'TO': 0}
+                    if module not in board_2_modules_count:
+                        board_2_modules_count[module] = 1
+                    else:
+                        board_2_modules_count[module] += 1
+                    # 根据不同的模块，对应不同的起始位置，比如第一块CTO163，DO从41开始
+                    if self.imm_type != 'VE2':
+                        if module == 'CTO163':
+                            if board_2_modules_count[module] == 1:
+                                board_2_io_pos_offset['DO'] = 153 - 1
+                                self.module_config_info['4'][idx] = 2
+                            elif board_2_modules_count[module] == 2:
+                                board_2_io_pos_offset['DO'] = 169 - 1
+                                self.module_config_info['4'][idx] = 3
+                            else:
+                                print('Error: 标准程序CMM102扩展底板一支持至多2块CTO163')
+                                self.status = -2
+                                break
+                        if module == 'CDI163':
+                            if board_2_modules_count[module] == 1:
+                                board_2_io_pos_offset['DI'] = 169 - 1
+                                self.module_config_info['4'][idx] = 1
+                            elif board_2_modules_count[module] == 2:
+                                board_2_io_pos_offset['DI'] = 217 - 1
+                                self.module_config_info['4'][idx] = 14
+                            else:
+                                print('Error: 标准程序CMM102扩展底板一支持至多2块CDI163')
+                                self.status = -2
+                                break
+                        if module == 'CDM163':
+                            if board_2_modules_count[module] == 1:
+                                board_2_io_pos_offset['DI'] = 185 - 1
+                                board_2_io_pos_offset['DO'] = 185 - 1
+                                self.module_config_info['4'][idx] = 4
+                            elif board_2_modules_count[module] == 2:
+                                board_2_io_pos_offset['DI'] = 209 - 1
+                                board_2_io_pos_offset['DO'] = 209 - 1
+                                self.module_config_info['4'][idx] = 13
+                            else:
+                                print('Error: 标注程序CMM102扩展底板一只支持至多2块CDM163')
+                                self.status = -2
+                                break
+                        if module == 'CIO021':
+                            if board_2_modules_count[module] == 1:
+                                board_2_io_pos_offset['DI'] = 193 - 1
+                                board_2_io_pos_offset['DO'] = 193 - 1
+                                # TODO: AI,AO起始位置未知
+                                self.module_config_info['4'][idx] = 11
+                            else:
+                                print('Error: 标注程序CMM102扩展底板一只支持至多1块CIO021')
+                                self.status = -2
+                                break
+                        if module == 'CIO011':
+                            if board_2_modules_count[module] == 1:
+                                board_2_io_pos_offset['DI'] = 201 - 1
+                                board_2_io_pos_offset['DO'] = 201 - 1
+                                # TODO: AI,AO起始位置未知
+                                self.module_config_info['4'][idx] = 12
+                            else:
+                                print('Error: 标注程序CMM102扩展底板一只支持至多1块CIO011')
+                                self.status = -2
+                                break
+                        if module == 'CAI888':
+                            if board_2_modules_count[module] == 1:
+                                self.module_config_info['4'][idx] = 5
+                            elif board_2_modules_count[module] == 2:
+                                self.module_config_info['4'][idx] = 6
+                            elif board_2_modules_count[module] == 3:
+                                self.module_config_info['4'][idx] = 7
+                            elif board_2_modules_count[module] == 4:
+                                self.module_config_info['4'][idx] = 8
+                            elif board_2_modules_count[module] == 5:
+                                self.module_config_info['4'][idx] = 9
+                            else:
+                                print('Error: 标准程序CMM102扩展底板一只支持5块CAI888')
+                                self.status = -2
+                    else:
+                        if module == 'CTO163':
+                            if board_2_modules_count[module] == 1:
+                                board_2_io_pos_offset['DO'] = 73 - 1
+                                self.module_config_info['2'][idx] = 3
+                            elif board_2_modules_count[module] == 2:
+                                board_2_io_pos_offset['DO'] = 89 - 1
+                                self.module_config_info['2'][idx] = 4
+                            else:
+                                print('Error: 标准程序CIPC扩展底板一支持至多2块CTO163')
+                                self.status = -2
+                                break
+                        if module == 'CDI163':
+                            if board_2_modules_count[module] == 1:
+                                board_2_io_pos_offset['DI'] = 89 - 1
+                                self.module_config_info['2'][idx] = 1
+                            elif board_2_modules_count[module] == 2:
+                                board_2_io_pos_offset['DI'] = 105 - 1
+                                self.module_config_info['2'][idx] = 2
+                            else:
+                                print('Error: 标准程序CIPC扩展底板一支持至多2块CDI163')
+                                self.status = -2
+                                break
+                        if module == 'CDM163':
+                            if board_2_modules_count[module] == 1:
+                                board_2_io_pos_offset['DI'] = 121 - 1
+                                board_2_io_pos_offset['DO'] = 105 - 1
+                                self.module_config_info['2'][idx] = 5
+                            elif board_2_modules_count[module] == 2:
+                                board_2_io_pos_offset['DI'] = 137 - 1
+                                board_2_io_pos_offset['DO'] = 121 - 1
+                                self.module_config_info['2'][idx] = 13
+                            elif board_2_modules_count[module] == 3:
+                                board_2_io_pos_offset['DI'] = 145 - 1
+                                board_2_io_pos_offset['DO'] = 129 - 1
+                                self.module_config_info['2'][idx] = 14
+                            else:
+                                print('Error: 标注程序CIPC扩展底板一只支持至多3块CDM163')
+                                self.status = -2
+                                break
+                        if module == 'CIO011' or module == 'CIO021':
+                            # 标准程序CIPC主底板只有CIO011
+                            if board_2_modules_count[module] == 1:
+                                board_2_io_pos_offset['DI'] = 129 - 1
+                                board_2_io_pos_offset['DO'] = 113 - 1
+                                # TODO: AI和AO起始位置未知
+                                self.module_config_info['2'][idx] = 7
+                            elif board_2_modules_count[module] == 2:
+                                board_2_io_pos_offset['DI'] = 153 - 1
+                                board_2_io_pos_offset['DO'] = 137 - 1
+                                # TODO: AI和AO起始位置未知
+                                self.module_config_info['2'][idx] = 15
+                            elif board_2_modules_count[module] == 3:
+                                board_2_io_pos_offset['DI'] = 161 - 1
+                                board_2_io_pos_offset['DO'] = 145 - 1
+                                # TODO: AI和AO起始位置未知
+                                self.module_config_info['2'][idx] = 16
+                            else:
+                                print('Error: 标准程序CIPC扩展底板一只支持至多3块CIO011')
+                                self.status = -2
+                                break
+                        if module == 'CAI888':
+                            if board_2_modules_count[module] == 1:
+                                self.module_config_info['2'][idx] = 8
+                            elif board_2_modules_count[module] == 2:
+                                self.module_config_info['2'][idx] = 9
+                            elif board_2_modules_count[module] == 3:
+                                self.module_config_info['2'][idx] = 10
+                            elif board_2_modules_count[module] == 4:
+                                self.module_config_info['2'][idx] = 11
+                            elif board_2_modules_count[module] == 5:
+                                self.module_config_info['2'][idx] = 12
+                            else:
+                                print('Error: 标准程序CMM102扩展底板一只支持5块CAI888')
+                                self.status = -2
+                        pass
 
-                for key, value in board_2_normal_modules_ios[idx][1].items():
-                    # TODO: 这样简陋的解析数据容易出BUG
-                    io_type = key[:2].upper()
-                    io_seq = int(value)
-                    io_pos = int(key[2:]) + board_2_io_pos_offset[io_type]
-                    self.io_config_info[io_type][io_seq] = io_pos
+                    for key, value in board_2_normal_modules_ios[idx][1].items():
+                        # TODO: 这样简陋的解析数据容易出BUG
+                        io_type = key[:2].upper()
+                        io_seq = int(value)
+                        io_pos = int(key[2:]) + board_2_io_pos_offset[io_type]
+                        self.io_config_info[io_type][io_seq] = io_pos
 
         # 能耗模块DEE是否启用
         if self.dee:
@@ -351,13 +381,23 @@ class HwFileMaker:
             else:
                 self.varan_config_info = [0, 4, 5]
         # Varan连接模块
-        if len(self.board_2_modules_ios) > 0:
+        if self.board_2_modules_ios is not None and len(self.board_2_modules_ios) > 0:
             varan_conn_module = self.board_2_modules_ios[0][0]
             if varan_conn_module.upper() == 'CIV512':
-                self.varan_config_info.append(1)
+                if self.varan_module_pos == 0:
+                    self.varan_config_info.append(1)
+                else:
+                    self.varan_config_info.insert(1, 1)
             else:
                 if varan_conn_module.upper() == 'CIV521':
-                    self.varan_config_info.append(2)
+                    if self.varan_module_pos == 0:
+                        self.varan_config_info.append(2)
+                    else:
+                        self.varan_config_info.insert(1, 2)
+
+        if self.e73:
+            self.io_config_info['DI'][110] = 7
+            self.io_config_info['DI'][111] = 8
 
         # 不要去尝试配置TI和TO点位，容易出错！
         self.io_config_info['TI'] = {}
@@ -366,6 +406,13 @@ class HwFileMaker:
         print(self.io_config_info)
         print(self.varan_config_info)
 
+    def getConfigInfo(self):
+        return {
+            'module_config_info': self.module_config_info,
+            'io_config_info': self.io_config_info,
+            'varan_config_info': self.varan_config_info
+        }
+
     def createHwFile(self):
         '''
             根据IO配置点，修改硬件配置文件
@@ -373,13 +420,16 @@ class HwFileMaker:
                         -1      文件根本不存在，严重错误
                         -2      文件修改失败
         '''
+        if self.status < 0:
+            print("当前状态不允许生成硬件配置文件, status:", self.status)
+            return -1
         if self.std_file_path != '':
             shutil.copyfile(self.std_file_path, self.dst_file_path)
         else:
             print("未找到标准硬件配置文件")
         if not os.path.isfile(self.dst_file_path):
             print("目标配置文件不存在，可能复制文件过程中发生了错误")
-            return -1
+            return -2
         if self.io_config_info is None and self.module_config_info is None:
             return 0
         with open(self.dst_file_path, 'r+') as fp:
@@ -392,24 +442,27 @@ class HwFileMaker:
                     if parsed_result['type'] == 'IO':
                         io_type = str(parsed_result['name'])
                         io_seq = int(parsed_result['seq'])
-                        # io_pos = parsed_result['pos']
+                        io_pos = int(parsed_result['pos'])
+                        re_exp = re.compile(r',\d+,,')
+                        if self.e73:
+                            # 清空原7、8号位置的IO信息
+                            if io_pos == 7 or io_pos == 8:
+                                lines[row_need_modified] = re_exp.sub(',0,,', line)
                         if io_seq in self.io_config_info[io_type]:
                             #   io_config_info = {'DI':{41: 41, 73: 81}, 'DO': {}, 'AI': {}, ... }
-                            re_exp = re.compile(r',\d+,,')
                             lines[row_need_modified] = re_exp.sub(',' + str(self.io_config_info[io_type][io_seq]) + ',,', line)
                     # 定位Module行
                     if parsed_result['type'] == 'Module':
                         board = str(parsed_result['name'])
                         slot_seq = int(parsed_result['seq'])
                         # module_idx = parsed_result['pos']
-                        if board != '1' and  board in self.module_config_info and slot_seq < len(self.module_config_info[board]):
+                        if board != '1' and board in self.module_config_info and slot_seq < len(self.module_config_info[board]):
                             #   module_config_info = {'3': [1, 3, 0, 0], '4': [5, 3, 0]}
                             re_exp = re.compile(r',\d+,,')
                             lines[row_need_modified] = re_exp.sub(',' + str(self.module_config_info[board][slot_seq]) + ',,', line)
                         if board == '1' and slot_seq == 7 and self.imm_type == 'VE2':
                             re_exp = re.compile(r',\d+,,')
                             lines[row_need_modified] = re_exp.sub(',' + str(self.module_config_info[board][0]) + ',,', line)
-
                     # 定位Varan连接模块行
                     if parsed_result['type'] == 'Varan':
                         varan_num = str(parsed_result['name'])
@@ -435,6 +488,7 @@ class HwFileMaker:
                                         '3'     CCP621 CMM102 主底板
                                         '4'     CCP621 CMM102 扩展底板一
                       {type: 'Varan', name: '1', seq: 3, pos: 1}   第1号Varan线，第3个节点，配0号模块，即未配置
+                      None             这一行既不是IO点配置行，也不是模块配置行，也不是Varan配置行
         '''
         ret_info = {'type': '', 'name': '', 'seq': '', 'pos': ''}
         # 尝试匹配IO点，格式如下：
@@ -484,3 +538,5 @@ class HwFileMaker:
             ret_info['pos'] = int(result.group(3))
             return ret_info
         return None
+
+

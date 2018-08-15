@@ -13,6 +13,7 @@
       :module-name="curActiveModule"
       :ios="curActiveModuleIOs"
       :new-io-to-append="newIoToAppend"
+      :cur-board="curSelectedBoardSeq"
       @moduleiosupdate = "getModuleIoInfo"
       @varanposupdate = 'getVaranPos'>
     </module-config>
@@ -25,7 +26,7 @@
   /**
    * 数据处理逻辑：
    * 1.处理并保存各底板模块配置及模块IO配置信息
-   *   该组件与两个子组件的数据交换是双向的，即在此模块修改IO信息，数据将会传递下去并实时刷新视图
+   *   该组件与两个子组件的数据交换是双向的(模块选择及模块IO点位的配置)，即在此模块修改IO信息，数据将会传递下去并实时刷新视图
    *   从ModuleSelector获取模块的选择清单，以及当前选中的底板和模块信息
    *   将当前选中的模块以及当前模块的IO配置信息传递到ModuleConfig
    * 2.当某插槽选为CAI888时，AJAX获取相应IO名称后，自动填充对应的IO配置加热1-8

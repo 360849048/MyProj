@@ -301,6 +301,7 @@
           },
           success: function(data){
             _this.waiting = false;
+            console.log(data);
             alert('ok')
           },
           error: function(xhr, type){

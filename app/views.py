@@ -186,14 +186,18 @@ def createHkFile():
             board_2_modules_ios.append([board_2[idx], board_2_ios[idx]])
 
     ce_standard = data['ceStandard']
+    varan_conn_module_pos = data['varanConnModulePos']
+    e73_safety = data['funcConfig']['3']['status']
 
     hwmaker = HwFileMaker(imm_type=data['type'],
                           board_1_modules_ios=board_1_modules_ios,
                           board_2_modules_ios=board_2_modules_ios,
                           dst_file_dir='./app/static/cache/',
-                          ce_standard=ce_standard)
+                          ce_standard=ce_standard,
+                          varan_module_pos=varan_conn_module_pos,
+                          e73=e73_safety)
     if hwmaker.createHwFile() == 0:
-        return jsonify({'status': 'success'})
+        return jsonify({'status': 'success', 'hwfileInfo': hwmaker.getConfigInfo()})
     else:
         return jsonify({'status': 'fail'})
 

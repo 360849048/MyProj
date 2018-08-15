@@ -65,17 +65,24 @@
       <p class="h1">
         您已激活扩展该底板，连接模块是：{{moduleName}}
       </p>
-      <hr>
-      <p class="h5">{{moduleName}}位置选择</p>
-      <div class="custom-control custom-radio">
-        <input type="radio" id="beforeKeb" name='varanPosSet' class="custom-control-input" value="0" v-model="varanConnModulePos">
-        <label class="custom-control-label" for="beforeKeb">KEB之后</label>
+      <div v-show="curBoard == 2">
+        <hr>
+        <p class="h5">{{moduleName}}位置选择</p>
+        <div class="custom-control custom-radio">
+          <input type="radio" id="beforeKeb" name='varanPosSet' class="custom-control-input" value="0" v-model="varanConnModulePos">
+          <label class="custom-control-label" for="beforeKeb">KEB之后</label>
+        </div>
+        <div class="custom-control custom-radio">
+          <input type="radio" id="afterKeb" name='varanPosSet' class="custom-control-input" value="1" v-model="varanConnModulePos">
+          <label class="custom-control-label" for="afterKeb">KEB之前</label>
+        </div>
       </div>
-      <div class="custom-control custom-radio">
-        <input type="radio" id="afterKeb" name='varanPosSet' class="custom-control-input" value="1" v-model="varanConnModulePos">
-        <label class="custom-control-label" for="afterKeb">KEB之前</label>
+      <div v-show="curBoard == 3">
+        <hr>
+        <i class="fa fa-exclamation text-danger" aria-hidden="true"></i>
+        <span>底板三功能尚未开发完全，无法写入IO表和硬件配置</span>
       </div>
-      <hr>
+
     </div>
   </div>
 </template>
@@ -113,7 +120,9 @@
         // 例如: {'do1': 43--阀门1开, 'di2': 73--可编程IO输出1}
         'ios',
         // 从IoList鼠标双击触发传递过来的IO信息
-        'newIoToAppend'
+        'newIoToAppend',
+        // 当前活动的底板
+        'curBoard'
       ],
       data(){
         return{
