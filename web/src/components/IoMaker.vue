@@ -292,7 +292,7 @@
         let _this = this;
         $.ajax({
           type: 'POST',
-          url: '/createhkfile',
+          url: '/createconfigfile',
           data: JSON.stringify(dataToPost),
           dataType: 'json',
           contentType: 'application/json',
@@ -302,7 +302,9 @@
           success: function(data){
             _this.waiting = false;
             console.log(data);
-            alert('ok')
+            if(data.url){
+              window.open(data.url);
+            }
           },
           error: function(xhr, type){
             _this.waiting = false;

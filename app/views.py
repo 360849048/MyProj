@@ -1,8 +1,10 @@
 from flask import request, send_file, jsonify
+import os
+import shutil
 from app import app
 from app.sqljob import TableManager
 from app.iomaker import IOMaker
-from app.configfile import HwFileMaker
+from app.configfile import HkFileMaker, FcfFileMaker, SysFileMaker, createZip
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -157,14 +159,14 @@ def createIoFile():
         iomaker.nozzleToValve()
     if e73_safety:
         iomaker.e73Safety()
-    iomaker.createIOFile(io_file_path)
+    iomaker.createFile(io_file_path)
 
     return jsonify({'status': 'ok', 'ioFileUrl': io_url})
 
-@app.route('/createhkfile', methods=['POST'])
-def createHkFile():
+@app.route('/createconfigfile', methods=['POST'])
+def createConfigFile():
     '''
-        生成硬件配置文件(.hk)
+        生成配置文件(.hk)
         同样只支持主底板和扩展底板一的编辑，更多的配置请自行特殊制作支持
         必须严格按照网页传输数据进行编程
     '''
@@ -189,17 +191,50 @@ def createHkFile():
     varan_conn_module_pos = data['varanConnModulePos']
     e73_safety = data['funcConfig']['3']['status']
 
-    hwmaker = HwFileMaker(imm_type=data['type'],
+    clamp_force = data['clampForce']
+    injection = data['injection']
+    # 这个是改造后规范显示的immType字符串，json中的immType值不适合取文件名
+    imm_type = ''
+    zip_file_path = ''
+    zip_file_url = ''
+    if data['type'].upper() == 'ZES':
+        imm_type = 'ZE' + clamp_force + 's-' + injection
+    elif data['type'].upper() == 'ZE':
+        imm_type = 'ZE' + clamp_force + '-' + injection
+    elif data['type'].upper() == 'VE2S':
+        imm_type = 'VE' + clamp_force + 'IIs-' + injection
+    elif data['type'].upper() == 'VE2':
+        imm_type = 'VE' + clamp_force + 'II-' + injection
+    if ce_standard:
+        dst_file_dir = './app/static/cache/' + data['evaluationNum'] + imm_type + '(CE)/'
+        zip_file_path = './app/static/cache/' + data['evaluationNum'] + imm_type + '(CE).zip'
+        zip_file_url = './static/cache/' + data['evaluationNum'] + imm_type + '(CE).zip'
+    else:
+        dst_file_dir = './app/static/cache/' + data['evaluationNum'] + imm_type + '/'
+        zip_file_path = './app/static/cache/' + data['evaluationNum'] + imm_type + '.zip'
+        zip_file_url = './static/cache/' + data['evaluationNum'] + imm_type + '.zip'
+    if os.path.isdir(dst_file_dir):
+        shutil.rmtree(dst_file_dir)
+    os.mkdir(dst_file_dir)
+    fcfmaker = FcfFileMaker(imm_type=data['type'],
+                            ce_standard=ce_standard,
+                            dst_file_dir=dst_file_dir)
+    fcfmaker.createFile()
+    sysmaker = SysFileMaker(ce_standard=ce_standard,
+                            clamp_force=clamp_force,
+                            dst_file_dir=dst_file_dir)
+    sysmaker.createFile()
+    hkmaker = HkFileMaker(imm_type=data['type'],
                           board_1_modules_ios=board_1_modules_ios,
                           board_2_modules_ios=board_2_modules_ios,
-                          dst_file_dir='./app/static/cache/',
+                          dst_file_dir=dst_file_dir,
                           ce_standard=ce_standard,
                           varan_module_pos=varan_conn_module_pos,
                           e73=e73_safety)
-    if hwmaker.createHwFile() == 0:
-        return jsonify({'status': 'success', 'hwfileInfo': hwmaker.getConfigInfo()})
-    else:
-        return jsonify({'status': 'fail'})
+    hkmaker.createFile()
+    createZip(dst_file_dir, zip_file_path)
+
+    return jsonify({'status': 'success', 'url': zip_file_url, 'hwfileInfo': hkmaker.getConfigInfo()})
 
 
 

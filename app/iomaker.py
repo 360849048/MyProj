@@ -198,7 +198,7 @@ class IOMaker:
         self.xlsxObj.modifyDefaultIO(io_type=io_type, origin_io_name=origin_io_name2,
                                      new_io_cname=new_io_cname2, new_io_ename=new_io_ename2)
 
-    def createIOFile(self, path):
+    def createFile(self, path):
         self.xlsxObj.modifyImmInfo()
 
         self.xlsxObj.copyMainBoardModulesInfo()
@@ -234,5 +234,5 @@ if __name__ == '__main__':
     iomaker.func2ToChargeSignal()
     iomaker.nozzleToValve()
     iomaker.e73Safety()
-    iomaker.createIOFile('./1.xlsx')
+    iomaker.createFile('./1.xlsx')
 

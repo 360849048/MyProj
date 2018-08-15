@@ -1,9 +1,9 @@
 import os
 import shutil
 import re
+import zipfile
 
-
-class HwFileMaker:
+class HkFileMaker:
     def __init__(self, imm_type, ce_standard=False, board_1_modules_ios=None, board_2_modules_ios=None, energy_dee=False,
                  varan_module_pos=0, e73=False,
                  std_file_dir='./app/libfiles/配置文件/硬件配置文件/',
@@ -413,7 +413,7 @@ class HwFileMaker:
             'varan_config_info': self.varan_config_info
         }
 
-    def createHwFile(self):
+    def createFile(self):
         '''
             根据IO配置点，修改硬件配置文件
             :return     0       一切顺利
@@ -540,3 +540,97 @@ class HwFileMaker:
         return None
 
 
+class FcfFileMaker:
+    def __init__(self, imm_type, ce_standard=False, functions=None,
+                 std_file_dir='./app/libfiles/配置文件/功能配置文件/',
+                 dst_file_dir='./app/static/cache/'):
+        '''
+            functions: {'injSig': True, 'chargeSig': False, 'internalHotrunnerNum': 0, 'externalHotrunnerNum': 0}
+        '''
+        self.functions = functions
+        self.std_file_path = ''
+        self.dst_file_path = ''
+        for file_name in os.listdir(os.path.join(std_file_dir, imm_type)):
+            if ce_standard:
+                if 'CE' in file_name:
+                    self.std_file_path = os.path.join(std_file_dir, imm_type, file_name)
+                    self.dst_file_path = os.path.join(dst_file_dir, file_name)
+            else:
+                if 'CE' not in file_name:
+                    self.std_file_path = os.path.join(std_file_dir, imm_type, file_name)
+                    self.dst_file_path = os.path.join(dst_file_dir, file_name)
+
+    def createFile(self):
+        if not os.path.isfile(self.std_file_path):
+            print('没有找到标准功能配置文件')
+            return -1
+        shutil.copyfile(self.std_file_path, self.dst_file_path)
+        if not os.path.isfile(self.dst_file_path):
+            print("功能配置文件复制过程中发生了错误")
+            return -2
+        with open(self.dst_file_path, 'r+') as fp:
+            row_need_modified = 0
+            lines = fp.readlines()
+            for line in lines:
+                # TODO: 打开相应的功能
+                row_need_modified += 1
+            fp.seek(0)
+            fp.truncate()
+            for line in lines:
+                fp.write(line)
+        return 0
+
+
+class SysFileMaker:
+    def __init__(self, ce_standard=False, clamp_force=40,
+                 std_file_dir='./app/libfiles/配置文件/系统文件',
+                 dst_file_dir='./app/static/cache/'):
+        self.std_file_path = ''
+        self.dst_file_path = ''
+        for file_name in os.listdir(std_file_dir):
+            if ce_standard and 'CE' in file_name:
+                if int(clamp_force) <= 5500 and '550' in file_name:
+                    self.std_file_path = os.path.join(std_file_dir, file_name)
+                    self.dst_file_path = os.path.join(dst_file_dir, file_name)
+                if int(clamp_force) > 5500 and '650' in file_name:
+                    self.std_file_path = os.path.join(std_file_dir, file_name)
+                    self.dst_file_path = os.path.join(dst_file_dir, file_name)
+            if not ce_standard and 'CE' not in file_name:
+                if int(clamp_force) <= 5500 and '550' in file_name:
+                    self.std_file_path = os.path.join(std_file_dir, file_name)
+                    self.dst_file_path = os.path.join(dst_file_dir, file_name)
+                if int(clamp_force) > 5500 and '650' in file_name:
+                    self.std_file_path = os.path.join(std_file_dir, file_name)
+                    self.dst_file_path = os.path.join(dst_file_dir, file_name)
+
+    def createFile(self):
+        if not os.path.isfile(self.std_file_path):
+            print('未找到标准系统文件')
+            return -1
+        shutil.copyfile(self.std_file_path, self.dst_file_path)
+        if not os.path.isfile(self.dst_file_path):
+            print('复制系统文件过程中发生了错误')
+            return -2
+        return 0
+
+
+def createZip(file_dir, dst_zip_path=''):
+    '''
+        将某个文件夹打包成zip文件，最后返回zip文件路径
+        file_dir:       文件夹的目录名
+        dst_zip_path:   *.zip文件的路径
+    '''
+    if dst_zip_path == '':
+        dst_zip_path = file_dir.strip(r' \/') + '.zip'
+    if os.path.isfile(dst_zip_path):
+        os.remove(dst_zip_path)
+    fp = zipfile.ZipFile(dst_zip_path, 'w')
+    for file_name in os.listdir(file_dir):
+        file_path = os.path.join(file_dir, file_name)
+        fp.write(file_path, file_name, zipfile.ZIP_DEFLATED)
+    fp.close()
+    return dst_zip_path
+
+
+if __name__ == '__main__':
+    createZip(r'F:\MyProj\app\static\cache')
