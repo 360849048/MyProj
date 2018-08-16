@@ -2,14 +2,14 @@
   <div id="funcSwitch">
     <div class="container-fluid">
       <div class="row">
-        <div class="col-xl-3">
+        <div class="col-sm-3">
             <button type="button" class="btn btn-lg"
                     :class="[status ? 'btn-outline-success' : 'btn-outline-danger']"
                     @click="toggleStatus">
               <i class="fa" :class="[status ? 'fa-check' : 'fa-times']" aria-hidden="true"></i>&nbsp;&nbsp;{{status | toChinese}}
             </button>
         </div>
-        <div class="col-xl-9">
+        <div class="col-sm-9">
           <span>{{name}}</span>
         </div>
       </div>

@@ -1,8 +1,9 @@
 <template>
   <div id="funcconfig">
     <div class="row">
-      <div class="col-4">
-        <h2>主底板默认IO修改</h2>
+      <div class="col-xl-4">
+        <h2>IO表相关修改</h2>
+        <hr>
         <div v-for="(item, index) in funcs" class="p-1">
           <func-switch
             :id="index"
@@ -16,14 +17,22 @@
             <label id="extHotrunnerLabel">外置热流道组数</label>
             <el-input-number :min="1" :max="10" label="热流道组数"
                              v-model="extHotrunnerNum"
-                             @change="handleChange">
+                             @change="handleExtHot">
             </el-input-number>
           </form>
         </transition>
       </div>
-      <div class="col-6">
+      <div class="col-xl-6">
         <h2>功能配置</h2>
+        <hr>
         <h3 class="ml-3 mt-3 text-secondary">施工中...</h3>
+        <form>
+          <label id="intHotrunnerLabel">内置热流道组数</label>
+          <el-input-number :min="0" :max="2" label="热流道组数"
+                           v-model="intHotrunnerNum"
+                           @change="handleIntHot">
+          </el-input-number>
+        </form>
       </div>
     </div>
   </div>
@@ -52,7 +61,8 @@
           5: {name: 'DEE能耗模块', status: false},
           666: {name: '外置热流道', status: false}
         },
-        extHotrunnerNum: 3
+        extHotrunnerNum: 3,
+        intHotrunnerNum: 0
       }
     },
     methods: {
@@ -60,16 +70,33 @@
         this.funcs[e.id].status = e.status;
         this.$emit('functionsupdate', this.funcs);
       },
-      handleChange(){
+      handleExtHot(){
         this.$emit('exthotrunnerchange', this.extHotrunnerNum);
+      },
+      handleIntHot(){
+        this.$emit('inthotrunnerchange', this.intHotrunnerNum);
       }
     },
   }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
   #funcconfig{
     /*border: 1px gray dotted;*/
+    /* 设置一定的padding，消除底部滚动条 */
+    padding: 15px;
+    margin-top: 10px;
+    height: 700px;
+    overflow: auto;
+    &::-webkit-scrollbar{
+       width: 6px;
+       /*display: none;*/
+     }
+    &::-webkit-scrollbar-thumb{
+       border-radius: 10px;
+       -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+       background: #818080;
+     }
   }
   #extHotrunnerLabel{
     margin-left: 3rem;

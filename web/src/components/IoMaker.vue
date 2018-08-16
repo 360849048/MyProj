@@ -16,7 +16,8 @@
             <div class="col-sm-8" v-show="curStep === 1">
               <func-config
               @functionsupdate="getFuncConfig"
-              @exthotrunnerchange="getExtHotrunnerNum">
+              @exthotrunnerchange="getExtHotrunnerNum"
+              @inthotrunnerchange="getIntHotrunnerNum">
               </func-config>
             </div>
           </transition>
@@ -56,8 +57,14 @@
       </div>
       <footer class="fixed-bottom">
         <i class="fa fa-angle-left fa-3x" :class="{'enable': curStep !== 1}" aria-hidden="true" @click="slidePrev"></i>
-        <div id="postInfo">
-          <a href="#exampleModalLong" class="fa-2x enable" @click="getInfo=true" data-toggle="modal">提交</a>
+        <div>
+          <a href="#exampleModalLong" class="fa-2x enable" @click="popModalIO" data-toggle="modal">IO表</a>
+        </div>
+        <div>
+          <a href="#exampleModalLong" class="fa-2x enable" @click="popModalConfig" data-toggle="modal">配置文件</a>
+        </div>
+        <div>
+          <a href="#" class="fa-2x enable" @click="resetAllInfo" data-toggle="modal">重置</a>
         </div>
         <i class="fa fa-angle-right fa-3x" :class="{'enable': curStep !== 2}" aria-hidden="true" @click="slideNext"></i>
       </footer>
@@ -66,14 +73,49 @@
         <div class="modal-dialog" role="document">
           <div class="modal-content">
             <div class="modal-header">
-              <h5 class="modal-title" id="exampleModalLongTitle">请确认配置信息</h5>
+              <h5 class="modal-title" id="exampleModalLongTitle">
+                <span v-if="modalType===0">即将创建IO表</span>
+                <span v-if="modalType===1">即将创建配置文件</span>
+              </h5>
               <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
               </button>
             </div>
             <div class="modal-body">
-              机型：{{type}}&nbsp;{{injection}}-{{clampForce}}<br>
-              是否CE：{{ceStandard}}
+              机型：{{type}}&nbsp;{{clampForce}}-{{injection}}<br>
+              <div v-if="ceStandard && modalType===1" class="font-weight-bold text-danger">
+                <span>&nbsp;&nbsp;CE</span>
+                <div class="btn-group dropright">
+                  <i class="fa fa-cog text-danger pointer" aria-hidden="true" aria-haspopup="true" aria-expanded="false"
+                     data-toggle="dropdown"
+                     :class="{'fa-spin': pilzNor===''}">
+                  </i>
+                  <div class="dropdown-menu">
+                    <a href="#" v-for="item in pilzList['normal']" @click="pilzNor=item" class="dropdown-item">{{item}}</a>
+                  </div>
+                </div>
+                <span class="pl-5">{{pilzNor}}</span>
+                <span v-show="pilzNor===''" class="float-right"><i class="fa fa-exclamation-triangle" aria-hidden="true"></i>请选择安全继电器文件</span>
+              </div>
+              <div v-if="ceStandard && modalType===0" class="font-weight-bold text-danger">
+                <span>&nbsp;&nbsp;CE</span>
+              </div>
+              <div v-if="funcConfig[3].status && modalType===1" class="font-weight-bold text-danger">
+                <span>E73</span>
+                <div class="btn-group dropright">
+                  <i class="fa fa-cog text-danger pointer" aria-hidden="true" aria-haspopup="true" aria-expanded="false"
+                     data-toggle="dropdown"
+                     :class="{'fa-spin': pilzE73===''}"></i>
+                  <div class="dropdown-menu">
+                    <a href="#" v-for="item in pilzList['e73']" @click="pilzE73=item" class="dropdown-item">{{item}}</a>
+                  </div>
+                </div>
+                <span class="pl-5">{{pilzE73}}</span>
+                <span v-show="pilzE73===''" class="float-right"><i class="fa fa-exclamation-triangle" aria-hidden="true"></i>请选择E73文件</span>
+              </div>
+              <div v-if="funcConfig[3].status && modalType===0" class="font-weight-bold text-danger">
+                <span>E73</span>
+              </div>
               <hr>
               主底板模块: {{boardModules1}}<br>
               <hr>
@@ -81,15 +123,14 @@
               <hr>
               扩展底板二：{{boardModules3}}<br>
               <hr>
-              能耗模块：{{funcConfig[5].status}}
+              能耗模块：<span class="font-weight-bold" :class="{'text-danger': funcConfig[5].status}">{{funcConfig[5].status}}</span>
               <hr>
-              外置热流道：{{funcConfig[666].status}}
+              外置热流道：<span class="font-weight-bold" :class="{'text-danger': funcConfig[666].status}">{{funcConfig[666].status}}</span>
               <div v-show="funcConfig[666].status">{{extHotrunnerNum}}</div>
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
-              <button type="button" class="btn btn-primary" data-dismiss="modal" @click="submitInfo">确认提交</button>
-              <button type="button" class="btn btn-danger" data-dismiss="modal" @click="testNewFunc">新功能测试</button>
+              <button type="button" class="btn btn-primary" data-dismiss="modal" @click="submitInfo">提交</button>
             </div>
           </div>
         </div>
@@ -151,6 +192,7 @@
           666: {name: '外置热流道', status: false}
         },
         extHotrunnerNum: 3,
+        intHotrunnerNum: 0,
         // 解析immType后得到的数据
         isBigImm: false,
         isDualInj: false,
@@ -158,6 +200,10 @@
         injection: 0,
         type: '',
         ceStandard: false,
+        // 安全继电器信息
+        pilzList: {'normal': ['pilz_type_1', 'pilz_type_2', 'pilz_type_3', '自选'], 'e73': ['e73_type_1', 'e73_type_2', '自选']},
+        pilzNor: '',
+        pilzE73: '',
 
         // 控制页面的展示内容：信息录入 或 IO选配（左右移动）
         curStep: 1,
@@ -168,7 +214,9 @@
         // 正常情况下，该值应该为 ''
         newIoToAppend: '',
         // POST后等待后台返回数据
-        waiting: false
+        waiting: false,
+        // 控制弹出modal的样式， 0：IO     1: 配置文件
+        modalType: 0
       }
     },
     methods:{
@@ -212,6 +260,9 @@
       getExtHotrunnerNum(e){
         this.extHotrunnerNum = e;
       },
+      getIntHotrunnerNum(e){
+        this.intHotrunnerNum = e;
+      },
       getNewIoAppend(e){
         this.newIoToAppend = e;
       },
@@ -233,6 +284,7 @@
           designNote: this.designNote,
           funcConfig: this.funcConfig,
           extHotrunnerNum: this.extHotrunnerNum,
+          intHotrunnerNum: this.intHotrunnerNum,
           isBigImm: this.isBigImm,
           isDualInj: this.isDualInj,
           clampForce: this.clampForce,
@@ -241,23 +293,30 @@
           ceStandard: this.ceStandard
         };
         let _this = this;
+        let url;
+        if(this.modalType === 0){
+          url = '/createxlxs';
+        }
+        if(this.modalType === 1){
+          url = '/createconfigfile';
+        }
         $.ajax({
           type: 'POST',
-          url: '/createxlxs',
+          url: url,
           data: JSON.stringify(dataToPost),
           dataType: 'json',
           contentType: 'application/json',
-          beforeSend: function(){
+          beforeSend: function () {
             _this.waiting = true;
           },
-          success: function(data){
+          success: function (data) {
             _this.waiting = false;
             // 下载文件
-            if(data.ioFileUrl){
-              window.open(data.ioFileUrl);
+            if (data.url) {
+              window.open(data.url);
             }
           },
-          error: function(xhr, type){
+          error: function (xhr, type) {
             _this.waiting = false;
             alert('无法连接服务器');
           }
@@ -282,6 +341,7 @@
           designNote: this.designNote,
           funcConfig: this.funcConfig,
           extHotrunnerNum: this.extHotrunnerNum,
+          intHotrunnerNum: this.intHotrunnerNum,
           isBigImm: this.isBigImm,
           isDualInj: this.isDualInj,
           clampForce: this.clampForce,
@@ -321,6 +381,20 @@
       },
       getVaranConnModulePosInfo(e){
         this.varanConnModulePos = e;
+      },
+      resetAllInfo(){
+        if(confirm('清空所有配置信息？')){
+          // location.reload();
+          this.$router.go(0);
+        }
+      },
+      popModalIO(){
+        this.getInfo = true;
+        this.modalType = 0;
+      },
+      popModalConfig(){
+        this.getInfo = true;
+        this.modalType = 1;
       }
     },
     watch: {
@@ -400,6 +474,25 @@
           this.ceStandard = false;
         }
       }
+    },
+    mounted(){
+      $.ajax({
+        url: "/pilzlist",
+        type: 'GET',
+        dataType: 'json',
+        beforeSend: function(){
+          console.log('开始获取Pilz文件列表');
+        },
+        complete: function(){
+          console.log('获取结束');
+        },
+        success: function(data){
+          this.pilzList = data;
+        },
+        error: function(){
+          console.log('AJAX请求失败，无法获取Pilz文件列表');
+        }
+      });
     }
   }
 </script>
@@ -487,5 +580,12 @@
         color: black;
       }
     }
+  }
+  .pointer{
+    cursor: pointer;
+  }
+  #srcmaker{
+    /* 防止底部被footer遮挡 */
+    padding-bottom: 2rem;
   }
 </style>

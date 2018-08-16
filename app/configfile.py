@@ -545,7 +545,7 @@ class FcfFileMaker:
                  std_file_dir='./app/libfiles/配置文件/功能配置文件/',
                  dst_file_dir='./app/static/cache/'):
         '''
-            functions: {'injSig': True, 'chargeSig': False, 'internalHotrunnerNum': 0, 'externalHotrunnerNum': 0}
+            functions: {'injSig': True, 'chargeSig': False, 'internalHotrunnerNum': 0, 'dee': False}
         '''
         self.functions = functions
         self.std_file_path = ''
@@ -573,6 +573,19 @@ class FcfFileMaker:
             lines = fp.readlines()
             for line in lines:
                 # TODO: 打开相应的功能
+                if 'injSig' in self.functions and self.functions['injSig'] and \
+                        re.search(r"SelectOutput1\.ClassSvr", line):
+                    lines[row_need_modified] = re.sub(r",\d+,,", r",1,,", line)
+                if 'chargeSig' in self.functions and  self.functions['chargeSig'] and \
+                        re.search(r"SelectOutput2\.ClassSvr", line):
+                    lines[row_need_modified] = re.sub(r",\d+,,", r",2,,", line)
+                if 'internalHotrunnerNum' in self.functions and int(self.functions['internalHotrunnerNum']) > 0 and \
+                        re.search(r"MoldHeating\.sMoldHeatingSelection", line):
+                    lines[row_need_modified] = re.sub(r",\d+,,", "," + str(self.functions['internalHotrunnerNum']) + ",,", line)
+                if 'dee' in self.functions and self.functions['dee'] and \
+                        re.search(r'FileEvaluation1\.DEE_Enable', line):
+                    lines[row_need_modified] = re.sub(r",\d+,,", r",1,,", line)
+
                 row_need_modified += 1
             fp.seek(0)
             fp.truncate()

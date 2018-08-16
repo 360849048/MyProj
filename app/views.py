@@ -161,7 +161,7 @@ def createIoFile():
         iomaker.e73Safety()
     iomaker.createFile(io_file_path)
 
-    return jsonify({'status': 'ok', 'ioFileUrl': io_url})
+    return jsonify({'status': 'ok', 'url': io_url})
 
 @app.route('/createconfigfile', methods=['POST'])
 def createConfigFile():
@@ -187,13 +187,15 @@ def createConfigFile():
         if board_2[idx] != '':
             board_2_modules_ios.append([board_2[idx], board_2_ios[idx]])
 
+    # 硬件配置文件
     ce_standard = data['ceStandard']
     varan_conn_module_pos = data['varanConnModulePos']
     e73_safety = data['funcConfig']['3']['status']
+    energy_dee = data['funcConfig']['5']['status']
 
     clamp_force = data['clampForce']
     injection = data['injection']
-    # 这个是改造后规范显示的immType字符串，json中的immType值不适合取文件名
+    # 下面开始生成文件路径，创建目录
     imm_type = ''
     zip_file_path = ''
     zip_file_url = ''
@@ -216,7 +218,16 @@ def createConfigFile():
     if os.path.isdir(dst_file_dir):
         shutil.rmtree(dst_file_dir)
     os.mkdir(dst_file_dir)
+
+    # 功能配置选项，注意key值和configfile.py中的名字对应
+    functions = {}
+    functions['injSig'] = data['funcConfig']['1']['status']
+    functions['chargeSig'] = data['funcConfig']['2']['status']
+    functions['dee'] = data['funcConfig']['5']['status']
+    functions['internalHotrunnerNum'] = data['intHotrunnerNum']
+
     fcfmaker = FcfFileMaker(imm_type=data['type'],
+                            functions=functions,
                             ce_standard=ce_standard,
                             dst_file_dir=dst_file_dir)
     fcfmaker.createFile()
@@ -230,7 +241,8 @@ def createConfigFile():
                           dst_file_dir=dst_file_dir,
                           ce_standard=ce_standard,
                           varan_module_pos=varan_conn_module_pos,
-                          e73=e73_safety)
+                          e73=e73_safety,
+                          energy_dee=energy_dee)
     hkmaker.createFile()
     createZip(dst_file_dir, zip_file_path)
 
