@@ -58,10 +58,10 @@
       <footer class="fixed-bottom">
         <i class="fa fa-angle-left fa-3x" :class="{'enable': curStep !== 1}" aria-hidden="true" @click="slidePrev"></i>
         <div>
-          <a href="#exampleModalLong" class="fa-2x enable" @click="popModalIO" data-toggle="modal">IO表</a>
+          <a href="#checkInfoBeforeSubmit" class="fa-2x enable" @click="popModalIO" data-toggle="modal">IO表</a>
         </div>
         <div>
-          <a href="#exampleModalLong" class="fa-2x enable" @click="popModalConfig" data-toggle="modal">配置文件</a>
+          <a href="#checkInfoBeforeSubmit" class="fa-2x enable" @click="popModalConfig" data-toggle="modal">配置文件</a>
         </div>
         <div>
           <a href="#" class="fa-2x enable" @click="resetAllInfo" data-toggle="modal">重置</a>
@@ -69,7 +69,7 @@
         <i class="fa fa-angle-right fa-3x" :class="{'enable': curStep !== 2}" aria-hidden="true" @click="slideNext"></i>
       </footer>
       <!-- 配置信息确认模态框 -->
-      <div class="modal fade" id="exampleModalLong" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
+      <div class="modal fade" id="checkInfoBeforeSubmit" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
         <div class="modal-dialog" role="document">
           <div class="modal-content">
             <div class="modal-header">
@@ -130,7 +130,7 @@
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
-              <button type="button" class="btn btn-primary" data-dismiss="modal" @click="submitInfo">提交</button>
+              <button type="button" class="btn btn-primary" @click="submitInfo">提交</button>
             </div>
           </div>
         </div>
@@ -201,7 +201,7 @@
         type: '',
         ceStandard: false,
         // 安全继电器信息
-        pilzList: {'normal': ['pilz_type_1', 'pilz_type_2', 'pilz_type_3', '自选'], 'e73': ['e73_type_1', 'e73_type_2', '自选']},
+        pilzList: {'normal': ['获取文件失败'], 'e73': ['获取文件失败']},
         pilzNor: '',
         pilzE73: '',
 
@@ -256,6 +256,9 @@
       },
       getFuncConfig(e){
         this.funcConfig = e;
+        if(!this.funcConfig[3].status){
+          this.pilzE73 = ''
+        }
       },
       getExtHotrunnerNum(e){
         this.extHotrunnerNum = e;
@@ -267,6 +270,22 @@
         this.newIoToAppend = e;
       },
       submitInfo(){
+        if(this.modalType === 1){
+          if(this.ceStandard && this.pilzNor === ''){
+            this.$message({
+              message: '请选择安全继电器文件',
+              type: 'warning'
+            });
+            return;
+          }
+          if(this.funcConfig[3].status && this.pilzE73 === ''){
+            this.$message({
+              message: '请选择E73文件',
+              type: 'warning'
+            });
+            return;
+          }
+        }
         let dataToPost = {
           boardModules1: this.boardModules1,
           boardModules2: this.boardModules2,
@@ -283,6 +302,8 @@
           technicalClause: this.technicalClause,
           designNote: this.designNote,
           funcConfig: this.funcConfig,
+          pilzNor: this.pilzNor,
+          pilzE73: this.pilzE73,
           extHotrunnerNum: this.extHotrunnerNum,
           intHotrunnerNum: this.intHotrunnerNum,
           isBigImm: this.isBigImm,
@@ -312,8 +333,10 @@
           success: function (data) {
             _this.waiting = false;
             // 下载文件
-            if (data.url) {
+            if (data.status.toUpperCase() === 'SUCCESS' && data.url) {
               window.open(data.url);
+            }else{
+              alert('后台遇到错误，无法生成文件，错误描述：' + data.description);
             }
           },
           error: function (xhr, type) {
@@ -321,56 +344,7 @@
             alert('无法连接服务器');
           }
         });
-      },
-      // TODO: 新功能测试
-      testNewFunc(){
-        let dataToPost = {
-          boardModules1: this.boardModules1,
-          boardModules2: this.boardModules2,
-          boardModules3: this.boardModules3,
-          boardModulesIOs1: this.boardModulesIOs1,
-          boardModulesIOs2: this.boardModulesIOs2,
-          boardModulesIOs3: this.boardModulesIOs3,
-          varanConnModulePos: this.varanConnModulePos,
-          evaluationNum: this.evaluationNum,
-          productionNum: this.productionNum,
-          immType: this.immType,
-          customer: this.customer,
-          safetyStandard: this.safetyStandard,
-          technicalClause: this.technicalClause,
-          designNote: this.designNote,
-          funcConfig: this.funcConfig,
-          extHotrunnerNum: this.extHotrunnerNum,
-          intHotrunnerNum: this.intHotrunnerNum,
-          isBigImm: this.isBigImm,
-          isDualInj: this.isDualInj,
-          clampForce: this.clampForce,
-          injection: this.injection,
-          type: this.type,
-          ceStandard: this.ceStandard
-        };
-        let _this = this;
-        $.ajax({
-          type: 'POST',
-          url: '/createconfigfile',
-          data: JSON.stringify(dataToPost),
-          dataType: 'json',
-          contentType: 'application/json',
-          beforeSend: function(){
-            _this.waiting = true;
-          },
-          success: function(data){
-            _this.waiting = false;
-            console.log(data);
-            if(data.url){
-              window.open(data.url);
-            }
-          },
-          error: function(xhr, type){
-            _this.waiting = false;
-            alert('无法连接服务器');
-          }
-        });
+        $('#checkInfoBeforeSubmit').modal('hide');
       },
       slideNext(){
         this.curStep = 2;
@@ -466,28 +440,24 @@
       },
       safetyStandard(){
         this.ceStandard = true;
-        console.log(this.safetyStandard);
         if(this.safetyStandard.search(/亚洲|非CE|not|国标/i) > -1) {
           this.ceStandard = false;
+          this.pilzNor = '';
         }
         if(this.safetyStandard === ''){
           this.ceStandard = false;
+          this.pilzNor = '';
         }
       }
     },
     mounted(){
+      let _this = this;
       $.ajax({
         url: "/pilzlist",
         type: 'GET',
         dataType: 'json',
-        beforeSend: function(){
-          console.log('开始获取Pilz文件列表');
-        },
-        complete: function(){
-          console.log('获取结束');
-        },
         success: function(data){
-          this.pilzList = data;
+          _this.pilzList = data;
         },
         error: function(){
           console.log('AJAX请求失败，无法获取Pilz文件列表');

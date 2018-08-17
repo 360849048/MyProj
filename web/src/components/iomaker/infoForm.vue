@@ -141,7 +141,7 @@
           if(this.immType === ''){
             this.$notify.error({
               title: '漏填了重要信息',
-              message: '注意啦，必须填写机器类型，否则不受理',
+              message: '注意啦，必须填写机器类型',
               position: 'top-left'
             });
           }

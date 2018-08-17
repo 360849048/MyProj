@@ -4,8 +4,14 @@ import shutil
 from app import app
 from app.sqljob import TableManager
 from app.iomaker import IOMaker
-from app.configfile import HkFileMaker, FcfFileMaker, SysFileMaker, createZip
+from app.configfile import HkFileMaker, FcfFileMaker, SysFileMaker, SafetyFileMaker, createZip
 
+
+_CONFIG_FILE_DIR = './app/libfiles/配置文件/'
+# 对于python运行环境来说，此时工作路径为  /MyProj
+_CACHE_FILE_DIR = './app/static/cache/'
+# 对于Flask框架来说，此时工作路径为  /app   且所有HTTP请求的文件必须位于 /app/static目录之下
+_URL_DIR = './static/cache/'
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
@@ -67,6 +73,19 @@ def getBigIo():
             ret_data['ios'][k] = str(v) + '--' + t_di.displayBriefData(v, 'CName')[0]
         if k.startswith('do'):
             ret_data['ios'][k] = str(v) + '--' + t_do.displayBriefData(v, 'CName')[0]
+    return jsonify(ret_data)
+
+@app.route('/pilzlist', methods=['GET'])
+def getPilzList():
+    ret_data = {'normal': [], 'e73': []}
+    e73_dir = os.path.join(_CONFIG_FILE_DIR, '安全继电器文件', 'E73')
+    normal_pilz_dir = os.path.join(_CONFIG_FILE_DIR, '安全继电器文件', 'Normal')
+    for file_name in os.listdir(normal_pilz_dir):
+        ret_data['normal'].append(file_name)
+    for file_name in os.listdir(e73_dir):
+        ret_data['e73'].append(file_name)
+    ret_data['normal'].append('其他')
+    ret_data['e73'].append('其他')
     return jsonify(ret_data)
 
 @app.route('/createxlxs', methods=['POST'])
@@ -132,10 +151,8 @@ def createIoFile():
     elif data['type'].upper() == 'VE2':
         imm_type = 'VE' + clamp_force + 'II-' + injection
 
-    # 对于python运行环境来说，此时工作路径为  /MyProj
-    io_file_path = './app/static/cache/' + evaluation_num + customer + imm_type + '.xlsx'
-    # 对于Flask框架来说，此时工作路径为  /app   且所有HTTP请求的文件必须位于 /app/static目录之下
-    io_url = './static/cache/' + evaluation_num + customer + imm_type + '.xlsx'
+    io_file_path = _CACHE_FILE_DIR + evaluation_num + customer + imm_type + '.xlsx'
+    io_url = _URL_DIR + evaluation_num + customer + imm_type + '.xlsx'
 
     print('wait....')
     iomaker = IOMaker(imm_type=data['type'],
@@ -161,7 +178,7 @@ def createIoFile():
         iomaker.e73Safety()
     iomaker.createFile(io_file_path)
 
-    return jsonify({'status': 'ok', 'url': io_url})
+    return jsonify({'status': 'success', 'url': io_url})
 
 @app.route('/createconfigfile', methods=['POST'])
 def createConfigFile():
@@ -192,6 +209,14 @@ def createConfigFile():
     varan_conn_module_pos = data['varanConnModulePos']
     e73_safety = data['funcConfig']['3']['status']
     energy_dee = data['funcConfig']['5']['status']
+
+    # 安全继电器文件
+    nor_pilz = data['pilzNor']
+    e73_pilz = data['pilzE73']
+    if not ce_standard:
+        nor_pilz = None
+    if not e73_safety:
+        e73_pilz = None
 
     clamp_force = data['clampForce']
     injection = data['injection']
@@ -230,11 +255,13 @@ def createConfigFile():
                             functions=functions,
                             ce_standard=ce_standard,
                             dst_file_dir=dst_file_dir)
-    fcfmaker.createFile()
+    if fcfmaker.createFile() != 0:
+        return jsonify({'status': 'failure', 'description': '功能配置文件生成失败'})
     sysmaker = SysFileMaker(ce_standard=ce_standard,
                             clamp_force=clamp_force,
                             dst_file_dir=dst_file_dir)
-    sysmaker.createFile()
+    if sysmaker.createFile() != 0:
+        return jsonify({'status': 'failure', 'description': '系统文件生成失败'})
     hkmaker = HkFileMaker(imm_type=data['type'],
                           board_1_modules_ios=board_1_modules_ios,
                           board_2_modules_ios=board_2_modules_ios,
@@ -243,11 +270,18 @@ def createConfigFile():
                           varan_module_pos=varan_conn_module_pos,
                           e73=e73_safety,
                           energy_dee=energy_dee)
-    hkmaker.createFile()
+    if hkmaker.createFile() != 0:
+        return jsonify({'status': 'failure', 'description': '硬件配置文件生成失败'})
+    if ce_standard:
+        mpnozmaker = SafetyFileMaker(nor_pilz=nor_pilz,
+                                     e73_pilz=e73_pilz,
+                                     dst_file_dir=dst_file_dir
+                                     )
+        if mpnozmaker.createFile() != 0:
+            return jsonify({'status': 'failure', 'description': '安全继电器（或E73）文件生成失败'})
     createZip(dst_file_dir, zip_file_path)
 
-    return jsonify({'status': 'success', 'url': zip_file_url, 'hwfileInfo': hkmaker.getConfigInfo()})
-
+    return jsonify({'status': 'success', 'url': zip_file_url})
 
 
 

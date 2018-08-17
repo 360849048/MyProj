@@ -3,6 +3,7 @@ import shutil
 import re
 import zipfile
 
+
 class HkFileMaker:
     def __init__(self, imm_type, ce_standard=False, board_1_modules_ios=None, board_2_modules_ios=None, energy_dee=False,
                  varan_module_pos=0, e73=False,
@@ -625,6 +626,38 @@ class SysFileMaker:
             print('复制系统文件过程中发生了错误')
             return -2
         return 0
+
+
+class SafetyFileMaker:
+    def __init__(self, nor_pilz=None, e73_pilz=None,
+                 std_nor_pilz_dir='./app/libfiles/配置文件/安全继电器文件/Normal',
+                 std_e73_pilz_dir='./app/libfiles/配置文件/安全继电器文件/E73',
+                 dst_file_dir='./app/static/cache/'):
+        self.std_nor_pilz_path = None
+        self.dst_nor_pilz_path = None
+        if nor_pilz is not None:
+            self.std_nor_pilz_path = os.path.join(std_nor_pilz_dir, nor_pilz)
+            self.dst_nor_pilz_path = os.path.join(dst_file_dir, nor_pilz)
+
+        self.std_e73_pilz_path = None
+        self.dst_e73_pilz_path = None
+        if e73_pilz is not None:
+            self.std_e73_pilz_path = os.path.join(std_e73_pilz_dir, e73_pilz)
+            self.dst_e73_pilz_path = os.path.join(dst_file_dir, e73_pilz)
+
+    def createFile(self):
+        if self.std_nor_pilz_path is not None and os.path.isfile(self.std_nor_pilz_path):
+            shutil.copyfile(self.std_nor_pilz_path, self.dst_nor_pilz_path)
+            if not os.path.isfile(self.dst_nor_pilz_path):
+                print('复制普通安全继电器文件失败')
+                return -1
+        if self.std_e73_pilz_path is not None and os.path.isfile(self.std_e73_pilz_path):
+            shutil.copyfile(self.std_e73_pilz_path, self.dst_e73_pilz_path)
+            if not os.path.isfile(self.dst_e73_pilz_path):
+                print('复制E73安全继电器文件失败')
+                return -2
+        return 0
+
 
 
 def createZip(file_dir, dst_zip_path=''):
