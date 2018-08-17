@@ -27,3 +27,7 @@ Flask框架调用的路径
 ENTRY_HTML_PATH = './static/index.html'
 # 生成的目标文件缓存目录
 URL_DIR = './static/cache/'
+
+
+if not os.path.isdir(CACHE_FILE_DIR):
+    os.mkdir(CACHE_FILE_DIR)

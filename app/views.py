@@ -266,7 +266,7 @@ def createConfigFile():
                           energy_dee=energy_dee)
     if hkmaker.createFile() != 0:
         return jsonify({'status': 'failure', 'description': '硬件配置文件生成失败'})
-    if ce_standard:
+    if ce_standard or e73_safety:
         mpnozmaker = SafetyFileMaker(nor_pilz=nor_pilz,
                                      e73_pilz=e73_pilz,
                                      dst_file_dir=dst_file_dir

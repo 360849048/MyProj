@@ -443,23 +443,22 @@ class HkFileMaker:
                 parsed_result = self._parseLineInfo(line)
                 if parsed_result is not None:
                     # 定位IO行
-                    # TODO: 暂时出现了BUG
                     if parsed_result['type'] == 'IO':
                         io_type = str(parsed_result['name'])
                         io_seq = int(parsed_result['seq'])
                         io_pos = int(parsed_result['pos'])
                         if io_pos != 0:
-                            used_io_seq.add(io_seq)
-                        if self.e73:
+                            used_io_seq.add(io_type + str(io_seq))
+                        if self.e73 and io_type == 'DI':
                             # 清空原7、8号位置的IO信息
                             if io_pos == 7 or io_pos == 8:
                                 lines[row_need_modified] = re_exp.sub(',0,,', line)
-                                used_io_seq.remove(io_seq)
+                                used_io_seq.remove(io_type + str(io_seq))
                         if io_seq in self.io_config_info[io_type]:
                             #   io_config_info = {'DI':{41: 41, 73: 81}, 'DO': {}, 'AI': {}, ... }
-                            if io_seq in used_io_seq:
+                            if io_type + str(io_seq) in used_io_seq:
                                 # 同一个IO被重复配置
-                                print('检测到同一个点位配置多个IO，该IO的序号是：%d' % io_seq)
+                                print('检测到同一个点位配置多个IO，该IO是：%s %d' % (io_type, io_seq))
                                 return -3
                             lines[row_need_modified] = re_exp.sub(',' + str(self.io_config_info[io_type][io_seq]) + ',,', line)
                     # 定位Module行
