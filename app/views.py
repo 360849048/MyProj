@@ -1,21 +1,15 @@
 from flask import request, send_file, jsonify
-import os
 import shutil
 from app import app
 from app.sqljob import TableManager
 from app.iomaker import IOMaker
 from app.configfile import HkFileMaker, FcfFileMaker, SysFileMaker, SafetyFileMaker, createZip
+from app.pathinfo import *
 
-
-_CONFIG_FILE_DIR = './app/libfiles/配置文件/'
-# 对于python运行环境来说，此时工作路径为  /MyProj
-_CACHE_FILE_DIR = './app/static/cache/'
-# 对于Flask框架来说，此时工作路径为  /app   且所有HTTP请求的文件必须位于 /app/static目录之下
-_URL_DIR = './static/cache/'
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
-    return send_file("./static/index.html")
+    return send_file(ENTRY_HTML_PATH)
 
 @app.route('/io', methods=['GET'])
 def getIo():
@@ -24,17 +18,17 @@ def getIo():
     end_id = int(request.args.get('end'))
     # io_type可以是'di', 'do', 'ai', 'ao', 'ti', 'to'
     if io_type == 'di':
-        t_io = TableManager('digital_input', './app/libfiles/data.db')
+        t_io = TableManager('digital_input', IO_INFO_DB_PATH)
     elif io_type == 'do':
-        t_io = TableManager('digital_output', './app/libfiles/data.db')
+        t_io = TableManager('digital_output', IO_INFO_DB_PATH)
     elif io_type == 'ai':
-        t_io = TableManager('analog_input', './app/libfiles/data.db')
+        t_io = TableManager('analog_input', IO_INFO_DB_PATH)
     elif io_type == 'ao':
-        t_io = TableManager('analog_output', './app/libfiles/data.db')
+        t_io = TableManager('analog_output', IO_INFO_DB_PATH)
     elif io_type == 'ti':
-        t_io = TableManager('temperature_input', './app/libfiles/data.db')
+        t_io = TableManager('temperature_input', IO_INFO_DB_PATH)
     else:
-        t_io = TableManager('temperature_output', './app/libfiles/data.db')
+        t_io = TableManager('temperature_output', IO_INFO_DB_PATH)
     ret_data = {}
     ret_data['amount'] = ios_amount[io_type]
     ret_data['ios'] = {}
@@ -66,8 +60,8 @@ def getBigIo():
         ret_data = {'name': 'CIO011', 'ios': {}}
     else:
         ret_data = {'name': 'CIO021', 'ios': {}}
-    t_di = TableManager('digital_input', './app/libfiles/data.db')
-    t_do = TableManager('digital_output', './app/libfiles/data.db')
+    t_di = TableManager('digital_input', IO_INFO_DB_PATH)
+    t_do = TableManager('digital_output', IO_INFO_DB_PATH)
     for k, v in cio021_io.items():
         if k.startswith('di'):
             ret_data['ios'][k] = str(v) + '--' + t_di.displayBriefData(v, 'CName')[0]
@@ -78,12 +72,11 @@ def getBigIo():
 @app.route('/pilzlist', methods=['GET'])
 def getPilzList():
     ret_data = {'normal': [], 'e73': []}
-    e73_dir = os.path.join(_CONFIG_FILE_DIR, '安全继电器文件', 'E73')
-    normal_pilz_dir = os.path.join(_CONFIG_FILE_DIR, '安全继电器文件', 'Normal')
-    for file_name in os.listdir(normal_pilz_dir):
+    for file_name in os.listdir(NOR_SAFETY_RELAY_FILE_DIR):
         ret_data['normal'].append(file_name)
-    for file_name in os.listdir(e73_dir):
+    for file_name in os.listdir(E73_SAFETY_RELAY_FILE_DIR):
         ret_data['e73'].append(file_name)
+
     ret_data['normal'].append('其他')
     ret_data['e73'].append('其他')
     return jsonify(ret_data)
@@ -151,10 +144,10 @@ def createIoFile():
     elif data['type'].upper() == 'VE2':
         imm_type = 'VE' + clamp_force + 'II-' + injection
 
-    io_file_path = _CACHE_FILE_DIR + evaluation_num + customer + imm_type + '.xlsx'
-    io_url = _URL_DIR + evaluation_num + customer + imm_type + '.xlsx'
+    io_file_path = CACHE_FILE_DIR + evaluation_num + customer + imm_type + '.xlsx'
+    io_url = URL_DIR + evaluation_num + customer + imm_type + '.xlsx'
 
-    print('wait....')
+    print('creating io.xlsx, pls wait....')
     iomaker = IOMaker(imm_type=data['type'],
                       board_1_modules_ios=board_1_modules_ios,
                       board_2_modules_ios=board_2_modules_ios,
@@ -213,13 +206,14 @@ def createConfigFile():
     # 安全继电器文件
     nor_pilz = data['pilzNor']
     e73_pilz = data['pilzE73']
-    if not ce_standard:
+    if not ce_standard or nor_pilz == '其他':
         nor_pilz = None
-    if not e73_safety:
+    if not e73_safety or e73_pilz == '其他':
         e73_pilz = None
 
     clamp_force = data['clampForce']
     injection = data['injection']
+
     # 下面开始生成文件路径，创建目录
     imm_type = ''
     zip_file_path = ''
@@ -233,18 +227,18 @@ def createConfigFile():
     elif data['type'].upper() == 'VE2':
         imm_type = 'VE' + clamp_force + 'II-' + injection
     if ce_standard:
-        dst_file_dir = './app/static/cache/' + data['evaluationNum'] + imm_type + '(CE)/'
-        zip_file_path = './app/static/cache/' + data['evaluationNum'] + imm_type + '(CE).zip'
-        zip_file_url = './static/cache/' + data['evaluationNum'] + imm_type + '(CE).zip'
+        dst_file_dir = CACHE_FILE_DIR + data['evaluationNum'] + imm_type + '(CE)/'
+        zip_file_path = CACHE_FILE_DIR + data['evaluationNum'] + imm_type + '(CE).zip'
+        zip_file_url = URL_DIR + data['evaluationNum'] + imm_type + '(CE).zip'
     else:
-        dst_file_dir = './app/static/cache/' + data['evaluationNum'] + imm_type + '/'
-        zip_file_path = './app/static/cache/' + data['evaluationNum'] + imm_type + '.zip'
-        zip_file_url = './static/cache/' + data['evaluationNum'] + imm_type + '.zip'
+        dst_file_dir = CACHE_FILE_DIR + data['evaluationNum'] + imm_type + '/'
+        zip_file_path = CACHE_FILE_DIR + data['evaluationNum'] + imm_type + '.zip'
+        zip_file_url = URL_DIR + data['evaluationNum'] + imm_type + '.zip'
     if os.path.isdir(dst_file_dir):
         shutil.rmtree(dst_file_dir)
     os.mkdir(dst_file_dir)
 
-    # 功能配置选项，注意key值和configfile.py中的名字对应
+    # 功能配置选项，注意key值和configfile.py中FcfFileMaker中属性名字对应
     functions = {}
     functions['injSig'] = data['funcConfig']['1']['status']
     functions['chargeSig'] = data['funcConfig']['2']['status']
@@ -284,17 +278,16 @@ def createConfigFile():
     return jsonify({'status': 'success', 'url': zip_file_url})
 
 
-
 # 避免频繁搜索数据库获取IO长度，这里一次性读取掉所有IO的数目
 # 通过函数中获取，可能可以尽早销毁这些被创建的TableManager
 def _getIoAmount():
     t_ios = {
-        'di': TableManager('digital_input', './app/libfiles/data.db'),
-        'do': TableManager('digital_output', './app/libfiles/data.db'),
-        'ai': TableManager('analog_input', './app/libfiles/data.db'),
-        'ao': TableManager('analog_output', './app/libfiles/data.db'),
-        'ti': TableManager('temperature_input', './app/libfiles/data.db'),
-        'to': TableManager('temperature_output', './app/libfiles/data.db')
+        'di': TableManager('digital_input', IO_INFO_DB_PATH),
+        'do': TableManager('digital_output', IO_INFO_DB_PATH),
+        'ai': TableManager('analog_input', IO_INFO_DB_PATH),
+        'ao': TableManager('analog_output', IO_INFO_DB_PATH),
+        'ti': TableManager('temperature_input', IO_INFO_DB_PATH),
+        'to': TableManager('temperature_output', IO_INFO_DB_PATH)
     }
     return {
         'di': len(t_ios['di'].getAllId()),

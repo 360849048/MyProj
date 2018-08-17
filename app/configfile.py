@@ -2,13 +2,13 @@ import os
 import shutil
 import re
 import zipfile
-
+from app.pathinfo import *
 
 class HkFileMaker:
     def __init__(self, imm_type, ce_standard=False, board_1_modules_ios=None, board_2_modules_ios=None, energy_dee=False,
                  varan_module_pos=0, e73=False,
-                 std_file_dir='./app/libfiles/配置文件/硬件配置文件/',
-                 dst_file_dir='./app/static/cache/'):
+                 std_file_dir=STD_HK_FILE_DIR,
+                 dst_file_dir=CACHE_FILE_DIR):
         '''
             imm_type:           'ZEs', 'ZE', 'VE2', 'VE2s'
             board_1_modules_ios: [['CTO163', {'DO3': OutputID, ...}], ['CDM163', {'DI5': InputID, ...}], ...]
@@ -436,21 +436,31 @@ class HkFileMaker:
         with open(self.dst_file_path, 'r+') as fp:
             row_need_modified = 0
             lines = fp.readlines()
+            # 记录已经配置过的IO，防止同一个IO被配到多个位置
+            used_io_seq = set()
+            re_exp = re.compile(r',\d+,,')
             for line in lines:
                 parsed_result = self._parseLineInfo(line)
                 if parsed_result is not None:
                     # 定位IO行
+                    # TODO: 暂时出现了BUG
                     if parsed_result['type'] == 'IO':
                         io_type = str(parsed_result['name'])
                         io_seq = int(parsed_result['seq'])
                         io_pos = int(parsed_result['pos'])
-                        re_exp = re.compile(r',\d+,,')
+                        if io_pos != 0:
+                            used_io_seq.add(io_seq)
                         if self.e73:
                             # 清空原7、8号位置的IO信息
                             if io_pos == 7 or io_pos == 8:
                                 lines[row_need_modified] = re_exp.sub(',0,,', line)
+                                used_io_seq.remove(io_seq)
                         if io_seq in self.io_config_info[io_type]:
                             #   io_config_info = {'DI':{41: 41, 73: 81}, 'DO': {}, 'AI': {}, ... }
+                            if io_seq in used_io_seq:
+                                # 同一个IO被重复配置
+                                print('检测到同一个点位配置多个IO，该IO的序号是：%d' % io_seq)
+                                return -3
                             lines[row_need_modified] = re_exp.sub(',' + str(self.io_config_info[io_type][io_seq]) + ',,', line)
                     # 定位Module行
                     if parsed_result['type'] == 'Module':
@@ -459,10 +469,8 @@ class HkFileMaker:
                         # module_idx = parsed_result['pos']
                         if board != '1' and board in self.module_config_info and slot_seq < len(self.module_config_info[board]):
                             #   module_config_info = {'3': [1, 3, 0, 0], '4': [5, 3, 0]}
-                            re_exp = re.compile(r',\d+,,')
                             lines[row_need_modified] = re_exp.sub(',' + str(self.module_config_info[board][slot_seq]) + ',,', line)
                         if board == '1' and slot_seq == 7 and self.imm_type == 'VE2':
-                            re_exp = re.compile(r',\d+,,')
                             lines[row_need_modified] = re_exp.sub(',' + str(self.module_config_info[board][0]) + ',,', line)
                     # 定位Varan连接模块行
                     if parsed_result['type'] == 'Varan':
@@ -470,7 +478,6 @@ class HkFileMaker:
                         varan_node = int(parsed_result['seq'])
                         # varan_module_idx = parsed_result['pos']
                         if varan_num == '1' and varan_node <= len(self.varan_config_info):
-                            re_exp = re.compile(r',\d+,,')
                             lines[row_need_modified] = re_exp.sub(',' + str(self.varan_config_info[varan_node - 1]) + ',,', line)
                 row_need_modified += 1
             fp.seek(0)
@@ -543,8 +550,8 @@ class HkFileMaker:
 
 class FcfFileMaker:
     def __init__(self, imm_type, ce_standard=False, functions=None,
-                 std_file_dir='./app/libfiles/配置文件/功能配置文件/',
-                 dst_file_dir='./app/static/cache/'):
+                 std_file_dir=STD_FCF_FILE_DIR,
+                 dst_file_dir=CACHE_FILE_DIR):
         '''
             functions: {'injSig': True, 'chargeSig': False, 'internalHotrunnerNum': 0, 'dee': False}
         '''
@@ -597,8 +604,8 @@ class FcfFileMaker:
 
 class SysFileMaker:
     def __init__(self, ce_standard=False, clamp_force=40,
-                 std_file_dir='./app/libfiles/配置文件/系统文件',
-                 dst_file_dir='./app/static/cache/'):
+                 std_file_dir=STD_SYS_FILE_DIR,
+                 dst_file_dir=CACHE_FILE_DIR):
         self.std_file_path = ''
         self.dst_file_path = ''
         for file_name in os.listdir(std_file_dir):
@@ -630,9 +637,9 @@ class SysFileMaker:
 
 class SafetyFileMaker:
     def __init__(self, nor_pilz=None, e73_pilz=None,
-                 std_nor_pilz_dir='./app/libfiles/配置文件/安全继电器文件/Normal',
-                 std_e73_pilz_dir='./app/libfiles/配置文件/安全继电器文件/E73',
-                 dst_file_dir='./app/static/cache/'):
+                 std_nor_pilz_dir=NOR_SAFETY_RELAY_FILE_DIR,
+                 std_e73_pilz_dir=E73_SAFETY_RELAY_FILE_DIR,
+                 dst_file_dir=CACHE_FILE_DIR):
         self.std_nor_pilz_path = None
         self.dst_nor_pilz_path = None
         if nor_pilz is not None:
