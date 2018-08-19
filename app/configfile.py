@@ -28,6 +28,10 @@ class HkFileMaker:
             self.ce_standard = False
 
         # 为了生成文件的可靠性，只有status==0才允许某些操作
+        # status: 0     正常
+        # status: -1    找到了多份硬件配置文件
+        # status: -2    配置的模块不符合标准程序，例如标准程序主底板最多支持2块CTO163，实际却配了3块
+        # status: -3    将同一个IO配置到了多个地方
         self.status = 0
 
         # 根据机型以及安全标准确定 “标准硬件配置” 和 修改后的 “特殊硬件配置” 文件路径
@@ -70,6 +74,11 @@ class HkFileMaker:
             module_config_info = {'1': [], '2': [], '3': [1, 3, 0, 0], '4': [5, 3, 0]}     key是board的序号，value是底板上的模块序号数，这里不显示Varan模块
             varan_config_info = [3, 5]   Varan总线上依次的模块名： 0:未配置  1:CIV512  2:CIV521  3:CMM10X  4:DEE021  5:F6
         '''
+        # 提前将E73的点位配置好，防止后面重复配置
+        if self.e73:
+            self.io_config_info['DI'][110] = 7
+            self.io_config_info['DI'][111] = 8
+
         if self.board_1_modules_ios is not None:
             #  board_1_modules_count = {'CDM163': 2, 'CTO163': 1}
             board_1_modules_count = {}
@@ -200,10 +209,13 @@ class HkFileMaker:
                                 print('Error: 标准程序CIPC主底板只支持1块CAI888')
 
                     for key, value in self.board_1_modules_ios[idx][1].items():
-                        # TODO: 这样简陋的解析数据容易出BUG
+                        # TODO: 程序功能待验证
                         io_type = key[:2].upper()
                         io_seq = int(value)
                         io_pos = int(key[2:]) + board_1_io_pos_offset[io_type]
+                        if io_seq in self.io_config_info[io_type]:
+                            # 同样的IO已经配置过了，不允许重复配置
+                            self.status = -3
                         self.io_config_info[io_type][io_seq] = io_pos
 
         if self.board_2_modules_ios is not None and len(self.board_2_modules_ios) > 0:
@@ -369,10 +381,13 @@ class HkFileMaker:
                         pass
 
                     for key, value in board_2_normal_modules_ios[idx][1].items():
-                        # TODO: 这样简陋的解析数据容易出BUG
+                        # TODO: 程序功能待验证
                         io_type = key[:2].upper()
                         io_seq = int(value)
                         io_pos = int(key[2:]) + board_2_io_pos_offset[io_type]
+                        if io_seq in self.io_config_info[io_type]:
+                            # 同样的IO已经配置过了，不允许重复配置
+                            self.status = -3
                         self.io_config_info[io_type][io_seq] = io_pos
 
         # 能耗模块DEE是否启用
@@ -396,9 +411,6 @@ class HkFileMaker:
                     else:
                         self.varan_config_info.insert(1, 2)
 
-        if self.e73:
-            self.io_config_info['DI'][110] = 7
-            self.io_config_info['DI'][111] = 8
 
         # 不要去尝试配置TI和TO点位，容易出错！
         self.io_config_info['TI'] = {}
@@ -436,9 +448,9 @@ class HkFileMaker:
         with open(self.dst_file_path, 'r+') as fp:
             row_need_modified = 0
             lines = fp.readlines()
-            # 记录已经配置过的IO，防止同一个IO被配到多个位置
-            used_io_seq = set()
             re_exp = re.compile(r',\d+,,')
+            # 标准已经配置好的IO，一般不允许更改
+            std_configured_io = set()
             for line in lines:
                 parsed_result = self._parseLineInfo(line)
                 if parsed_result is not None:
@@ -448,17 +460,17 @@ class HkFileMaker:
                         io_seq = int(parsed_result['seq'])
                         io_pos = int(parsed_result['pos'])
                         if io_pos != 0:
-                            used_io_seq.add(io_type + str(io_seq))
+                            # 这是标准已经配好的IO
+                            std_configured_io.add(io_type + str(io_seq))
                         if self.e73 and io_type == 'DI':
-                            # 清空原7、8号位置的IO信息
+                            # 对于原先已经被配置好的IO点，必须先清空其配置信息，否则会导致多个IO被配置到相同的位置
                             if io_pos == 7 or io_pos == 8:
                                 lines[row_need_modified] = re_exp.sub(',0,,', line)
-                                used_io_seq.remove(io_type + str(io_seq))
+                                std_configured_io.remove(io_type + str(io_seq))
                         if io_seq in self.io_config_info[io_type]:
                             #   io_config_info = {'DI':{41: 41, 73: 81}, 'DO': {}, 'AI': {}, ... }
-                            if io_type + str(io_seq) in used_io_seq:
-                                # 同一个IO被重复配置
-                                print('检测到同一个点位配置多个IO，该IO是：%s %d' % (io_type, io_seq))
+                            if (io_type + str(io_seq)) in std_configured_io:
+                                print('对标准已经配好的IO进行了重复配置，该IO是%s%d' % (io_type, io_seq))
                                 return -3
                             lines[row_need_modified] = re_exp.sub(',' + str(self.io_config_info[io_type][io_seq]) + ',,', line)
                     # 定位Module行
