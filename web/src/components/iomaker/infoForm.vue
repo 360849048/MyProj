@@ -12,7 +12,8 @@
         </div>
         <div class="col-lg-4 mb-3">
           <label for="validationDefaultUsername"><span class="text-danger">*</span>机型</label>
-          <input type="text" class="form-control" id="validationDefaultUsername" required autocomplete="off" v-model="immType">
+          <input type="text" class="form-control" id="validationDefaultUsername" required autocomplete="off" v-model="immType"
+          @change="handerImmTypeChange">
         </div>
       </div>
       <div class="form-row">
@@ -30,22 +31,26 @@
         <textarea id="techInfo" class="form-control" aria-label="With textarea" v-model="technicalClause"></textarea>
       </div>
     </form>
-    <!--<div id="BtnBox">-->
-      <!--<button class="btn btn-danger ml-1 mr-1" @click="resetInfo">清空</button>-->
-      <!--<button class="btn btn-primary ml-1 mr-1" @click="saveInfo">提交</button>-->
-    <!--</div>-->
     <hr>
     <div class="input-group">
       <div class="input-group-prepend">
         <label class="input-group-text" for="infoArea">设计说明</label>
       </div>
-      <textarea class="form-control" id="infoArea" aria-label="With textarea" placeholder="这里不用填" v-model="designNote" style="height: 250px;"></textarea>
+      <textarea class="form-control" id="infoArea" aria-label="With textarea" placeholder="这里不用填" v-model="designNote" style="height: 280px;"></textarea>
     </div>
     <button class="btn btn-secondary" id="autoFillBtn" @click="parseParams">自动填单</button>
   </div>
 </template>
 
 <script>
+  /**
+   * 数据处理逻辑：
+   * 1.收集机器的基础信息，通过事件imminfochange发送到父组件
+   * 2.触发imminfochange事件有如下几种情况：
+   *   * 父组件传递下来的变量getInfo为true
+   *   * immType变量输入框发生onchange事件
+   *   * 从设计说明进行参数解析
+   */
   export default {
     name: "info-form",
     props: ['getInfo'],
@@ -61,46 +66,20 @@
       }
     },
     methods: {
-      resetInfo(){
-        this.evaluationNum = '';
-        this.productionNum = '';
-        this.immType = '';
-        this.customer = '';
-        this.safetyStandard = '';
-        this.technicalClause = '';
-        this.designNote = '';
-        this.$emit('imminfochange', {
-          evaluationNum: this.evaluationNum,
-          productionNum: this.productionNum,
-          immType: this.immType,
-          customer: this.customer,
-          safetyStandard: this.safetyStandard,
-          technicalClause: this.technicalClause,
-          designNote: this.designNote,
-        });
-      },
-      saveInfo(){
-        if(this.immType === ''){
-          this.$notify.error({
-            title: '错误',
-            message: '必须填写机器类型',
-            position: 'top-left'
-          });
-          return;
-        }
-        this.$emit('imminfochange', {
-          evaluationNum: this.evaluationNum,
-          productionNum: this.productionNum,
-          immType: this.immType,
-          customer: this.customer,
-          safetyStandard: this.safetyStandard,
-          technicalClause: this.technicalClause,
-          evaluationNote: this.designNote,
+      _emitParams(_this){
+        _this.$emit('imminfochange', {
+          evaluationNum: _this.evaluationNum,
+          productionNum: _this.productionNum,
+          immType: _this.immType,
+          customer: _this.customer,
+          safetyStandard: _this.safetyStandard,
+          technicalClause: _this.technicalClause,
+          designNote: _this.designNote,
         });
       },
       parseParams(){
         /**
-         * 从设计说明的文字this.designNote中提取出合同订单信息
+         * 从设计说明的文字this.designNote中提取出合同订单信息，并向父组件提交数据
          */
         if(this.designNote === ''){
           return;
@@ -133,6 +112,10 @@
             this.productionNum = value;
           }
         }
+        this._emitParams(this);
+      },
+      handerImmTypeChange(){
+        this._emitParams(this);
       }
     },
     watch: {
@@ -145,15 +128,7 @@
               position: 'top-left'
             });
           }
-          this.$emit('imminfochange', {
-            evaluationNum: this.evaluationNum,
-            productionNum: this.productionNum,
-            immType: this.immType,
-            customer: this.customer,
-            safetyStandard: this.safetyStandard,
-            technicalClause: this.technicalClause,
-            designNote: this.designNote,
-          });
+          this._emitParams(this);
         }
       }
     }

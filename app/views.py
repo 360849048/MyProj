@@ -11,6 +11,11 @@ from app.pathinfo import *
 def home():
     return send_file(ENTRY_HTML_PATH)
 
+# 没有下面404处理，会导致vue-router在history模式下一刷新就404错误
+@app.errorhandler(404)
+def pageNotFound(e):
+    return send_file(ENTRY_HTML_PATH)
+
 @app.route('/io', methods=['GET'])
 def getIo():
     io_type = request.args.get('type')
@@ -202,6 +207,7 @@ def createConfigFile():
     varan_conn_module_pos = data['varanConnModulePos']
     e73_safety = data['funcConfig']['3']['status']
     energy_dee = data['funcConfig']['5']['status']
+    mold_slider = data['funcConfig']['6']['status']
 
     # 安全继电器文件
     nor_pilz = data['pilzNor']
@@ -244,6 +250,10 @@ def createConfigFile():
     functions['chargeSig'] = data['funcConfig']['2']['status']
     functions['dee'] = data['funcConfig']['5']['status']
     functions['internalHotrunnerNum'] = data['intHotrunnerNum']
+    functions['valve'] = data['funcConfig']['7']['status']
+    functions['air'] = data['funcConfig']['8']['status']
+    functions['core'] = data['funcConfig']['9']['status']
+    functions['progio'] = data['funcConfig']['10']['status']
 
     fcfmaker = FcfFileMaker(imm_type=data['type'],
                             functions=functions,
@@ -263,8 +273,11 @@ def createConfigFile():
                           ce_standard=ce_standard,
                           varan_module_pos=varan_conn_module_pos,
                           e73=e73_safety,
-                          energy_dee=energy_dee)
-    if hkmaker.createFile() != 0:
+                          energy_dee=energy_dee,
+                          mold_slider=mold_slider)
+    # debug时候查看硬件修改
+    # print(hkmaker.getConfigInfo())
+    if hkmaker.createFile() < 0:
         return jsonify({'status': 'failure', 'description': '硬件配置文件生成失败'})
     if ce_standard or e73_safety:
         mpnozmaker = SafetyFileMaker(nor_pilz=nor_pilz,

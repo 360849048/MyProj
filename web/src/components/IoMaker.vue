@@ -15,6 +15,7 @@
           <transition name="vanish-left">
             <div class="col-sm-8" v-show="curStep === 1">
               <func-config
+              :type="type"
               @functionsupdate="getFuncConfig"
               @exthotrunnerchange="getExtHotrunnerNum"
               @inthotrunnerchange="getIntHotrunnerNum">
@@ -147,7 +148,7 @@
    * 3.从Module获取模块和模块上的IO配置信息，并将配置信息传递到IoList组件
    * 4.页脚处放置的一些按钮，用来移动展示页面以及向后台POST机器信息
    * 5.IoList接受HTML5的drag事件，ModuleConfig接受HTML5的drop事件，通过鼠标拖拽的方法可实现模块点位的配置
-   * 6.TODO: 在IoList的IO列表上某项双击，自动将该IO填充到模块的最靠前空余的IO点上
+   * 6.在IoList的IO列表上某项双击，自动将该IO填充到模块的最靠前空余的IO点上
    */
 
   import IoList from './iomaker/IoList'
@@ -189,6 +190,11 @@
           3: {name: 'E73', status: false},
           4: {name: '喷嘴改阀门1', status: false},
           5: {name: 'DEE能耗模块', status: false},
+          6: {name: '7号改可编程', status: false},
+          7: {name: '阀门', status: false},
+          8: {name: '吹气', status: false},
+          9: {name: '中子', status: false},
+          10: {name: '可编程IO', status: false},
           666: {name: '外置热流道', status: false}
         },
         extHotrunnerNum: 3,
@@ -531,6 +537,7 @@
     background-color: #eee;
     display: flex;
     justify-content: center;
+    opacity: .7;
     i{
       color: #ccc;
       cursor: pointer;
@@ -556,6 +563,6 @@
   }
   #srcmaker{
     /* 防止底部被footer遮挡 */
-    padding-bottom: 2rem;
+    padding-bottom: 3rem;
   }
 </style>

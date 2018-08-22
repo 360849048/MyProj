@@ -4,7 +4,8 @@
       <div class="col-xl-4">
         <h2>IO表相关修改</h2>
         <hr>
-        <div v-for="(item, index) in funcs" class="p-1">
+        <!-- v-if里面不能用 === -->
+        <div v-for="(item, index) in funcs" v-if="index <= 6 || index==666" class="p-1">
           <func-switch
             :id="index"
             :name="item.name"
@@ -25,7 +26,7 @@
       <div class="col-xl-6">
         <h2>功能配置</h2>
         <hr>
-        <h3 class="ml-3 mt-3 text-secondary">施工中...</h3>
+        <!--<h3 class="ml-3 mt-3 text-secondary">施工中...</h3>-->
         <form>
           <label id="intHotrunnerLabel">内置热流道组数</label>
           <el-input-number :min="0" :max="2" label="热流道组数"
@@ -33,6 +34,14 @@
                            @change="handleIntHot">
           </el-input-number>
         </form>
+        <div v-for="(item, index) in funcs" v-if="index > 6 && index != 666" class="p-1">
+          <func-switch
+            :id="index"
+            :name="item.name"
+            :status="item.status"
+            @statusupdate="getFuncStatus">
+          </func-switch>
+        </div>
       </div>
     </div>
   </div>
@@ -49,6 +58,7 @@
     components: {
       FuncSwitch
     },
+    props: ['type'],
     data(){
       return{
         funcs: {
@@ -59,6 +69,11 @@
           3: {name: 'E73', status: false},
           4: {name: '喷嘴改阀门1', status: false},
           5: {name: 'DEE能耗模块', status: false},
+          6: {name: '7号改可编程输入', status: false},
+          7: {name: '阀门', status: false},
+          8: {name: '吹气', status: false},
+          9: {name: '中子', status: false},
+          10: {name: '可编程IO', status: false},
           666: {name: '外置热流道', status: false}
         },
         extHotrunnerNum: 3,
@@ -77,6 +92,26 @@
         this.$emit('inthotrunnerchange', this.intHotrunnerNum);
       }
     },
+    watch:{
+      funcs:{
+        handler: function(cval){
+          if(this.type === 'VE2' && cval[3].status){
+            this.$message({
+              message: 'VE2机器的E73两个输入点需要自行配置',
+              type: 'warning'
+            });
+          }
+          if(this.funcs[6].status && this.type === 'VE2') {
+            this.funcs[6].status = false;
+            this.$message({
+              message: 'VE2机器不支持7号点的修改',
+              type: 'error'
+            });
+          }
+        },
+        deep: true,
+      }
+    }
   }
 </script>
 

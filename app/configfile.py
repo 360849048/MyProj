@@ -4,9 +4,10 @@ import re
 import zipfile
 from app.pathinfo import *
 
+
 class HkFileMaker:
     def __init__(self, imm_type, ce_standard=False, board_1_modules_ios=None, board_2_modules_ios=None, energy_dee=False,
-                 varan_module_pos=0, e73=False,
+                 varan_module_pos=0, e73=False, mold_slider=False,
                  std_file_dir=STD_HK_FILE_DIR,
                  dst_file_dir=CACHE_FILE_DIR):
         '''
@@ -14,13 +15,22 @@ class HkFileMaker:
             board_1_modules_ios: [['CTO163', {'DO3': OutputID, ...}], ['CDM163', {'DI5': InputID, ...}], ...]
             board_2_modules_ios:    [['CTO163', {'DO3': OutputID, ...}], ['CDM163', {'DI5': InputID, ...}], ...]
             varan_module_pos:   0：CIV512等连接模块放在KEB之后； 1：CIV512等连接模块放在KEB之前
+            e73:          将CMM102底板7,8输入点配置为E73相关点位（不支持VE2）
+            mold_slider:  模具滑块信号，将CMM102底板7号点配置为可编程IO（不支持VE2，不支持与E73共存）
         '''
         self.imm_type = imm_type
         self.board_1_modules_ios = board_1_modules_ios
         self.board_2_modules_ios = board_2_modules_ios
         self.dee = energy_dee
         self.varan_module_pos = int(varan_module_pos)
-        self.e73 = e73
+        if imm_type == 'VE2':
+            self.e73 = False
+        else:
+            self.e73 = e73
+        if e73 or imm_type == 'VE2':
+            self.mold_slider = False
+        else:
+            self.mold_slider = mold_slider
 
         if imm_type.endswith('s'):
             self.ce_standard = ce_standard
@@ -62,7 +72,7 @@ class HkFileMaker:
         if self.imm_type != 'VE2':
             self.varan_config_info = [3, 5]
         else:
-            self.varan_config_info = [0, 0, 5]
+            self.varan_config_info = [0, 0, 0, 5]
 
         if self.status == 0:
             self._getConfigInfo()
@@ -78,9 +88,11 @@ class HkFileMaker:
         if self.e73:
             self.io_config_info['DI'][110] = 7
             self.io_config_info['DI'][111] = 8
+        if self.mold_slider:
+            self.io_config_info['DI'][73] = 7
 
         if self.board_1_modules_ios is not None:
-            #  board_1_modules_count = {'CDM163': 2, 'CTO163': 1}
+            #  board_1_modules_count格式： {'CDM163': 2, 'CTO163': 1}
             board_1_modules_count = {}
             for idx in range(len(self.board_1_modules_ios)):
                 module = self.board_1_modules_ios[idx][0].upper()
@@ -138,7 +150,6 @@ class HkFileMaker:
                                 board_1_io_pos_offset['DI'] = 73 - 1
                                 board_1_io_pos_offset['DO'] = 73 - 1
                                 board_1_io_pos_offset['AI'] = 5 - 1
-                                # TODO: AO起始位置未知
                                 self.module_config_info['3'][idx] = 12
                             else:
                                 print('Error: 标准程序CMM102主底板只支持至多1块CIO021')
@@ -149,7 +160,6 @@ class HkFileMaker:
                                 board_1_io_pos_offset['DI'] = 113 - 1
                                 board_1_io_pos_offset['DO'] = 129 - 1
                                 board_1_io_pos_offset['AI'] = 3 - 1
-                                # TODO: AO起始位置未知
                                 self.module_config_info['3'][idx] = 4
                             else:
                                 print('Error: 标准程序CMM102主底板只支持至多1块CIO011')
@@ -195,7 +205,6 @@ class HkFileMaker:
                             if board_1_modules_count[module] == 1:
                                 board_1_io_pos_offset['DI'] = 81 - 1
                                 board_1_io_pos_offset['DO'] = 65 - 1
-                                # TODO: AI和AO起始位置未知
                                 self.module_config_info['1'][0] = 6
                             else:
                                 print('Error: 标准程序CIPC主底板只支持至多1块CIO011')
@@ -209,13 +218,13 @@ class HkFileMaker:
                                 print('Error: 标准程序CIPC主底板只支持1块CAI888')
 
                     for key, value in self.board_1_modules_ios[idx][1].items():
-                        # TODO: 程序功能待验证
                         io_type = key[:2].upper()
                         io_seq = int(value)
                         io_pos = int(key[2:]) + board_1_io_pos_offset[io_type]
                         if io_seq in self.io_config_info[io_type]:
-                            # 同样的IO已经配置过了，不允许重复配置
-                            self.status = -3
+                            if io_type != 'TI' and io_type != 'TO':
+                                # 同样的IO已经配置过了，不允许重复配置
+                                self.status = -3
                         self.io_config_info[io_type][io_seq] = io_pos
 
         if self.board_2_modules_ios is not None and len(self.board_2_modules_ios) > 0:
@@ -273,7 +282,6 @@ class HkFileMaker:
                             if board_2_modules_count[module] == 1:
                                 board_2_io_pos_offset['DI'] = 193 - 1
                                 board_2_io_pos_offset['DO'] = 193 - 1
-                                # TODO: AI,AO起始位置未知
                                 self.module_config_info['4'][idx] = 11
                             else:
                                 print('Error: 标注程序CMM102扩展底板一只支持至多1块CIO021')
@@ -283,7 +291,6 @@ class HkFileMaker:
                             if board_2_modules_count[module] == 1:
                                 board_2_io_pos_offset['DI'] = 201 - 1
                                 board_2_io_pos_offset['DO'] = 201 - 1
-                                # TODO: AI,AO起始位置未知
                                 self.module_config_info['4'][idx] = 12
                             else:
                                 print('Error: 标注程序CMM102扩展底板一只支持至多1块CIO011')
@@ -348,17 +355,14 @@ class HkFileMaker:
                             if board_2_modules_count[module] == 1:
                                 board_2_io_pos_offset['DI'] = 129 - 1
                                 board_2_io_pos_offset['DO'] = 113 - 1
-                                # TODO: AI和AO起始位置未知
                                 self.module_config_info['2'][idx] = 7
                             elif board_2_modules_count[module] == 2:
                                 board_2_io_pos_offset['DI'] = 153 - 1
                                 board_2_io_pos_offset['DO'] = 137 - 1
-                                # TODO: AI和AO起始位置未知
                                 self.module_config_info['2'][idx] = 15
                             elif board_2_modules_count[module] == 3:
                                 board_2_io_pos_offset['DI'] = 161 - 1
                                 board_2_io_pos_offset['DO'] = 145 - 1
-                                # TODO: AI和AO起始位置未知
                                 self.module_config_info['2'][idx] = 16
                             else:
                                 print('Error: 标准程序CIPC扩展底板一只支持至多3块CIO011')
@@ -381,13 +385,13 @@ class HkFileMaker:
                         pass
 
                     for key, value in board_2_normal_modules_ios[idx][1].items():
-                        # TODO: 程序功能待验证
                         io_type = key[:2].upper()
                         io_seq = int(value)
                         io_pos = int(key[2:]) + board_2_io_pos_offset[io_type]
                         if io_seq in self.io_config_info[io_type]:
-                            # 同样的IO已经配置过了，不允许重复配置
-                            self.status = -3
+                            if io_type != 'TI' and io_type != 'TO':
+                                # 同样的IO已经配置过了，不允许重复配置
+                                self.status = -3
                         self.io_config_info[io_type][io_seq] = io_pos
 
         # 能耗模块DEE是否启用
@@ -395,7 +399,7 @@ class HkFileMaker:
             if self.imm_type != 'VE2':
                 self.varan_config_info = [3, 4, 5]
             else:
-                self.varan_config_info = [0, 4, 5]
+                self.varan_config_info = [0, 0, 4, 5]
         # Varan连接模块
         if self.board_2_modules_ios is not None and len(self.board_2_modules_ios) > 0:
             varan_conn_module = self.board_2_modules_ios[0][0]
@@ -415,9 +419,6 @@ class HkFileMaker:
         # 不要去尝试配置TI和TO点位，容易出错！
         self.io_config_info['TI'] = {}
         self.io_config_info['TO'] = {}
-        print(self.module_config_info)
-        print(self.io_config_info)
-        print(self.varan_config_info)
 
     def getConfigInfo(self):
         return {
@@ -429,7 +430,7 @@ class HkFileMaker:
     def createFile(self):
         '''
             根据IO配置点，修改硬件配置文件
-            :return     0       一切顺利
+            :return     >=0    文件的修改行数
                         -1      文件根本不存在，严重错误
                         -2      文件修改失败
         '''
@@ -449,7 +450,9 @@ class HkFileMaker:
             row_need_modified = 0
             lines = fp.readlines()
             re_exp = re.compile(r',\d+,,')
-            # 标准已经配置好的IO，一般不允许更改
+            # 备份标准硬件配置文件，用来后面的修改行数比较
+            lines_duplicated = lines.copy()
+            # 标准已经配置好的IO，原则上不允许更改
             std_configured_io = set()
             for line in lines:
                 parsed_result = self._parseLineInfo(line)
@@ -465,6 +468,10 @@ class HkFileMaker:
                         if self.e73 and io_type == 'DI':
                             # 对于原先已经被配置好的IO点，必须先清空其配置信息，否则会导致多个IO被配置到相同的位置
                             if io_pos == 7 or io_pos == 8:
+                                lines[row_need_modified] = re_exp.sub(',0,,', line)
+                                std_configured_io.remove(io_type + str(io_seq))
+                        if self.mold_slider and io_type == 'DI':
+                            if io_pos == 7:
                                 lines[row_need_modified] = re_exp.sub(',0,,', line)
                                 std_configured_io.remove(io_type + str(io_seq))
                         if io_seq in self.io_config_info[io_type]:
@@ -493,9 +500,19 @@ class HkFileMaker:
                 row_need_modified += 1
             fp.seek(0)
             fp.truncate()
+            # 计算硬件配置文件的改动行数
+            lines_modified = set(lines).difference(set(lines_duplicated))
+            lines_modified_count = len(lines_modified)
             for line in lines:
                 fp.write(line)
-        return 0
+        if lines_modified_count > 0:
+            # 若硬件配置文件发生了更改，需要在文件名中体现出更改的行数
+            temp = os.path.splitext(self.dst_file_path)
+            if len(temp) == 2:
+                new_dst_file_path = temp[0] + 'm' + str(lines_modified_count) + temp[1]
+                os.rename(self.dst_file_path, new_dst_file_path)
+                self.dst_file_path = new_dst_file_path
+        return lines_modified_count
 
     def _parseLineInfo(self, line):
         '''
@@ -603,6 +620,18 @@ class FcfFileMaker:
                     lines[row_need_modified] = re.sub(r",\d+,,", "," + str(self.functions['internalHotrunnerNum']) + ",,", line)
                 if 'dee' in self.functions and self.functions['dee'] and \
                         re.search(r'FileEvaluation1\.DEE_Enable', line):
+                    lines[row_need_modified] = re.sub(r",\d+,,", r",1,,", line)
+                if 'valve' in self.functions and self.functions['valve'] and \
+                        re.search(r"OptionalFunction\.sVolveGate", line):
+                    lines[row_need_modified] = re.sub(r",\d+,,", r",1,,", line)
+                if 'air' in self.functions and self.functions['air'] and \
+                        re.search(r"OptionalFunction\.sAirblowVisible", line):
+                    lines[row_need_modified] = re.sub(r",\d+,,", r",1,,", line)
+                if 'core' in self.functions and self.functions['core'] and \
+                        re.search(r"OptionalFunction\.sCoreVisible", line):
+                    lines[row_need_modified] = re.sub(r",\d+,,", r",1,,", line)
+                if 'progio' in self.functions and self.functions['progio'] and \
+                        re.search(r"OptionalFunction\.sProgrammableIO", line):
                     lines[row_need_modified] = re.sub(r",\d+,,", r",1,,", line)
 
                 row_need_modified += 1
