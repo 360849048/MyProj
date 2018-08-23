@@ -5,6 +5,10 @@ web_path = './web/'
 os.chdir(web_path)
 
 os.system("npm run build")
-src_path = './dist/build.js'
-dst_path = '../app/static/js/build.js'
-shutil.copyfile(src_path, dst_path)
+
+for file_name in os.listdir('./dist/'):
+    if file_name.endswith('.js'):
+        src_path = os.path.join('./dist/', file_name)
+        dst_path = os.path.join('../app/static/js/', file_name)
+        shutil.copyfile(src_path, dst_path)
+

@@ -1,12 +1,13 @@
-var path = require('path')
-var webpack = require('webpack')
+var path = require('path');
+var webpack = require('webpack');
 
 module.exports = {
   entry: './src/main.js',
   output: {
     path: path.resolve(__dirname, './dist'),
-    publicPath: '/dist/',
-    filename: 'build.js'
+    filename: 'build.js',
+    // 下面属性用来规定打包后的主文件(build.js)加载懒加载文件(0.build.js)的调用路径
+    publicPath: process.env.NODE_ENV === 'production' ? './static/js/' : '/dist/'
   },
   module: {
     rules: [
@@ -85,10 +86,10 @@ module.exports = {
     hints: false
   },
   devtool: '#eval-source-map'
-}
+};
 
 if (process.env.NODE_ENV === 'production') {
-  module.exports.devtool = '#source-map'
+  module.exports.devtool = '#source-map';
   // http://vue-loader.vuejs.org/en/workflow/production.html
   module.exports.plugins = (module.exports.plugins || []).concat([
     new webpack.DefinePlugin({

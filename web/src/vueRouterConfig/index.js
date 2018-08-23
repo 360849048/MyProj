@@ -3,9 +3,12 @@ import VueRouter from 'vue-router'
 import Home from '../components/Home.vue'
 import Versions from '../components/Versions'
 import Srctransfer from '../components/SrcTransfer'
-import Iomaker from '../components/IoMaker'
+// import Iomaker from '../components/IoMaker'
 
 Vue.use(VueRouter);
+
+
+const Iomaker = resolve => require(['../components/IoMaker.vue'], resolve);
 
 export default new VueRouter({
   // 三种模式介绍
