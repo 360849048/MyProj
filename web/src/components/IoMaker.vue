@@ -446,7 +446,7 @@
       },
       safetyStandard(){
         this.ceStandard = true;
-        if(this.safetyStandard.search(/亚洲|非CE|not|国标/i) > -1) {
+        if(this.safetyStandard.search(/亚洲|非CE|无CE|not|国标/i) > -1) {
           this.ceStandard = false;
           this.pilzNor = '';
         }
