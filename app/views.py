@@ -128,6 +128,11 @@ def createIoFile():
     func2_to_charge_signal = data['funcConfig']['2']['status']
     e73_safety = data['funcConfig']['3']['status']
     nozzle_to_valve = data['funcConfig']['4']['status']
+    if e73_safety or data['type'].upper() == 'VE2':
+        # 7号点改可编程输出与E73冲突，且VE2不允许修改7号点
+        mold_slider = False
+    else:
+        mold_slider = data['funcConfig']['6']['status']
     # 能耗模块DEE是否启用
     energy_dee = data['funcConfig']['5']['status']
     # Varan连接模块如果启用，安装在KEB之后(0)之前(1)
@@ -172,8 +177,11 @@ def createIoFile():
         iomaker.func2ToChargeSignal()
     if nozzle_to_valve:
         iomaker.nozzleToValve()
-    if e73_safety:
+    if e73_safety and data['type'].upper() != 'VE2':
+        # VE2的E73需要自己配置
         iomaker.e73Safety()
+    if mold_slider:
+        iomaker.moldSlider()
     iomaker.createFile(io_file_path)
 
     return jsonify({'status': 'success', 'url': io_url})
@@ -207,7 +215,10 @@ def createConfigFile():
     varan_conn_module_pos = data['varanConnModulePos']
     e73_safety = data['funcConfig']['3']['status']
     energy_dee = data['funcConfig']['5']['status']
-    mold_slider = data['funcConfig']['6']['status']
+    if e73_safety or data['type'].upper() == 'VE2':
+        mold_slider = False
+    else:
+        mold_slider = data['funcConfig']['6']['status']
 
     # 安全继电器文件
     nor_pilz = data['pilzNor']

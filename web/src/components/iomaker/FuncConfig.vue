@@ -101,10 +101,17 @@
               type: 'warning'
             });
           }
-          if(this.funcs[6].status && this.type === 'VE2') {
+          if(cval[6].status && this.type === 'VE2') {
             this.funcs[6].status = false;
             this.$message({
               message: 'VE2机器不支持7号点的修改',
+              type: 'error'
+            });
+          }
+          if(cval[3].status && cval[6].status){
+            this.funcs[6].status = false;
+            this.$message({
+              message: 'E73已经修改了输入7号点，不可重复配置',
               type: 'error'
             });
           }

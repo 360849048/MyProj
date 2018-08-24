@@ -198,6 +198,15 @@ class IOMaker:
         self.xlsxObj.modifyDefaultIO(io_type=io_type, origin_io_name=origin_io_name2,
                                      new_io_cname=new_io_cname2, new_io_ename=new_io_ename2)
 
+    def moldSlider(self):
+        io_type = 'DI'
+
+        io_id1 = 73
+        origin_io_name1 = '模内压'
+        new_io_cname1, new_io_ename1 = self.t_di.displayBriefData(io_id1, 'CName', 'EName')
+        self.xlsxObj.modifyDefaultIO(io_type=io_type, origin_io_name=origin_io_name1,
+                                     new_io_cname=new_io_cname1, new_io_ename=new_io_ename1)
+
     def createFile(self, path):
         self.xlsxObj.modifyImmInfo()
 
