@@ -324,3 +324,13 @@ def _getIoAmount():
 
 
 ios_amount = _getIoAmount()
+
+@app.route('/queryversions', methods=['GET'])
+def getVersion():
+    start_id = int(request.args.get('start'))
+    end_id = int(request.args.get('end'))
+    t_soft = TableManager('t_soft', SOFTWARE_VERSION_INFO_DB_PATH)
+    ret_data = {}
+    for soft_id in range(start_id, end_id + 1):
+        ret_data[soft_id] = t_soft.displayDetailedData(soft_id)
+    return jsonify(ret_data)
