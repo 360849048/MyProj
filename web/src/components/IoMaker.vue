@@ -32,6 +32,9 @@
                 :boardModulesIOs1="boardModulesIOs1"
                 :boardModulesIOs2="boardModulesIOs2"
                 :boardModulesIOs3="boardModulesIOs3"
+                :type="type"
+                :e73Safety="funcConfig[3].status"
+                :moldSlider="funcConfig[6].status"
                 @newioappend="getNewIoAppend">
               </io-list>
             </div>
@@ -50,12 +53,14 @@
           </transition>
         </div>
       </div>
+      <!-- 左右滑动页面按钮 -->
       <div id="slidePrev" v-show="curStep === 2" @click="slidePrev">
         <i class="fa fa-angle-left fa-3x"></i>
       </div>
       <div id="slideNext" v-show="curStep === 1" @click="slideNext">
         <i class="fa fa-angle-right fa-3x"></i>
       </div>
+      <!-- 页脚信息提交栏 -->
       <footer class="fixed-bottom">
         <i class="fa fa-angle-left fa-3x" :class="{'enable': curStep !== 1}" aria-hidden="true" @click="slidePrev"></i>
         <div>
@@ -141,14 +146,14 @@
 <script>
   /**
    * 数据处理逻辑：
+   * 本模块主要协调各个子模块的通讯，并向后台POST一些数据进行IO表和配置文件的生成。
    * 1.从infoForm收集机器基础信息，并根据immType解析机器具体参数信息：机器类型、单双注射、大机选配
    *   为了避免频繁触发imminfochange事件，通过设置this.getInfo=true可以从FuncForm读取一次信息
-   * 2.从FuncForm获取主底板IO修改信息：功能点12的配置等信息。
-   *  TODO:功能配置文件信息录入
+   * 2.从FuncForm获取主底板IO修改信息：功能点12的配置等信息，某些特殊功能涉及到IO点配置，这些信息也会传递到IoList组件。
    * 3.从Module获取模块和模块上的IO配置信息，并将配置信息传递到IoList组件
    * 4.页脚处放置的一些按钮，用来移动展示页面以及向后台POST机器信息
    * 5.IoList接受HTML5的drag事件，ModuleConfig接受HTML5的drop事件，通过鼠标拖拽的方法可实现模块点位的配置
-   * 6.在IoList的IO列表上某项双击，自动将该IO填充到模块的最靠前空余的IO点上
+   * 6.在IoList的IO列表上某项（尚未占用的IO）双击，自动将该IO填充到模块的最靠前空余的IO点上
    */
 
   import IoList from './iomaker/IoList'

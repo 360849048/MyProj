@@ -7,7 +7,7 @@ import Srctransfer from '../components/SrcTransfer'
 
 Vue.use(VueRouter);
 
-
+// 改用vue-router懒加载，缩短首次主页加载时间
 const Iomaker = resolve => require(['../components/IoMaker.vue'], resolve);
 
 export default new VueRouter({

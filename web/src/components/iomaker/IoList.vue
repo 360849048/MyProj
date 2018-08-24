@@ -68,7 +68,7 @@
 
   export default {
     name: "io-list",
-    props: ['boardModules1', 'boardModules2', 'boardModules3', 'boardModulesIOs1', 'boardModulesIOs2', 'boardModulesIOs3'],
+    props: ['boardModules1', 'boardModules2', 'boardModules3', 'boardModulesIOs1', 'boardModulesIOs2', 'boardModulesIOs3', 'type', 'e73Safety', 'moldSlider'],
     data(){
       return {
         ioType: 'di',
@@ -161,8 +161,9 @@
       },
       checkUsed(ioIdx){
         /**
-         * 检查某个IO是否已经被选中到Module中
-         * @param ioIdx 某个IO的序号，这里结合变量ioType，可以定位到具体某个IO点
+         * 检查某个IO是否已经被选中到Module中，或被某些特殊功能占用
+         *  该函数调用频率很高，比较耗费性能，里面不要写太复杂
+         * @param ioIdx 某个IO的序号(字符串格式)，这里结合变量ioType，可以定位到具体某个IO点
          */
         for(let i=0; i<=this.boardModulesIOs1.length; i++) {
           for (let key in this.boardModulesIOs1[i]) {
@@ -191,14 +192,33 @@
             }
           }
         }
+        if(this.e73Safety && this.type !== 'VE2'){
+          if(this.ioType.toUpperCase() === 'DI'){
+            if(ioIdx === '110' || ioIdx === '111'){
+              return true;
+            }
+          }
+        }
+        if(this.moldSlider){
+          if(this.ioType.toUpperCase() === 'DI'){
+            if(ioIdx === '73'){
+              return true;
+            }
+          }
+        }
         return false;
       },
       dblClickIO(e){
         /**
-         * 触发newioappend事件，向父组件发送当前发生鼠标双击的IO
+         * 触发newioappend事件，向父组件发送当前发生鼠标双击的且未占用的IO。
          */
         // 格式例如："di--1--阀门1开" （与上面的drag事件传递数据格式一致）
-        this.$emit('newioappend',  this.ioType + '--' + e.target.getAttribute('data-index') + '--' + e.target.getAttribute('data-name'));
+        let ioIdx = e.target.getAttribute('data-index');
+        let ioName = e.target.getAttribute('data-name');
+        if(this.checkUsed(ioIdx)){
+          return;
+        }
+        this.$emit('newioappend',  this.ioType + '--' + ioIdx + '--' + ioName);
       }
     },
     watch: {

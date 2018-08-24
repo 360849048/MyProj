@@ -49,8 +49,13 @@
 
 <script>
   /**
-   * 获取主底板IO配置信息
-   * TODO: 获取功能配置信息，POST到后台生成相应功能配置文件
+   * 数据处理逻辑：
+   * 该模块集中处理一些功能开关，所有功能的开闭信息都由this.funcs保管。
+   * 每次增加或删除某个具体功能，需要看情况修改父组件、后端的代码（尤其是涉及到IO点修改的功能，必须谨慎处理，防止影响到其他功能）
+   * 该模块可触发以下几种事件：
+   *  * functionsupdate：当功能的开闭状态发生变化时，触发该事件
+   *  * exthotrunnerchange：当外置热流道组数设置发生变化时，触发该事件
+   *  * inthotrunnerchange：内置热流道组数设置发生变化时，触发该事件
    */
   import FuncSwitch from './funcConfig/FuncSwitch'
   export default {
