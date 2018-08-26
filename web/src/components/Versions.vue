@@ -17,14 +17,14 @@
       </thead>
       <tbody>
       <tr v-for="(msg, index) in softVers" :key="index">
-        <td scope="col">{{msg.client}}</td>
-        <td scope="col">{{msg.version}}</td>
-        <td scope="col">{{msg.date}}</td>
-        <td scope="col">{{msg.base}}</td>
-        <td scope="col">{{msg.record}}</td>
-        <td scope="col">{{msg.reason}}</td>
-        <td scope="col">{{msg.remark}}</td>
-        <td scope="col">{{msg.author}}</td>
+        <td scope="col"><div>{{msg.client}}</div></td>
+        <td scope="col"><div>{{msg.version}}</div></td>
+        <td scope="col"><div>{{msg.date}}</div></td>
+        <td scope="col"><div>{{msg.base}}</div></td>
+        <td scope="col"><div>{{msg.record}}</div></td>
+        <td scope="col"><div>{{msg.reason}}</div></td>
+        <td scope="col"><div>{{msg.remark}}</div></td>
+        <td scope="col"><div>{{msg.author}}</div></td>
       </tr>
       </tbody>
     </table>
@@ -48,15 +48,15 @@
             author: 'CX'
           },
           2: {
-            client: 'Zhafir',
-            version: 'V05_38_20',
-            date: '2018.06.18',
-            base: 'V05_38_00',
-            record: '紧急bug修复，原标准程序托模无法保持',
-            reason: '标准程序',
+            client: '美视伊',
+            version: 'V05_15_10',
+            date: '2017.01.18',
+            base: 'V05_15_15',
+            record: '1.一组吹气 2.一组气动中子 3.一组阀门 4.两组模温监控 5.质量参数公差设定质量监控画面的监控值 6.质量监控画面增加：模温异常的不良判定 7.质量判别控制电气接口，传送带 8.一组可编程I/O 9.下料口温度闭环控制 10.调模模式下打开后安全门，蜂鸣器不响 1.产品质量监控对循环周期只采样一次',
+            reason: '合同',
             remark: '',
-            author: 'CX'
-          }
+            author: '王何宇'
+          },
         }
       }
     },
@@ -76,7 +76,6 @@
           },
           success: function(data){
             _this.softVers = data;
-            console.log(_this.softVers);
           },
           error: function(){
             console.log('AJAX请求无法获取Version列表');
@@ -86,3 +85,22 @@
     }
   }
 </script>
+<style scoped>
+  td div{
+    height: 30px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 600px;
+  }
+  @media screen and (max-width: 1000px){
+    td div{
+      max-width: 300px !important;
+    }
+  }
+  td div:hover{
+    overflow: auto;
+    white-space: normal;
+    height: auto;
+  }
+</style>
