@@ -5,6 +5,7 @@ from app.sqljob import TableManager
 from app.iomaker import IOMaker
 from app.configfile import HkFileMaker, FcfFileMaker, SysFileMaker, SafetyFileMaker, createZip
 from app.pathinfo import *
+from app.softupdater import update
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -35,7 +36,7 @@ def getIo():
     else:
         t_io = TableManager('temperature_output', IO_INFO_DB_PATH)
     ret_data = {}
-    ret_data['amount'] = ios_amount[io_type]
+    ret_data['amount'] = IOS_AMOUNT[io_type]
     ret_data['ios'] = {}
     if start_id > end_id or start_id > ret_data['amount']:
         return jsonify(ret_data)
@@ -323,14 +324,54 @@ def _getIoAmount():
     }
 
 
-ios_amount = _getIoAmount()
+IOS_AMOUNT = _getIoAmount()
 
 @app.route('/queryversions', methods=['GET'])
 def getVersion():
-    start_id = int(request.args.get('start'))
-    end_id = int(request.args.get('end'))
-    t_soft = TableManager('t_soft', SOFTWARE_VERSION_INFO_DB_PATH)
-    ret_data = {}
-    for soft_id in range(start_id, end_id + 1):
-        ret_data[soft_id] = t_soft.displayDetailedData(soft_id)
+    soft_type = request.args.get('softType')
+    start_seq = int(request.args.get('start'))
+    end_seq = int(request.args.get('end'))
+    table_name = 't_' + soft_type
+    t_soft = TableManager(table_name, SOFTWARE_VERSION_INFO_DB_PATH)
+    ret_data = {'itemsNum': len(ALL_VERS_ID[table_name]), 'items': {}}
+    key = 0
+    for soft_id in ALL_VERS_ID[table_name][start_seq: end_seq]:
+        ret_data['items'][key] = t_soft.displayDetailedData(soft_id)
+        key += 1
     return jsonify(ret_data)
+
+@app.route('/updateversions', methods=['GET'])
+def updateVersion():
+    global ALL_VERS_ID
+    soft_type = request.args.get('softType')
+    table_name = 't_' + soft_type
+    if soft_type == 'V03V04':
+        sheet_name = 'V03&V04'
+    else:
+        sheet_name = soft_type
+    new_updated_vers = update(table_name=table_name, sheet_name=sheet_name)
+    if new_updated_vers is None:
+        return jsonify({'status': 'fail', 'newVers': ''})
+    ALL_VERS_ID = _getAllVersionsId()
+    return jsonify({'status': 'success', 'newVers': new_updated_vers})
+
+
+# 以降序获取所有版本的ID号
+def _getAllVersionsId():
+    t_vers = {
+        't_V01': TableManager('t_V01', SOFTWARE_VERSION_INFO_DB_PATH),
+        't_V02': TableManager('t_V02', SOFTWARE_VERSION_INFO_DB_PATH),
+        't_V03V04': TableManager('t_V03V04', SOFTWARE_VERSION_INFO_DB_PATH),
+        't_V05': TableManager('t_V05', SOFTWARE_VERSION_INFO_DB_PATH),
+        't_T05': TableManager('t_T05', SOFTWARE_VERSION_INFO_DB_PATH)
+    }
+    return {
+        't_V01': t_vers['t_V01'].getAllId('version', desc=True),
+        't_V02': t_vers['t_V02'].getAllId('version', desc=True),
+        't_V03V04': t_vers['t_V03V04'].getAllId('version', desc=True),
+        't_V05': t_vers['t_V05'].getAllId('version', desc=True),
+        't_T05': t_vers['t_T05'].getAllId('version', desc=True)
+    }
+
+
+ALL_VERS_ID = _getAllVersionsId()

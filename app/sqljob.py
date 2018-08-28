@@ -247,10 +247,18 @@ class TableManager:
         result = self.c.fetchone()
         return result[0]
 
-    def getAllId(self):
+    def getAllId(self, column=None, desc=False):
         # 返回所有行id，例如(1, 2, 3, 4, ...)
+        # 按column对所有id进行升序排列，当desc为True时，降序排列
         ids = []
-        self.c.execute("SELECT id FROM %s" % self.table)
+        if column is None or column not in self.__columns:
+            sql = 'SELECT id FROM %s' % self.table
+        else:
+            if desc:
+                sql = 'SELECT id FROM %s ORDER BY %s DESC' % (self.table, column)
+            else:
+                sql = 'SELECT id FROM %s ORDER BY %s' % (self.table, column)
+        self.c.execute(sql)
         result = self.c.fetchall()
         for i in result:
             ids.append(i[0])
@@ -322,4 +330,10 @@ class TableManager:
 
 if __name__ == '__main__':
     db = DbManager('./libfiles/soft.db')
-    db.deleteTableColumns('t_soft', 'bug_ids')
+    db.dropTable('t_V01')
+    # 新建各个表
+    db.createNewTable('t_V01', ('client', 'version', 'date', 'base', 'record', 'reason', 'remark', 'author'))
+    # db.createNewTable('t_V02', ('client', 'version', 'date', 'base', 'record', 'reason', 'remark', 'author'))
+    # db.createNewTable('t_V03&V04', ('client', 'version', 'date', 'base', 'record', 'reason', 'remark', 'author'))
+    # db.createNewTable('t_V05', ('client', 'version', 'date', 'base', 'record', 'reason', 'remark', 'author'))
+    # db.createNewTable('t_T05', ('client', 'version', 'date', 'base', 'record', 'reason', 'remark', 'author'))
