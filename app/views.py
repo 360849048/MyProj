@@ -5,7 +5,7 @@ from app.sqljob import TableManager
 from app.iomaker import IOMaker
 from app.configfile import HkFileMaker, FcfFileMaker, SysFileMaker, SafetyFileMaker, createZip
 from app.pathinfo import *
-from app.softupdater import update
+from app.softupdater import Updater
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -17,6 +17,8 @@ def home():
 def pageNotFound(e):
     return send_file(ENTRY_HTML_PATH)
 
+
+# ##################################### IO #################################
 @app.route('/io', methods=['GET'])
 def getIo():
     io_type = request.args.get('type')
@@ -326,37 +328,66 @@ def _getIoAmount():
 
 IOS_AMOUNT = _getIoAmount()
 
+
+# ##################################### Version #################################
 @app.route('/queryversions', methods=['GET'])
 def getVersion():
+    '''
+        根据请求的版本类型以及版本区间（不是数据库的id号）返回版本数据
+        当某个版本类型下的所有版本数据按一定顺序（这里按名字降序排列）后，取
+        位于第start_seq和end_seq之间的版本数据
+        :return 格式如 {'itemsNum': 123, 'items': {'client': xxx, 'version': xxx , ...}}
+    '''
     soft_type = request.args.get('softType')
     start_seq = int(request.args.get('start'))
     end_seq = int(request.args.get('end'))
     table_name = 't_' + soft_type
     t_soft = TableManager(table_name, SOFTWARE_VERSION_INFO_DB_PATH)
-    ret_data = {'itemsNum': len(ALL_VERS_ID[table_name]), 'items': {}}
+    ret_data = {'itemsNum': len(ALL_VERS_ID[soft_type]), 'items': {}}
     key = 0
-    for soft_id in ALL_VERS_ID[table_name][start_seq: end_seq]:
+    for soft_id in ALL_VERS_ID[soft_type][start_seq: end_seq]:
+        # 即使end_seq超过ALL_VERS_ID的长度也无所谓，不会影响结果
         ret_data['items'][key] = t_soft.displayDetailedData(soft_id)
         key += 1
     return jsonify(ret_data)
 
-@app.route('/updateversions', methods=['GET'])
-def updateVersion():
-    global ALL_VERS_ID
-    soft_type = request.args.get('softType')
-    table_name = 't_' + soft_type
-    if soft_type == 'V03V04':
-        sheet_name = 'V03&V04'
-    else:
-        sheet_name = soft_type
-    new_updated_vers = update(table_name=table_name, sheet_name=sheet_name)
-    if new_updated_vers is None:
-        return jsonify({'status': 'fail', 'newVers': ''})
-    ALL_VERS_ID = _getAllVersionsId()
-    return jsonify({'status': 'success', 'newVers': new_updated_vers})
 
+# 需要遍历数据库和xls表，并且对比两者的差别，非常费时
+# 检测更新需要遍历数据库和xls表，为了避免确认更新时，重复检测更新
+# 将下面变量设为全局变量
+updaters = {
+    'V01': Updater('t_V01', 'V01'),
+    'V02': Updater('t_V02', 'V02'),
+    'V03V04': Updater('t_V03V04', 'V03&V04'),
+    'V05': Updater('t_V05', 'V05'),
+    'T05': Updater('t_T05', 'T05'),
+}
+@app.route('/checkupdate', methods=['GET'])
+def checkUpdate():
+    '''
+        检查某类版本的更新信息
+        如果找不到或无法打开'软件版本登记表.xls'文件，这里返回状态为失败。
+        :return: 成功返回格式如 {'status': success, 'newVers': [{'client': xx, 'version': xx, ...}, {...}, ,,]}
+                  失败返回格式如 {'status': failure, 'description': 'xxxx'}
+    '''
+    global ALL_VERS_ID, updaters
+    soft_type = request.args.get('softType')
+    vers_ready_to_update = updaters[soft_type].getUpdateInfo()
+    if vers_ready_to_update is None:
+        return jsonify({'status': 'failure', 'description': '无法打开xls文件路径，检查后台 "软件版本登记表.xls" 文件路径'})
+    return jsonify({'status': 'success', 'newVers': vers_ready_to_update})
+
+@app.route('/startupdate', methods=['GET'])
+def startUpdate():
+    global updaters, ALL_VERS_ID
+    soft_type = request.args.get('softType')
+    if updaters[soft_type].startUpdate() is False:
+        return jsonify({'status': 'failure', 'description': '更新信息已过期，请重试'})
+    ALL_VERS_ID = _getAllVersionsId()
+    return jsonify({'status': 'success'})
 
 # 以降序获取所有版本的ID号
+# 避免频繁搜索数据库，这里一次性读取掉所有版本ID号
 def _getAllVersionsId():
     t_vers = {
         't_V01': TableManager('t_V01', SOFTWARE_VERSION_INFO_DB_PATH),
@@ -366,12 +397,29 @@ def _getAllVersionsId():
         't_T05': TableManager('t_T05', SOFTWARE_VERSION_INFO_DB_PATH)
     }
     return {
-        't_V01': t_vers['t_V01'].getAllId('version', desc=True),
-        't_V02': t_vers['t_V02'].getAllId('version', desc=True),
-        't_V03V04': t_vers['t_V03V04'].getAllId('version', desc=True),
-        't_V05': t_vers['t_V05'].getAllId('version', desc=True),
-        't_T05': t_vers['t_T05'].getAllId('version', desc=True)
+        'V01': t_vers['t_V01'].getAllId('version', desc=True),
+        'V02': t_vers['t_V02'].getAllId('version', desc=True),
+        'V03V04': t_vers['t_V03V04'].getAllId('version', desc=True),
+        'V05': t_vers['t_V05'].getAllId('version', desc=True),
+        'T05': t_vers['t_T05'].getAllId('version', desc=True)
     }
 
 
 ALL_VERS_ID = _getAllVersionsId()
+
+@app.route('/downloadsrccode', methods=['GET'])
+def downloadSrcCode():
+    '''
+        为网页端准备下载文件（根据提供的路径复制文件到cache/），然后返回url提供下载
+    '''
+    src_path = request.args.get('path')
+    print(src_path)
+    if not os.path.isfile(src_path):
+        return jsonify({'status': 'failure', 'description': '数据库路径无效在本服务器上无效，'})
+    file_name = os.path.basename(src_path)
+    dst_path = os.path.join(CACHE_FILE_DIR, file_name)
+    shutil.copy(src_path, dst_path)
+    if not os.path.isfile(dst_path):
+        return jsonify({'status': 'failure', 'description': '后台源程序文件复制失败，请重试'})
+    src_code_url = os.path.join(URL_DIR, file_name)
+    return jsonify({'status': 'success', 'url': src_code_url})

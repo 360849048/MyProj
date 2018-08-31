@@ -3,45 +3,76 @@ from app.pathinfo import *
 from app.sqljob import TableManager
 
 
-def update(table_name, sheet_name):
-    if not os.path.isfile(SOFTWARE_VERSION_INFO_XLS_PATH):
-        return None
-    try:
-        workbook = xlrd.open_workbook(SOFTWARE_VERSION_INFO_XLS_PATH)
-        sheet = workbook.sheet_by_name(sheet_name)
-    except (FileNotFoundError, xlrd.biffh.XLRDError) as e:
-        print(e)
-        return None
-    print('更新软件版本库...')
-    t_soft = TableManager(table_name, SOFTWARE_VERSION_INFO_DB_PATH)
-    ids = t_soft.getAllId()
-    softs_existed = []
-    for id in ids:
-        # 3重验证，防止版本号重复的版本无法录入
-        client, version, author = t_soft.displayBriefData(id, 'client', 'version', 'author')
-        softs_existed.append((client, version, author))
-    softs_ready_to_append = []
-    print('即将更新的版本为：')
-    for i in range(1, sheet.nrows):
-        temp = sheet.row_values(i)
-        client = temp[0]
-        version = temp[1]
-        author = temp[7]
-        if version and (client, version, author) not in softs_existed:
-            softs_ready_to_append.append(sheet.row_values(i)[:8])
-            print(version)
-    for new_soft in softs_ready_to_append:
-        t_soft.appendLine(client=new_soft[0],
-                          version=new_soft[1],
-                          date=new_soft[2],
-                          base=new_soft[3],
-                          record=new_soft[4],
-                          reason=new_soft[5],
-                          remark=new_soft[6],
-                          author=new_soft[7])
-    if len(softs_ready_to_append) == 0:
-        print('没有任何更新！')
-    else:
-        print('更新完毕！')
-    return tuple(softs_ready_to_append)
+class Updater:
+    def __init__(self, table_name, sheet_name):
+        self.table_name = table_name
+        self.sheet_name = sheet_name
+        self.version_xls_path = SOFTWARE_VERSION_INFO_XLS_PATH
+        self.version_db_path = SOFTWARE_VERSION_INFO_DB_PATH
+        self.vers_ready_to_append = None
 
+    def getUpdateInfo(self):
+        '''
+            对比数据库与xls文件，获得需要更新的软件版本
+            对比逻辑：取各自(client, version, author)，若三者一致视为同版本，否则视为待添加的新版本
+            注意table_name和sheet_name必须对应， 比如t_V05对应V05！
+            :returns 成功打开xls文件并进行对比后，返回格式为
+            [
+                (client, version, date, base, record, reason, remark, author),
+                (client, version, date, base, record, reason, remark, author),
+                ...
+            ]
+            如果没有更新返回空list
+            如果因为无法xls等失败则返回None
+        '''
+        if not os.path.isfile(self.version_xls_path):
+            print('xls文件路径有误！！！')
+            self.vers_ready_to_append = None
+            return None
+        try:
+            workbook = xlrd.open_workbook(self.version_xls_path)
+            sheet = workbook.sheet_by_name(self.sheet_name)
+        except (FileNotFoundError, xlrd.biffh.XLRDError) as e:
+            print(e)
+            self.vers_ready_to_append = None
+            return None
+        t_soft = TableManager(self.table_name, self.version_db_path)
+        ids = t_soft.getAllId()
+        softs_existed = []
+        for id in ids:
+            # 3重验证，防止版本号重复的版本无法录入
+            client, version, author = t_soft.displayBriefData(id, 'client', 'version', 'author')
+            softs_existed.append((client, version, author))
+        self.vers_ready_to_append = []
+        for i in range(1, sheet.nrows):
+            temp = sheet.row_values(i)
+            client = temp[0]
+            version = temp[1]
+            author = temp[7]
+            if version and (client, version, author) not in softs_existed:
+                self.vers_ready_to_append.append(sheet.row_values(i)[:8])
+        return self.vers_ready_to_append
+
+    def startUpdate(self):
+        '''
+            将getUpdateInfo返回的数据，传入该函数，进行数据库写入更新操作
+        '''
+        if self.vers_ready_to_append is None:
+            return False
+        t_soft = TableManager(self.table_name, self.version_db_path)
+        for new_vers in self.vers_ready_to_append:
+            t_soft.appendLine(client=new_vers[0],
+                              version=new_vers[1],
+                              date=new_vers[2],
+                              base=new_vers[3],
+                              record=new_vers[4],
+                              reason=new_vers[5],
+                              remark=new_vers[6],
+                              author=new_vers[7],
+                              path='')
+        if len(self.vers_ready_to_append) == 0:
+            print('没有任何更新！')
+        else:
+            print('更新完毕！')
+        self.vers_ready_to_append = None
+        return True

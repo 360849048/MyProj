@@ -214,10 +214,14 @@
               })).done(function(){
                 _this.$set(allModulesIOs[_this.curSelectedBoardSeq - 1], i, cai888DefaultIos);
               });
-            }else if(this.bigImm && this.curSelectedBoardSeq === 1){
+            }else if(this.bigImm && this.curSelectedBoardSeq === 1 && this.curSelectedModuleSeq === 1){
+              // 修复了bug：大机情况下无法重置底板一的模块信息
               if( (this.type.toUpperCase() === 'VE2' && this.boardModules1[0] === 'CIO011') ||
-                (this.type.toUpperCase() !== 'VE2' && this.boardModules1[0] === 'CIO021') )
+                (this.type.toUpperCase() !== 'VE2' && this.boardModules1[0] === 'CIO021') ){
                 getBigImmStdIO(this);
+              }else{
+                this.$set(allModulesIOs[this.curSelectedBoardSeq - 1], i, {});
+              }
             }else{
               // 当模块选择发生变动时，除上述两种情况外，清空这个模块的配点信息
               this.$set(allModulesIOs[this.curSelectedBoardSeq - 1], i, {});

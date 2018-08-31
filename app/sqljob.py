@@ -330,10 +330,14 @@ class TableManager:
 
 if __name__ == '__main__':
     db = DbManager('./libfiles/soft.db')
-    db.dropTable('t_V01')
+    # db.dropTable('t_V01')
+    # db.dropTable('t_V02')
+    # db.dropTable('t_V03V04')
+    # db.dropTable('t_V05')
+    # db.dropTable('t_T05')
     # 新建各个表
-    db.createNewTable('t_V01', ('client', 'version', 'date', 'base', 'record', 'reason', 'remark', 'author'))
+    # db.createNewTable('t_V01', ('client', 'version', 'date', 'base', 'record', 'reason', 'remark', 'author'))
     # db.createNewTable('t_V02', ('client', 'version', 'date', 'base', 'record', 'reason', 'remark', 'author'))
-    # db.createNewTable('t_V03&V04', ('client', 'version', 'date', 'base', 'record', 'reason', 'remark', 'author'))
+    # db.createNewTable('t_V03V04', ('client', 'version', 'date', 'base', 'record', 'reason', 'remark', 'author'))
     # db.createNewTable('t_V05', ('client', 'version', 'date', 'base', 'record', 'reason', 'remark', 'author'))
     # db.createNewTable('t_T05', ('client', 'version', 'date', 'base', 'record', 'reason', 'remark', 'author'))

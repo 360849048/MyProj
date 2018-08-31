@@ -30,13 +30,20 @@ URL_DIR = './static/cache/'
 
 # 存放软件版本的数据库路径
 SOFTWARE_VERSION_INFO_DB_PATH = './app/libfiles/soft.db'
+
 # 存放软件版本的xls文件路径（！注意服务器上该文件的路径）
 SOFTWARE_VERSION_INFO_XLS_PATH = 'Y:/软件版本登记/软件版本登记表.xls'
+if not os.path.isfile(SOFTWARE_VERSION_INFO_XLS_PATH):
+    # 如果部署与服务器上，该xls文件的正确路径应该如下
+    SOFTWARE_VERSION_INFO_XLS_PATH = 'G:/软件版本登记/软件版本登记表.xls'
 
 
 if not os.path.isdir(CACHE_FILE_DIR):
     os.mkdir(CACHE_FILE_DIR)
 
-if not os.path.isfile(SOFTWARE_VERSION_INFO_XLS_PATH):
-    # 如果部署与服务器上，该xls文件的正确路径应该如下
-    SOFTWARE_VERSION_INFO_XLS_PATH = 'G:/软件版本登记/软件版本登记表.xls'
+
+# 存放软件源文件的目录
+SOFTWARE_SRC_CODE_DIR = 'E:/工作重要备份/'
+if not os.path.isdir(SOFTWARE_SRC_CODE_DIR):
+    # 如果部署在服务器上，搜索路径更改为G盘根目录
+    SOFTWARE_SRC_CODE_DIR = 'G:/'
