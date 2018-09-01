@@ -77,6 +77,7 @@
         <el-pagination
           layout="prev, pager, next"
           :total="itemsNum * 10 / pageItemAmount"
+          :current-page="curPage"
           @current-change="gotoPage">
         </el-pagination>
       </div>
@@ -129,7 +130,8 @@
         softType: 'V05',
         itemsNum: pageItemAmount,
         pageItemAmount: pageItemAmount,
-        versReadyToUpdate: []
+        versReadyToUpdate: [],
+        curPage: 1
       }
     },
     methods: {
@@ -164,7 +166,7 @@
                 date: '2018.08.18',
                 base: 'V0X_38_20',
                 record: '新增较多功能',
-                reason: '标准程序',
+                reason: '这是一个例子',
                 remark: '',
                 author: 'XX',
                 path: 'G:/windows/system32/test.rar'
@@ -175,7 +177,7 @@
                 date: '2017.01.18',
                 base: 'V0X_15_15',
                 record: '1.一组吹气 2.一组气动中子 3.一组阀门 4.两组模温监控 5.质量参数公差设定质量监控画面的监控值 6.质量监控画面增加：模温异常的不良判定 7.质量判别控制电气接口，传送带 8.一组可编程I/O 9.下料口温度闭环控制 10.调模模式下打开后安全门，蜂鸣器不响 1.产品质量监控对循环周期只采样一次',
-                reason: '合同',
+                reason: '这也是一个例子',
                 remark: '',
                 author: '员工A',
                 path: ''
@@ -186,7 +188,7 @@
                 date: '2017.01.18',
                 base: 'V0X_15_15',
                 record: '1.一组吹气 2.一组气动中子 3.一组阀门 4.两组模温监控 5.质量参数公差设定质量监控画面的监控值 6.质量监控画面增加：模温异常的不良判定 7.质量判别控制电气接口，传送带 8.一组可编程I/O 9.下料口温度闭环控制 10.调模模式下打开后安全门，蜂鸣器不响 1.产品质量监控对循环周期只采样一次',
-                reason: '合同',
+                reason: '这还是一个例子',
                 remark: '',
                 author: '技术员B',
                 path: ''
@@ -197,7 +199,7 @@
                 date: '2017.01.18',
                 base: 'V0X_15_15',
                 record: '1.一组吹气 2.一组气动中子 3.一组阀门 4.两组模温监控 5.质量参数公差设定质量监控画面的监控值 6.质量监控画面增加：模温异常的不良判定 7.质量判别控制电气接口，传送带 8.一组可编程I/O 9.下料口温度闭环控制 10.调模模式下打开后安全门，蜂鸣器不响 1.产品质量监控对循环周期只采样一次',
-                reason: '合同',
+                reason: '这依旧是一个例子',
                 remark: '',
                 author: '管理人员C',
                 path: 'g:/sigmatek/测试/v0x-15-xx.rar;g:/临时/管理人员C/v0x_15_xx.7z'
@@ -207,8 +209,9 @@
         });
       },
       gotoPage(e){
-        let firstSeq = (parseInt(e) - 1) * pageItemAmount;
-        let lastSeq = parseInt(e) * pageItemAmount;
+        this.curPage = parseInt(e);
+        let firstSeq = (this.curPage - 1) * pageItemAmount;
+        let lastSeq = this.curPage * pageItemAmount;
         this.getVers(firstSeq, lastSeq);
       },
       checkUpdateInfo(){
@@ -317,6 +320,7 @@
       softType: {
         handler(cval, oval){
           if(cval !== oval){
+            this.curPage = 1;
             this.gotoPage(1);
           }
         }

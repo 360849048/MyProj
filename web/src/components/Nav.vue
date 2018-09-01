@@ -8,19 +8,32 @@
 
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav mr-auto">
-        <li class="nav-item active">
-            <router-link class="nav-link" href="#" to="/home"><i class="fa fa-home fa-fw"></i>Home <span class="sr-only">(current)</span></router-link>
+        <li class="nav-item" :class="{'active': curRoute === 1}">
+            <router-link class="nav-link" href="#" to="/home" @click.native="curRoute=1">
+              <i class="fa fa-home fa-fw"></i>
+              Home
+            </router-link>
         </li>
-        <li class="nav-item">
-            <router-link class="nav-link" href="#" to="/versions">Versions</router-link>
+        <li class="nav-item" :class="{'active': curRoute === 2}">
+            <router-link class="nav-link" href="#" to="/versions" @click.native="curRoute=2">
+              <i class="fa fa-code-fork" aria-hidden="true"></i>
+              Versions
+            </router-link>
         </li>
-        <li class="nav-item dropdown">
+        <li class="nav-item dropdown" :class="{'active': curRoute === 3}">
             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            Tools
+              <i class="fa fa-magic"></i>
+              Tools
             </a>
             <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-            <router-link class="dropdown-item" href="#" to="/srctransfer">Select</router-link>
-            <router-link class="dropdown-item" href="#" to="/makeio">IO</router-link>
+            <router-link class="dropdown-item" href="#" to="/srctransfer" @click.native="curRoute=3">
+              <i class="fa fa-minus-circle"></i>
+              Select
+            </router-link>
+            <router-link class="dropdown-item" href="#" to="/makeio" @click.native="curRoute=3">
+              <i class="fa fa-files-o"></i>
+              IO
+            </router-link>
             <div class="dropdown-divider"></div>
             <a class="dropdown-item" href="#">more...</a>
             </div>
@@ -39,10 +52,14 @@
 </template>
 <script>
 export default {
-    data(){
-        return {
-            textSearch: ''
-        }
+  data(){
+    return {
+      curRoute: 1,
+      textSearch: ''
     }
+  },
+  methods: {
+
+  }
 }
 </script>

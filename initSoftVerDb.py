@@ -3,7 +3,7 @@
     注意，运行这段脚本会删除原先的soft.db数据库，注意数据备份
 '''
 from app.rebuildSoftDb import rebuidSoftDb
-from app.softpathmap import mapVersionPath, writePathInfo
+from app.softpathmap import mapAllVersionsPath, writePathInfo
 from app.softupdater import Updater
 
 if input('是否重建数据库？这会清空原先数据库 (y/n)') == 'y':
@@ -25,5 +25,5 @@ if input('是否重建数据库？这会清空原先数据库 (y/n)') == 'y':
     print('完成数据导入')
 
 if input('是否搜索源码路径？这可能需要很长时间 (y/n)') == 'y':
-    ver_path_map = mapVersionPath()
+    ver_path_map = mapAllVersionsPath()
     writePathInfo(ver_path_map)
