@@ -35,6 +35,8 @@
                 :type="type"
                 :e73Safety="funcConfig[3].status"
                 :moldSlider="funcConfig[6].status"
+                :func1ToProgO1="funcConfig[7].status"
+                :func2ToProgO2="funcConfig[8].status"
                 @newioappend="getNewIoAppend">
               </io-list>
             </div>
@@ -131,8 +133,8 @@
               <hr>
               能耗模块：<span class="font-weight-bold" :class="{'text-danger': funcConfig[5].status}">{{funcConfig[5].status}}</span>
               <hr>
-              外置热流道：<span class="font-weight-bold" :class="{'text-danger': funcConfig[666].status}">{{funcConfig[666].status}}</span>
-              <div v-show="funcConfig[666].status">{{extHotrunnerNum}}</div>
+              外置热流道：<span class="font-weight-bold" :class="{'text-danger': funcConfig[99].status}">{{funcConfig[99].status}}</span>
+              <div v-show="funcConfig[99].status">{{extHotrunnerNum}}</div>
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
@@ -195,12 +197,14 @@
           3: {name: 'E73', status: false},
           4: {name: '喷嘴改阀门1', status: false},
           5: {name: 'DEE能耗模块', status: false},
-          6: {name: '7号改可编程', status: false},
-          7: {name: '阀门', status: false},
-          8: {name: '吹气', status: false},
-          9: {name: '中子', status: false},
-          10: {name: '可编程IO', status: false},
-          666: {name: '外置热流道', status: false}
+          6: {name: '7号改可编程输入1', status: false},
+          7: {name: '功能点1改可编程输出1', status: false},
+          8: {name: '功能点2改可编程输出2', status: false},
+          99: {name: '外置热流道', status: false},
+          101: {name: '阀门', status: false},
+          102: {name: '吹气', status: false},
+          103: {name: '中子', status: false},
+          104: {name: '可编程IO', status: false}
         },
         extHotrunnerNum: 3,
         intHotrunnerNum: 0,

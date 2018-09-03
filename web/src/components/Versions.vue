@@ -331,7 +331,7 @@
 <style scoped>
   #versions{
     margin-top: 10px;
-    padding-bottom: 2rem;
+    padding-bottom: 5rem;
   }
   .no-bt{
     border-top: 0;

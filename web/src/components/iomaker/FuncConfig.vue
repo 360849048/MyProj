@@ -1,11 +1,11 @@
 <template>
   <div id="funcconfig">
     <div class="row">
-      <div class="col-xl-4">
+      <div class="col-xl-6">
         <h2>IO表相关修改</h2>
         <hr>
         <!-- v-if里面不能用 === -->
-        <div v-for="(item, index) in funcs" v-if="index <= 6 || index==666" class="p-1">
+        <div v-for="(item, index) in funcs" v-if="index <= 100" class="p-1">
           <func-switch
             :id="index"
             :name="item.name"
@@ -14,7 +14,7 @@
           </func-switch>
         </div>
         <transition name="fade">
-          <form v-show="funcs[666].status">
+          <form v-show="funcs[99].status">
             <label id="extHotrunnerLabel">外置热流道组数</label>
             <el-input-number :min="1" :max="10" label="热流道组数"
                              v-model="extHotrunnerNum"
@@ -34,7 +34,7 @@
                            @change="handleIntHot">
           </el-input-number>
         </form>
-        <div v-for="(item, index) in funcs" v-if="index > 6 && index != 666" class="p-1">
+        <div v-for="(item, index) in funcs" v-if="index > 100" class="p-1">
           <func-switch
             :id="index"
             :name="item.name"
@@ -74,12 +74,14 @@
           3: {name: 'E73', status: false},
           4: {name: '喷嘴改阀门1', status: false},
           5: {name: 'DEE能耗模块', status: false},
-          6: {name: '7号改可编程输入', status: false},
-          7: {name: '阀门', status: false},
-          8: {name: '吹气', status: false},
-          9: {name: '中子', status: false},
-          10: {name: '可编程IO', status: false},
-          666: {name: '外置热流道', status: false}
+          6: {name: '7号改可编程输入1', status: false},
+          7: {name: '功能点1改可编程输出1', status: false},
+          8: {name: '功能点2改可编程输出2', status: false},
+          99: {name: '外置热流道', status: false},
+          101: {name: '阀门', status: false},
+          102: {name: '吹气', status: false},
+          103: {name: '中子', status: false},
+          104: {name: '可编程IO', status: false}
         },
         extHotrunnerNum: 3,
         intHotrunnerNum: 0
@@ -118,6 +120,20 @@
             this.$message({
               message: 'E73已经修改了输入7号点，不可重复配置',
               type: 'error'
+            });
+          }
+          if(cval[7].status && cval[1].status){
+            this.funcs[7].status = false;
+            this.$message({
+              message: '请将可编程IO输出1配到模块',
+              type: 'warning'
+            });
+          }
+          if(cval[8].status && cval[2].status){
+            this.funcs[8].status = false;
+            this.$message({
+              message: '请将可编程IO输出2配到模块',
+              type: 'warning'
             });
           }
         },

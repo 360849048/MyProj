@@ -128,8 +128,8 @@ class IOFile:
                  safety_standard=None, technical_clause=None, dual_inj=False, external_hotrunner_num=0,
                  energy_dee=False, varan_conn_module_pos=0):
         ''' imm_type:           'ZEs', 'ZE', 'VE2', 'VE2s'
-            main_board_modules: [['CTO163', {'O3': ['中文名', 'EnglishName'], ...}], ['CDM163', {'I5': ['中文名', 'EnglishName'], ...}], ...]
-            board_1_modules:    [['CIV512', {}], ['CTO163', {'O3': ['中文名', 'EnglishName'], ...}], ['CDM163', {'I5': ['中文名', 'EnglishName'], ...}], ...]
+            main_board_modules: [['CTO163', {'DO3': ['中文名', 'EnglishName'], ...}], ['CDM163', {'DI5': ['中文名', 'EnglishName'], ...}], ...]
+            board_1_modules:    [['CIV512', {}], ['CTO163', {'DO3': ['中文名', 'EnglishName'], ...}], ['CDM163', {'DI5': ['中文名', 'EnglishName'], ...}], ...]
             varan_conn_module_pos:  0：如果有Varan连接模块，则配置在KEB之后；   1：如果有Varan连接模块，则配置在KEB之前
         '''
         self.imm_type = imm_type
@@ -592,7 +592,7 @@ class IOFile:
         hardware_info_worksheet.cell(row=cur_work_row, column=cur_work_column + 3, value='+' + str(self.external_hotrunner_num))
         return 0
 
-    def copyExternalHotrunnerModule(self):
+    def copyExternalHotrunnerModule(self, cai888_configuration):
         ''' 往 热流道箱IO 复制CAI888模块 '''
         if self.external_hotrunner_num == 0:
             return 0
@@ -617,7 +617,7 @@ class IOFile:
         src_end_cell = cai888_worksheets.cell(row=cai888_worksheets.max_row, column=4)
         for i in range(self.external_hotrunner_num):
             dst_start_cell = hotrunner_io_worksheet.cell(row=cur_work_row, column=cur_work_column)
-            if self._copyAndModifyCellRange(src_start_cell, src_end_cell, dst_start_cell) != 0:
+            if self._copyAndModifyCellRange(src_start_cell, src_end_cell, dst_start_cell, ioconfiguration=cai888_configuration) != 0:
                 print("Fatal: 单元格区域复制失败")
                 return -2
             hotrunner_io_worksheet.cell(row=cur_work_row, column=cur_work_column).value += str(i)
@@ -668,7 +668,7 @@ class IOFile:
 
 if __name__ == '__main__':
     iofile = IOFile(imm_type='ve2s',
-                    main_board_modules=[['cdm163', {'I1': ['点1', 'id 1']}], ['cio011', {'O2': ['点45', 'id 45'], 'Ai2': ['模腔压力', 'Mold Pressure']}], ['cto163', {'O1': ['点41', 'ID 41']}]],
+                    main_board_modules=[['cdm163', {'DI1': ['点1', 'id 1']}], ['cio011', {'DO2': ['点45', 'id 45'], 'Ai2': ['模腔压力', 'Mold Pressure']}], ['cto163', {'DO1': ['点41', 'ID 41']}]],
                     board_1_modules=[['civ512', {}], ['cai888', {}]],
                     big=True)
     iofile.copyMainBoardModulesInfo()

@@ -68,7 +68,8 @@
 
   export default {
     name: "io-list",
-    props: ['boardModules1', 'boardModules2', 'boardModules3', 'boardModulesIOs1', 'boardModulesIOs2', 'boardModulesIOs3', 'type', 'e73Safety', 'moldSlider'],
+    props: ['boardModules1', 'boardModules2', 'boardModules3', 'boardModulesIOs1', 'boardModulesIOs2', 'boardModulesIOs3',
+      'type', 'e73Safety', 'moldSlider', 'func1ToProgO1', 'func2ToProgO2'],
     data(){
       return {
         ioType: 'di',
@@ -202,6 +203,20 @@
         if(this.moldSlider){
           if(this.ioType.toUpperCase() === 'DI'){
             if(ioIdx === '73'){
+              return true;
+            }
+          }
+        }
+        if(this.func1ToProgO1){
+          if(this.ioType.toUpperCase() === 'DO'){
+            if(ioIdx === '73'){
+              return true;
+            }
+          }
+        }
+        if(this.func2ToProgO2){
+          if(this.ioType.toUpperCase() === 'DO'){
+            if(ioIdx === '74'){
               return true;
             }
           }

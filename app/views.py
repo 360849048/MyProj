@@ -127,8 +127,8 @@ def createIoFile():
     # 这个是改造后规范显示的immType字符串，json中的immType值不适合取文件名
     imm_type = ''
     # 默认的主底板IO是否修改
-    func1_to_inj_signal = data['funcConfig']['1']['status']
-    func2_to_charge_signal = data['funcConfig']['2']['status']
+    func1_inj_signal = data['funcConfig']['1']['status']
+    func2_charge_signal = data['funcConfig']['2']['status']
     e73_safety = data['funcConfig']['3']['status']
     nozzle_to_valve = data['funcConfig']['4']['status']
     if e73_safety or data['type'].upper() == 'VE2':
@@ -138,11 +138,14 @@ def createIoFile():
         mold_slider = data['funcConfig']['6']['status']
     # 能耗模块DEE是否启用
     energy_dee = data['funcConfig']['5']['status']
+    # 功能点为是否更改为可编程输出
+    func1_to_progo1 = data['funcConfig']['7']['status']
+    func2_to_progo2 = data['funcConfig']['8']['status']
     # Varan连接模块如果启用，安装在KEB之后(0)之前(1)
     varan_conn_module_pos = data['varanConnModulePos']
     # 外置热流道是否激活，及组数
     # 注意网页端提交的功能序号可能随功能增加而改变，注意 data['funcConfig']['?']['status]中的序号('?')需要随之更新
-    activate_external_hotrunner = data['funcConfig']['666']['status']
+    activate_external_hotrunner = data['funcConfig']['99']['status']
     if activate_external_hotrunner:
         external_hotrunner_num = int(data['extHotrunnerNum'])
     else:
@@ -174,9 +177,9 @@ def createIoFile():
                       external_hotrunner_num=external_hotrunner_num,
                       energy_dee=energy_dee,
                       varan_conn_module_pos=varan_conn_module_pos)
-    if func1_to_inj_signal:
+    if func1_inj_signal:
         iomaker.func1ToInjSignal()
-    if func2_to_charge_signal:
+    if func2_charge_signal:
         iomaker.func2ToChargeSignal()
     if nozzle_to_valve:
         iomaker.nozzleToValve()
@@ -185,6 +188,10 @@ def createIoFile():
         iomaker.e73Safety()
     if mold_slider:
         iomaker.moldSlider()
+    if func1_to_progo1:
+        iomaker.func1_to_progo1()
+    if func2_to_progo2:
+        iomaker.func2_to_progo2()
     iomaker.createFile(io_file_path)
 
     return jsonify({'status': 'success', 'url': io_url})
@@ -222,6 +229,9 @@ def createConfigFile():
         mold_slider = False
     else:
         mold_slider = data['funcConfig']['6']['status']
+    # 功能点为是否更改为可编程输出
+    func1_to_progo1 = data['funcConfig']['7']['status']
+    func2_to_progo2 = data['funcConfig']['8']['status']
 
     # 安全继电器文件
     nor_pilz = data['pilzNor']
@@ -264,10 +274,10 @@ def createConfigFile():
     functions['chargeSig'] = data['funcConfig']['2']['status']
     functions['dee'] = data['funcConfig']['5']['status']
     functions['internalHotrunnerNum'] = data['intHotrunnerNum']
-    functions['valve'] = data['funcConfig']['7']['status']
-    functions['air'] = data['funcConfig']['8']['status']
-    functions['core'] = data['funcConfig']['9']['status']
-    functions['progio'] = data['funcConfig']['10']['status']
+    functions['valve'] = data['funcConfig']['101']['status']
+    functions['air'] = data['funcConfig']['102']['status']
+    functions['core'] = data['funcConfig']['103']['status']
+    functions['progio'] = data['funcConfig']['104']['status']
 
     fcfmaker = FcfFileMaker(imm_type=data['type'],
                             functions=functions,
@@ -288,7 +298,9 @@ def createConfigFile():
                           varan_module_pos=varan_conn_module_pos,
                           e73=e73_safety,
                           energy_dee=energy_dee,
-                          mold_slider=mold_slider)
+                          mold_slider=mold_slider,
+                          func1_to_progo1=func1_to_progo1,
+                          func2_to_progo2=func2_to_progo2)
     # debug时候查看硬件修改
     # print(hkmaker.getConfigInfo())
     if hkmaker.createFile() < 0:

@@ -7,7 +7,7 @@ from app.pathinfo import *
 
 class HkFileMaker:
     def __init__(self, imm_type, ce_standard=False, board_1_modules_ios=None, board_2_modules_ios=None, energy_dee=False,
-                 varan_module_pos=0, e73=False, mold_slider=False,
+                 varan_module_pos=0, e73=False, mold_slider=False, func1_to_progo1=False, func2_to_progo2=False,
                  std_file_dir=STD_HK_FILE_DIR,
                  dst_file_dir=CACHE_FILE_DIR):
         '''
@@ -31,6 +31,8 @@ class HkFileMaker:
             self.mold_slider = False
         else:
             self.mold_slider = mold_slider
+        self.func1_to_progo1 = func1_to_progo1
+        self.func2_to_progo2 = func2_to_progo2
 
         if imm_type.endswith('s'):
             self.ce_standard = ce_standard
@@ -90,6 +92,10 @@ class HkFileMaker:
             self.io_config_info['DI'][111] = 8
         if self.mold_slider:
             self.io_config_info['DI'][73] = 7
+        if self.func1_to_progo1:
+            self.io_config_info['DO'][73] = 35
+        if self.func2_to_progo2:
+            self.io_config_info['DO'][74] = 36
 
         if self.board_1_modules_ios is not None:
             #  board_1_modules_count格式： {'CDM163': 2, 'CTO163': 1}
@@ -471,7 +477,18 @@ class HkFileMaker:
                                 lines[row_need_modified] = re_exp.sub(',0,,', line)
                                 std_configured_io.remove(io_type + str(io_seq))
                         if self.mold_slider and io_type == 'DI':
+                            # 对于原先已经被配置好的IO点，必须先清空其配置信息，否则会导致多个IO被配置到相同的位置
                             if io_pos == 7:
+                                lines[row_need_modified] = re_exp.sub(',0,,', line)
+                                std_configured_io.remove(io_type + str(io_seq))
+                        if self.func1_to_progo1 and io_type == 'DO':
+                            # 对于原先已经被配置好的IO点，必须先清空其配置信息，否则会导致多个IO被配置到相同的位置
+                            if io_pos == 35:
+                                lines[row_need_modified] = re_exp.sub(',0,,', line)
+                                std_configured_io.remove(io_type + str(io_seq))
+                        if self.func2_to_progo2 and io_type == 'DO':
+                            # 对于原先已经被配置好的IO点，必须先清空其配置信息，否则会导致多个IO被配置到相同的位置
+                            if io_pos == 36:
                                 lines[row_need_modified] = re_exp.sub(',0,,', line)
                                 std_configured_io.remove(io_type + str(io_seq))
                         if io_seq in self.io_config_info[io_type]:
