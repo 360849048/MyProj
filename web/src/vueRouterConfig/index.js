@@ -4,6 +4,7 @@ import Home from '../components/Home.vue'
 // import Versions from '../components/Versions'
 import Srctransfer from '../components/SrcTransfer'
 // import Iomaker from '../components/IoMaker'
+import SearchResult from '../components/SearchResult'
 
 Vue.use(VueRouter);
 
@@ -18,10 +19,11 @@ export default new VueRouter({
   // Abstract： 支持所有javascript运行模式。如果发现没有浏览器的API，路由会自动强制进入这个模式。
   mode: 'history',
   routes: [
-      {path: '/home', component: Home},
-      {path: '/versions', component: Versions},
-      {path: '/srctransfer', component: Srctransfer},
-      {path: '/makeio', component: Iomaker},
-      {path: '*', redirect: '/home'}
+    {path: '/home', component: Home},
+    {path: '/versions', component: Versions},
+    {path: '/srctransfer', component: Srctransfer},
+    {path: '/makeio', component: Iomaker},
+    {path: '/search', component: SearchResult},
+    {path: '*', redirect: '/home'}
   ]
 })

@@ -43,8 +43,10 @@
         </li>
         </ul>
         <form class="form-inline my-2 my-lg-0">
-        <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search" v-model="textSearch">
-        <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+        <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search"
+               v-model="textSearch"
+               @keydown.enter.prevent="search">
+        <button class="btn btn-outline-success my-2 my-sm-0" type="button" @click="search">Search</button>
         </form>
     </div>
     </nav>
@@ -59,7 +61,15 @@ export default {
     }
   },
   methods: {
-
+    search(){
+      this.$router.push({
+        path: 'search',
+        query:{
+          text: this.textSearch
+        }
+      });
+      this.curRoute = 9;
+    }
   }
 }
 </script>

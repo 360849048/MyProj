@@ -1,5 +1,5 @@
 <template>
-    <div id="srcmaker" v-loading="waiting">
+    <div id="iomaker" v-loading="waiting">
       <div class="container-fluid">
         <div class="row">
           <!-- 信息录入 -->

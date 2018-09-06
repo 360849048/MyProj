@@ -170,18 +170,22 @@ class DbManager:
         columns = tuple(columns)
         return columns[1:]
 
+    def execSQL(self, sql):
+        self.c.execute(sql)
+        return self.c.fetchall()
+
 class TableManager:
     def __init__(self, table_name, path_db, columns4init=('如果不是创建新表，不需要填写该参数',)):
         # 修改表内容后自动保存
         self.auto_commit = True
         self.table = table_name
-        self.__columns = columns4init
+        self.columns = columns4init
 
         self.conn = sqlite3.connect(path_db)
         self.c = self.conn.cursor()
-        sql = ("CREATE TABLE IF NOT EXISTS %s(id integer PRIMARY KEY AUTOINCREMENT" + ",%s text"*len(self.__columns) + ")") % ((self.table,) + self.__columns)
+        sql = ("CREATE TABLE IF NOT EXISTS %s(id integer PRIMARY KEY AUTOINCREMENT" + ",%s text" * len(self.columns) + ")") % ((self.table,) + self.columns)
         self.c.execute(sql)
-        self.__columns = self.getColumns()
+        self.columns = self._getColumns()
 
     def __del__(self):
         try:
@@ -231,7 +235,7 @@ class TableManager:
 
     #  ###################### 以下所有为查询数据相关函数 ######################
 
-    def getColumns(self):
+    def _getColumns(self):
         # 获取表中列的名字
         self.c.execute("PRAGMA table_info(%s)" % self.table)
         temp = self.c.fetchall()
@@ -241,23 +245,26 @@ class TableManager:
         columns = tuple(columns)
         return columns[1:]
 
+    def getColumns(self):
+        return self.columns
+
     def countLines(self):
         sql = "SELECT count(*) FROM %s" % self.table
         self.c.execute(sql)
         result = self.c.fetchone()
         return result[0]
 
-    def getAllId(self, column=None, desc=False):
+    def getAllId(self, orderby=None, desc=False):
         # 返回所有行id，例如(1, 2, 3, 4, ...)
         # 按column对所有id进行升序排列，当desc为True时，降序排列
         ids = []
-        if column is None or column not in self.__columns:
+        if orderby is None or orderby not in self.columns:
             sql = 'SELECT id FROM %s' % self.table
         else:
             if desc:
-                sql = 'SELECT id FROM %s ORDER BY %s DESC' % (self.table, column)
+                sql = 'SELECT id FROM %s ORDER BY %s DESC' % (self.table, orderby)
             else:
-                sql = 'SELECT id FROM %s ORDER BY %s' % (self.table, column)
+                sql = 'SELECT id FROM %s ORDER BY %s' % (self.table, orderby)
         self.c.execute(sql)
         result = self.c.fetchall()
         for i in result:
@@ -267,7 +274,7 @@ class TableManager:
 
     def displayBriefData(self, id, *columns):
         if len(columns) == 0:
-            columns = (self.__columns[0], )
+            columns = (self.columns[0],)
         sql = "SELECT " + (("%s,"*len(columns)) % columns).strip(',') + " FROM %s WHERE id=?" % self.table
         self.c.execute(sql, (str(id),))
         line = self.c.fetchone()
@@ -283,10 +290,10 @@ class TableManager:
     def displayDetailedData(self, id):
         if id not in self.getAllId():
             return
-        self.c.execute("SELECT * FROM %s WHERE id=?" % self.table, (str(id),))
+        self.c.execute("SELECT * FROM %s WHERE id=?" % self.table, (str(id), ))
         line = self.c.fetchone()
         # return line[1:]
-        temp_cols = list(self.__columns)
+        temp_cols = list(self.columns)
         temp_cols.insert(0, "id")
         return dict(zip(temp_cols, line))
 
@@ -327,17 +334,48 @@ class TableManager:
         ids = tuple(ids)
         return ids
 
+    def searchDataInTable(self, keyword, *exclude):
+        ids = set()
+        target_cols = tuple(col for col in self.columns if col not in exclude)
+        for col in target_cols:
+            sql = 'SELECT id FROM %s WHERE ' % self.table + "%s LIKE %r" % (col, '%'+keyword + '%')
+            self.c.execute(sql)
+            result = self.c.fetchall()
+            for item in result:
+                ids.add(item[0])
+        return tuple(ids)
+
 
 if __name__ == '__main__':
-    db = DbManager('./libfiles/soft.db')
-    # db.dropTable('t_V01')
-    # db.dropTable('t_V02')
-    # db.dropTable('t_V03V04')
-    # db.dropTable('t_V05')
-    # db.dropTable('t_T05')
-    # 新建各个表
-    # db.createNewTable('t_V01', ('client', 'version', 'date', 'base', 'record', 'reason', 'remark', 'author'))
-    # db.createNewTable('t_V02', ('client', 'version', 'date', 'base', 'record', 'reason', 'remark', 'author'))
-    # db.createNewTable('t_V03V04', ('client', 'version', 'date', 'base', 'record', 'reason', 'remark', 'author'))
-    # db.createNewTable('t_V05', ('client', 'version', 'date', 'base', 'record', 'reason', 'remark', 'author'))
-    # db.createNewTable('t_T05', ('client', 'version', 'date', 'base', 'record', 'reason', 'remark', 'author'))
+    import re
+    import time
+
+
+    # 多表模糊匹配查询速度测试
+    time_mark = time.time()
+    t_vers = {
+        'V01': TableManager('t_V01', './libfiles/soft.db'),
+        'V02': TableManager('t_V02', './libfiles/soft.db'),
+        'V03V04': TableManager('t_V03V04', './libfiles/soft.db'),
+        'V05': TableManager('t_V05', './libfiles/soft.db'),
+        'T05': TableManager('t_T05', './libfiles/soft.db')
+    }
+
+    string = '华 麦 邵 阀门'
+    ret_data = {'itemsNum': 0, 'items': {}}
+    keywords = re.split(r'\s+', string)
+    key = 0
+    for soft_type in t_vers:
+        ids_for_each_keys = []
+
+        for keyword in keywords:
+            ids_for_each_keys.append(t_vers[soft_type].searchDataInTable(keyword, 'path'))
+        ids = ids_for_each_keys[0]
+        for i in range(1, len(ids_for_each_keys)):
+            ids = tuple(id for id in ids if id in ids_for_each_keys[i])
+        ret_data['itemsNum'] += len(ids)
+        for soft_id in ids:
+            ret_data['items'][key] = t_vers[soft_type].displayDetailedData(soft_id)
+            key += 1
+    print(ret_data)
+    print('一共耗时: ', time.time() - time_mark)

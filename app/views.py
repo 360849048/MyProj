@@ -1,5 +1,6 @@
 from flask import request, send_file, jsonify
 import shutil
+import re
 from app import app
 from app.sqljob import TableManager
 from app.iomaker import IOMaker
@@ -402,18 +403,18 @@ def startUpdate():
 # 避免频繁搜索数据库，这里一次性读取掉所有版本ID号
 def _getAllVersionsId():
     t_vers = {
-        't_V01': TableManager('t_V01', SOFTWARE_VERSION_INFO_DB_PATH),
-        't_V02': TableManager('t_V02', SOFTWARE_VERSION_INFO_DB_PATH),
-        't_V03V04': TableManager('t_V03V04', SOFTWARE_VERSION_INFO_DB_PATH),
-        't_V05': TableManager('t_V05', SOFTWARE_VERSION_INFO_DB_PATH),
-        't_T05': TableManager('t_T05', SOFTWARE_VERSION_INFO_DB_PATH)
+        'V01': TableManager('t_V01', SOFTWARE_VERSION_INFO_DB_PATH),
+        'V02': TableManager('t_V02', SOFTWARE_VERSION_INFO_DB_PATH),
+        'V03V04': TableManager('t_V03V04', SOFTWARE_VERSION_INFO_DB_PATH),
+        'V05': TableManager('t_V05', SOFTWARE_VERSION_INFO_DB_PATH),
+        'T05': TableManager('t_T05', SOFTWARE_VERSION_INFO_DB_PATH)
     }
     return {
-        'V01': t_vers['t_V01'].getAllId('version', desc=True),
-        'V02': t_vers['t_V02'].getAllId('version', desc=True),
-        'V03V04': t_vers['t_V03V04'].getAllId('version', desc=True),
-        'V05': t_vers['t_V05'].getAllId('version', desc=True),
-        'T05': t_vers['t_T05'].getAllId('version', desc=True)
+        'V01': t_vers['V01'].getAllId('version', desc=True),
+        'V02': t_vers['V02'].getAllId('version', desc=True),
+        'V03V04': t_vers['V03V04'].getAllId('version', desc=True),
+        'V05': t_vers['V05'].getAllId('version', desc=True),
+        'T05': t_vers['T05'].getAllId('version', desc=True)
     }
 
 
@@ -435,3 +436,34 @@ def downloadSrcCode():
         return jsonify({'status': 'failure', 'description': '后台源程序文件复制失败，请重试'})
     src_code_url = os.path.join(URL_DIR, file_name)
     return jsonify({'status': 'success', 'url': src_code_url})
+
+@app.route('/searchversions', methods=['GET'])
+def searchVersion():
+    search_str = request.args.get('text')
+    ret_data = {'itemsNum': 0, 'items': {}}
+    if search_str == '':
+        return jsonify(ret_data)
+    t_vers = {
+        'V01': TableManager('t_V01', SOFTWARE_VERSION_INFO_DB_PATH),
+        'V02': TableManager('t_V02', SOFTWARE_VERSION_INFO_DB_PATH),
+        'V03V04': TableManager('t_V03V04', SOFTWARE_VERSION_INFO_DB_PATH),
+        'V05': TableManager('t_V05', SOFTWARE_VERSION_INFO_DB_PATH),
+        'T05': TableManager('t_T05', SOFTWARE_VERSION_INFO_DB_PATH)
+    }
+    keywords = re.split(r'\s+', search_str)
+    key = 0
+    for soft_type in t_vers:
+        ids_for_each_keyword = []
+
+        for keyword in keywords:
+            # 在表中搜索1个关键字
+            ids_for_each_keyword.append(t_vers[soft_type].searchDataInTable(keyword, 'path'))
+        # 取多个关键字获得到重合id部分，即筛选出符合多个条件的数据
+        ids = ids_for_each_keyword[0]
+        for i in range(1, len(ids_for_each_keyword)):
+            ids = tuple(soft_id for soft_id in ids if soft_id in ids_for_each_keyword[i])
+        ret_data['itemsNum'] += len(ids)
+        for soft_id in ids:
+            ret_data['items'][key] = t_vers[soft_type].displayDetailedData(soft_id)
+            key += 1
+    return jsonify(ret_data)
