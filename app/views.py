@@ -1,4 +1,4 @@
-from flask import request, send_file, jsonify
+from flask import request, send_file, jsonify, make_response
 import shutil
 import re
 from app import app
@@ -467,3 +467,11 @@ def searchVersion():
             ret_data['items'][key] = t_vers[soft_type].displayDetailedData(soft_id)
             key += 1
     return jsonify(ret_data)
+
+
+@app.route('/foo', methods=['GET'])
+def cookieTest():
+    response = make_response('ok')
+    response.set_cookie('date', '20180807')
+    print(request.cookies.get('username'))
+    return response

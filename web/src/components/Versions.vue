@@ -31,15 +31,15 @@
         <table class="table table-hover" v-loading="loading">
           <thead>
           <tr>
-            <th scope="col" class="no-bt">客户</th>
-            <th scope="col" class="no-bt">版本</th>
-            <th scope="col" class="no-bt">更改日期</th>
-            <th scope="col" class="no-bt">原版本</th>
-            <th scope="col" class="no-bt">内容</th>
-            <th scope="col" class="no-bt">原因</th>
-            <th scope="col" class="no-bt">备注</th>
-            <th scope="col" class="no-bt">更改人</th>
-            <th scope="col" class="no-bt">更多</th>
+            <th scope="col" class="no-bt" width="10%">客户</th>
+            <th scope="col" class="no-bt" width="7%">版本</th>
+            <th scope="col" class="no-bt" width="6%">更改日期</th>
+            <th scope="col" class="no-bt" width="7%">原版本</th>
+            <th scope="col" class="no-bt" width="45%">内容</th>
+            <th scope="col" class="no-bt" width="5%">原因</th>
+            <th scope="col" class="no-bt" width="5%">备注</th>
+            <th scope="col" class="no-bt" width="10%">更改人</th>
+            <th scope="col" class="no-bt" width="5%">更多</th>
           </tr>
           </thead>
           <tbody>
@@ -344,18 +344,12 @@
     overflow: hidden;
     /*text-overflow: ellipsis;*/
     /*white-space: nowrap;*/
-    max-width: 1000px;
+    /*max-width: 1000px;*/
     transition: .5s max-height;
   }
-  @media screen and (max-width: 1200px){
+  @media screen and (max-width: 1000px){
     .in-one-line{
-      max-width: 800px !important;
-      transition: .5s max-height;
-    }
-  }
-  @media screen and (max-width: 900px){
-    .in-one-line{
-      max-width: 400px !important;
+      max-height: 3rem;
       transition: .5s max-height;
     }
   }
