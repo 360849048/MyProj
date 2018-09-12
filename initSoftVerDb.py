@@ -5,7 +5,15 @@
 from app.rebuildSoftDb import rebuidSoftDb
 from app.softpathmap import mapAllVersionsPath, writePathInfo
 from app.softupdater import Updater
+from app.pathinfo import *
 
+if os.path.exists(CACHE_FILE_DIR):
+    for root, dirs, files in os.walk(CACHE_FILE_DIR):
+        for file in files:
+            os.remove(os.path.join(CACHE_FILE_DIR, file))
+        for dir in dirs:
+            os.rmdir(os.path.join(CACHE_FILE_DIR, dir))
+print('缓存文件清空完毕！')
 if input('是否重建数据库？这会清空原先数据库 (y/n)') == 'y':
     print('开始重建数据')
     rebuidSoftDb()

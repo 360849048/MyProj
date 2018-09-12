@@ -432,6 +432,10 @@ def downloadSrcCode():
         return jsonify({'status': 'failure', 'description': '数据库路径无效在本服务器上无效，'})
     file_name = os.path.basename(src_path)
     dst_path = os.path.join(CACHE_FILE_DIR, file_name)
+    if os.path.isfile(dst_path):
+        # 如果该文件原来已经被复制到cache目录下，则直接返回该文件路径
+        src_code_url = os.path.join(URL_DIR, file_name)
+        return jsonify({'status': 'success', 'url': src_code_url})
     try:
         # 如果src_path和dst_path指向同一个文件，会导致复制失败
         shutil.copy(src_path, dst_path)

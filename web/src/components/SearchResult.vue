@@ -89,7 +89,30 @@
             });
           }
         });
-      }
+      },
+      downloadSrcCode(path){
+        let _this = this;
+        $.ajax({
+          type: 'GET',
+          url: '/downloadsrccode',
+          dataType: 'json',
+          data: {'path': path},
+          beforeSend: function(){
+
+          },
+          success: function(data){
+            if (data.status.toUpperCase() === 'SUCCESS' && data.url){
+              window.open(data.url);
+            }else{
+              alert('后台遇到错误，无法下载文件，错误描述: ' + data.description);
+            }
+          },
+          error: function (xhr, type) {
+            _this.waiting = false;
+            alert('无法连接服务器');
+          }
+        })
+      },
     },
     watch:{
       '$route'(to, from){
