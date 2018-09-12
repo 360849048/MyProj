@@ -386,8 +386,10 @@ def checkUpdate():
     global ALL_VERS_ID, updaters
     soft_type = request.args.get('softType')
     vers_ready_to_update = updaters[soft_type].getUpdateInfo()
-    if vers_ready_to_update is None:
+    if vers_ready_to_update == -1:
         return jsonify({'status': 'failure', 'description': '无法打开xls文件路径，检查后台 "软件版本登记表.xls" 文件路径'})
+    elif vers_ready_to_update == 0:
+        return jsonify({'status': 'failure', 'description': '其他线程正在更新数据，稍后刷新重试'})
     return jsonify({'status': 'success', 'newVers': vers_ready_to_update})
 
 @app.route('/startupdate', methods=['GET'])
@@ -395,7 +397,7 @@ def startUpdate():
     global updaters, ALL_VERS_ID
     soft_type = request.args.get('softType')
     if updaters[soft_type].startUpdate() is False:
-        return jsonify({'status': 'failure', 'description': '更新信息已过期，请重试'})
+        return jsonify({'status': 'failure', 'description': '更新信息已过期或后台繁忙，请重试'})
     ALL_VERS_ID = _getAllVersionsId()
     return jsonify({'status': 'success'})
 
@@ -426,13 +428,14 @@ def downloadSrcCode():
         为网页端准备下载文件（根据提供的路径复制文件到cache/），然后返回url提供下载
     '''
     src_path = request.args.get('path')
-    print(src_path)
     if not os.path.isfile(src_path):
         return jsonify({'status': 'failure', 'description': '数据库路径无效在本服务器上无效，'})
     file_name = os.path.basename(src_path)
     dst_path = os.path.join(CACHE_FILE_DIR, file_name)
-    shutil.copy(src_path, dst_path)
-    if not os.path.isfile(dst_path):
+    try:
+        # 如果src_path和dst_path指向同一个文件，会导致复制失败
+        shutil.copy(src_path, dst_path)
+    except:
         return jsonify({'status': 'failure', 'description': '后台源程序文件复制失败，请重试'})
     src_code_url = os.path.join(URL_DIR, file_name)
     return jsonify({'status': 'success', 'url': src_code_url})
