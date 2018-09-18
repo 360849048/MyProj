@@ -6,7 +6,7 @@ from app.rebuildSoftDb import rebuidSoftDb
 from app.softpathmap import mapAllVersionsPath, writePathInfo
 from app.softupdater import Updater
 from app.pathinfo import *
-from app.log import Log
+from app.log import log
 
 if os.path.exists(CACHE_FILE_DIR):
     for root, dirs, files in os.walk(CACHE_FILE_DIR):
@@ -32,7 +32,9 @@ if input('是否重建数据库？这会清空原先数据库 (y/n)') == 'y':
         print('写入', ver_type, '数据...')
         updater.startUpdate()
     print('完成数据导入')
+    log.record('重建软件版本数据库')
 
 if input('是否搜索源码路径？这可能需要很长时间 (y/n)') == 'y':
     ver_path_map = mapAllVersionsPath()
     writePathInfo(ver_path_map)
+    log.record('重建软件版本路径关系')

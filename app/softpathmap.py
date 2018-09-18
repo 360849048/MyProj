@@ -151,9 +151,10 @@ def mapAllVersionsPath():
     print('Success, found %d files' % count)
     # 移除path信息仍为''的数据
     for ver_type in ver_path_map:
-        for ver_id, ver_info in ver_path_map[ver_type].items():
-            if ver_info['path'] == '':
-                ver_path_map[ver_type].pop(ver_id)
+        # 如果采用常规遍历dict方法删除空path项目，会导致程序报错
+        for ver_id in list(ver_path_map[ver_type].keys()):
+            if ver_path_map[ver_type][ver_id]['path'] == '':
+                del ver_path_map[ver_type][ver_id]
     return ver_path_map
 
 def mapEmptyPathVersionsPath():
@@ -200,9 +201,11 @@ def mapEmptyPathVersionsPath():
     print('Success, found %d files' % count)
     # 移除path信息仍为''的数据
     for ver_type in ver_path_map:
-        for ver_id, ver_info in ver_path_map[ver_type].items():
-            if ver_info['path'] == '':
-                ver_path_map[ver_type].pop(ver_id)
+        # 如果采用常规遍历dict方法删除空path项目，会导致程序报错
+        for ver_id in list(ver_path_map[ver_type].keys()):
+            if ver_path_map[ver_type][ver_id]['path'] == '':
+                del ver_path_map[ver_type][ver_id]
+    print(ver_path_map)
     return ver_path_map
 
 
