@@ -1,5 +1,11 @@
-from app import app
+if __name__ == '__main__':
+    from multiprocessing import Process
+    from app import app
+    from app.dailytask import updatePathInfoAutomatically
 
-# 该后台是单线程服务，暂时无需担心数据库并发写入情况锁死数据库情况
-# app.run(host='172.18.71.158', port=8080, threaded=True)
-app.run(debug=True)
+    p = Process(target=updatePathInfoAutomatically, args=())
+    p.start()
+    # 默认flask，包括debug模式，它是单线程后台
+    # 当threaded=True时，采用多线程模式
+    app.run(host='127.0.0.1', port=8080, threaded=True)
+    # app.run(debug=True)

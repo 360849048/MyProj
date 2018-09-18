@@ -6,6 +6,7 @@ from app.rebuildSoftDb import rebuidSoftDb
 from app.softpathmap import mapAllVersionsPath, writePathInfo
 from app.softupdater import Updater
 from app.pathinfo import *
+from app.log import Log
 
 if os.path.exists(CACHE_FILE_DIR):
     for root, dirs, files in os.walk(CACHE_FILE_DIR):

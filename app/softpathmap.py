@@ -149,6 +149,11 @@ def mapAllVersionsPath():
                         print(this_ver_path)
                         count += 1
     print('Success, found %d files' % count)
+    # 移除path信息仍为''的数据
+    for ver_type in ver_path_map:
+        for ver_id, ver_info in ver_path_map[ver_type].items():
+            if ver_info['path'] == '':
+                ver_path_map[ver_type].pop(ver_id)
     return ver_path_map
 
 def mapEmptyPathVersionsPath():
@@ -182,7 +187,7 @@ def mapEmptyPathVersionsPath():
             except:
                 continue
             for ver_type in ver_path_map:
-                # ver_type的格式为{1: {'version': 'V01_17_16}, 'path': ''}, 2: {xxx}, ...,}
+                # ver_path_map[ver_type]的格式为{1: {'version': 'V01_17_16}, 'path': ''}, 2: {xxx}, ...,}
                 for ver_id, ver_info in ver_path_map[ver_type].items():
                     if _searchVerInStr(ver_info['version'], file):
                         this_ver_path = os.path.join(root, file)
@@ -193,7 +198,13 @@ def mapEmptyPathVersionsPath():
                         print(this_ver_path)
                         count += 1
     print('Success, found %d files' % count)
+    # 移除path信息仍为''的数据
+    for ver_type in ver_path_map:
+        for ver_id, ver_info in ver_path_map[ver_type].items():
+            if ver_info['path'] == '':
+                ver_path_map[ver_type].pop(ver_id)
     return ver_path_map
+
 
 def writePathInfo(ver_path_map):
     '''
@@ -218,11 +229,11 @@ def writePathInfo(ver_path_map):
         'T05': TableManager('t_T05', SOFTWARE_VERSION_INFO_DB_PATH)
     }
     print('开始向数据库写入path信息')
-    for key in ver_path_map:
-        for ver_id, ver_info in ver_path_map[key].items():
-            if ver_info['version'] == t_vers[key].displayBriefData(ver_id, 'version')[0]:
+    for ver_type in ver_path_map:
+        for ver_id, ver_info in ver_path_map[ver_type].items():
+            if ver_info['version'] == t_vers[ver_type].displayBriefData(ver_id, 'version')[0]:
                 print('Writing: %s -- %s' % (ver_info['version'], ver_info['path']))
-                t_vers[key].modifyLine(ver_id, path=ver_info['path'])
+                t_vers[ver_type].modifyLine(ver_id, path=ver_info['path'])
     print('path信息写入数据库成功')
     return
 
