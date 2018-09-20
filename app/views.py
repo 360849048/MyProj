@@ -7,6 +7,7 @@ from app.iomaker import IOMaker
 from app.configfile import HkFileMaker, FcfFileMaker, SysFileMaker, SafetyFileMaker, createZip
 from app.pathinfo import *
 from app.softupdater import Updater
+from app.log import log
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -100,6 +101,10 @@ def createIoFile():
     '''
     # data是一个dict对象
     data = request.get_json()
+    client_ip = request.remote_addr
+    record_info = 'IP: ' + client_ip + '创建IO表：\n'
+    record_info += request.data.decode()
+    log.record(record_info)
 
     # 将post得到的数据整理成规范格式的数据
     board_1_modules_ios = []
@@ -205,6 +210,10 @@ def createConfigFile():
         必须严格按照网页传输数据进行编程
     '''
     data = request.get_json()
+    client_ip = request.remote_addr
+    record_info = 'IP: ' + client_ip + '创建配置文件：\n'
+    record_info += request.data.decode()
+    log.record(record_info)
 
     # 将post得到的数据整理成规范格式的数据
     board_1_modules_ios = []
@@ -396,6 +405,11 @@ def checkUpdate():
 def startUpdate():
     global updaters, ALL_VERS_ID
     soft_type = request.args.get('softType')
+    client_ip = request.remote_addr
+    record_info = 'IP: ' + client_ip + '更新软件版本：\n'
+    record_info += request.data.decode()
+    log.record(record_info)
+
     if updaters[soft_type].startUpdate() is False:
         return jsonify({'status': 'failure', 'description': '更新信息已过期或后台繁忙，请重试'})
     ALL_VERS_ID = _getAllVersionsId()

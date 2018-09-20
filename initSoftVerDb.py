@@ -2,6 +2,8 @@
     初始化保存软件版本的数据库
     注意，运行这段脚本会删除原先的soft.db数据库，注意数据备份
 '''
+import datetime
+import shutil
 from app.rebuildSoftDb import rebuidSoftDb
 from app.softpathmap import mapAllVersionsPath, writePathInfo
 from app.softupdater import Updater
@@ -15,6 +17,11 @@ if os.path.exists(CACHE_FILE_DIR):
         for dir in dirs:
             os.rmdir(os.path.join(CACHE_FILE_DIR, dir))
 print('缓存文件清空完毕！')
+# 提前备份一个soft.db文件，万一写烂给留条后路撤退
+now = datetime.datetime.now()
+db_cpy_name = 'soft_cpy' + now.strftime('%Y%m%d%H%M%S') + '.db'
+db_cpy_path = os.path.join(os.path.dirname(SOFTWARE_VERSION_INFO_DB_PATH), db_cpy_name)
+shutil.copyfile(SOFTWARE_VERSION_INFO_DB_PATH, db_cpy_path)
 if input('是否重建数据库？这会清空原先数据库 (y/n)') == 'y':
     print('开始重建数据')
     rebuidSoftDb()
