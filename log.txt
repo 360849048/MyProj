@@ -1,17 +1,26 @@
-* 2018.09.18 22:05:10          更新数据库path信息
-V05_39_62: D:/迅雷下载\V05_39_62.zip
-
-* 2018.09.19 09:09:40          后台脚本程序启动
-* 2018.09.19 09:17:54          后台脚本程序启动
-* 2018.09.19 09:21:33          后台脚本程序启动
-* 2018.09.19 09:22:02          后台脚本程序启动
-* 2018.09.19 09:22:06          IP: 127.0.0.1开始创建IO表：
-{"boardModules1":["CDM163","CTO163","",""],"boardModules2":["CIV512","CAI888","",""],"boardModules3":["","","",""],"boardModulesIOs1":[{"di1":"73","di2":"74","di3":"75","di4":"76","di5":"77","di6":"78","di7":"57","di8":"58","do1":"73","do2":"74","do3":"75","do4":"76","do5":"77","do6":"78","do7":"57","do8":"58"},{"do1":"41","do2":"43","do3":"45","do4":"47","do5":"49","do6":"51","do7":"53","do8":"55"},{},{}],"boardModulesIOs2":[{},{"ti1":"1","ti2":"2","ti3":"3","ti4":"4","ti5":"5","ti6":"6","ti7":"7","ti8":"8","to1":"1","to2":"2","to3":"3","to4":"4","to5":"5","to6":"6","to7":"7","to8":"8"},{},{}],"boardModulesIOs3":[{},{},{},{}],"varanConnModulePos":0,"evaluationNum":"zhafir","productionNum":"57010001","immType":"ze2300s/830","customer":"zhafir","safetyStandard":"国标","technicalClause":"","designNote":"","funcConfig":{"1":{"name":"功能点1注射信号","status":true},"2":{"name":"功能点2储料信号","status":false},"3":{"name":"E73","status":false},"4":{"name":"喷嘴改阀门1","status":false},"5":{"name":"DEE能耗模块","status":false},"6":{"name":"7号改可编程输入1","status":false},"7":{"name":"功能点1改可编程输出1","status":false},"8":{"name":"功能点2改可编程输出2","status":false},"99":{"name":"外置热流道","status":false},"101":{"name":"阀门","status":true},"102":{"name":"吹气","status":true},"103":{"name":"中子","status":true},"104":{"name":"可编程IO","status":true}},"pilzNor":"","pilzE73":"","extHotrunnerNum":3,"intHotrunnerNum":1,"isBigImm":false,"isDualInj":false,"clampForce":"2300","injection":"830","type":"ZEs","ceStandard":false}
-* 2018.09.19 09:25:13          后台脚本程序启动
-* 2018.09.19 09:25:18          IP: 127.0.0.1创建配置文件：
-{"boardModules1":["CDM163","CTO163","",""],"boardModules2":["CIV512","CAI888","",""],"boardModules3":["","","",""],"boardModulesIOs1":[{"di1":"73","di2":"74","di3":"75","di4":"76","di5":"77","di6":"78","di7":"57","di8":"58","do1":"73","do2":"74","do3":"75","do4":"76","do5":"77","do6":"78","do7":"57","do8":"58"},{"do1":"41","do2":"43","do3":"45","do4":"47","do5":"49","do6":"51","do7":"53","do8":"55"},{},{}],"boardModulesIOs2":[{},{"ti1":"1","ti2":"2","ti3":"3","ti4":"4","ti5":"5","ti6":"6","ti7":"7","ti8":"8","to1":"1","to2":"2","to3":"3","to4":"4","to5":"5","to6":"6","to7":"7","to8":"8"},{},{}],"boardModulesIOs3":[{},{},{},{}],"varanConnModulePos":0,"evaluationNum":"zhafir","productionNum":"57010001","immType":"ze2300s/830","customer":"zhafir","safetyStandard":"国标","technicalClause":"","designNote":"","funcConfig":{"1":{"name":"功能点1注射信号","status":true},"2":{"name":"功能点2储料信号","status":false},"3":{"name":"E73","status":false},"4":{"name":"喷嘴改阀门1","status":false},"5":{"name":"DEE能耗模块","status":false},"6":{"name":"7号改可编程输入1","status":false},"7":{"name":"功能点1改可编程输出1","status":false},"8":{"name":"功能点2改可编程输出2","status":false},"99":{"name":"外置热流道","status":false},"101":{"name":"阀门","status":true},"102":{"name":"吹气","status":true},"103":{"name":"中子","status":true},"104":{"name":"可编程IO","status":true}},"pilzNor":"","pilzE73":"","extHotrunnerNum":3,"intHotrunnerNum":1,"isBigImm":false,"isDualInj":false,"clampForce":"2300","injection":"830","type":"ZEs","ceStandard":false}
-* 2018.09.19 15:17:09          IP: 127.0.0.1创建IO表：
-{"boardModules1":["","","",""],"boardModules2":["","","",""],"boardModules3":["","","",""],"boardModulesIOs1":[{},{},{},{}],"boardModulesIOs2":[{},{},{},{}],"boardModulesIOs3":[{},{},{},{}],"varanConnModulePos":0,"evaluationNum":"","productionNum":"","immType":"d","customer":"","safetyStandard":"","technicalClause":"","designNote":"","funcConfig":{"1":{"name":"功能点1注射信号","status":false},"2":{"name":"功能点2储料信号","status":false},"3":{"name":"E73","status":false},"4":{"name":"喷嘴改阀门1","status":false},"5":{"name":"DEE能耗模块","status":false},"6":{"name":"7号改可编程输入1","status":false},"7":{"name":"功能点1改可编程输出1","status":false},"8":{"name":"功能点2改可编程输出2","status":false},"99":{"name":"外置热流道","status":false},"101":{"name":"阀门","status":false},"102":{"name":"吹气","status":false},"103":{"name":"中子","status":false},"104":{"name":"可编程IO","status":false}},"pilzNor":"","pilzE73":"","extHotrunnerNum":3,"intHotrunnerNum":0,"isBigImm":false,"isDualInj":false,"clampForce":0,"injection":0,"type":"","ceStandard":false}
-* 2018.09.19 15:17:28          IP: 127.0.0.1创建IO表：
-{"boardModules1":["","","",""],"boardModules2":["","","",""],"boardModules3":["","","",""],"boardModulesIOs1":[{},{},{},{}],"boardModulesIOs2":[{},{},{},{}],"boardModulesIOs3":[{},{},{},{}],"varanConnModulePos":0,"evaluationNum":"","productionNum":"","immType":"ve2300s-830","customer":"","safetyStandard":"","technicalClause":"","designNote":"","funcConfig":{"1":{"name":"功能点1注射信号","status":false},"2":{"name":"功能点2储料信号","status":false},"3":{"name":"E73","status":false},"4":{"name":"喷嘴改阀门1","status":false},"5":{"name":"DEE能耗模块","status":false},"6":{"name":"7号改可编程输入1","status":false},"7":{"name":"功能点1改可编程输出1","status":false},"8":{"name":"功能点2改可编程输出2","status":false},"99":{"name":"外置热流道","status":false},"101":{"name":"阀门","status":false},"102":{"name":"吹气","status":false},"103":{"name":"中子","status":false},"104":{"name":"可编程IO","status":false}},"pilzNor":"","pilzE73":"","extHotrunnerNum":3,"intHotrunnerNum":0,"isBigImm":false,"isDualInj":false,"clampForce":"2300","injection":"830","type":"VE2s","ceStandard":false}
-* 2018.09.19 15:27:25          后台脚本程序启动
+* 2018.09.25 09:40:20          后台脚本程序启动
+* 2018.09.25 14:26:45          后台脚本程序启动
+* 2018.09.25 14:26:47          后台脚本程序启动
+* 2018.09.26 13:44:33          后台脚本程序启动
+* 2018.09.26 13:44:34          后台脚本程序启动
+* 2018.09.26 19:25:51          后台脚本程序启动
+* 2018.09.26 19:25:54          后台脚本程序启动
+* 2018.09.26 19:28:09          后台脚本程序启动
+* 2018.09.27 16:39:22          后台脚本程序启动
+* 2018.09.27 16:41:36          后台脚本程序启动
+* 2018.09.28 10:10:32          后台脚本程序启动
+* 2018.09.28 10:10:34          后台脚本程序启动
+* 2018.09.28 10:17:32          后台脚本程序启动
+* 2018.09.28 10:17:33          后台脚本程序启动
+* 2018.09.28 14:33:19          后台脚本程序启动
+* 2018.09.28 14:33:20          后台脚本程序启动
+* 2018.09.28 14:40:17          后台脚本程序启动
+* 2018.09.28 14:40:18          后台脚本程序启动
+* 2018.09.30 08:43:48          后台脚本程序启动
+* 2018.09.30 08:44:37          IP: 127.0.0.1更新软件版本[['意大利直角双色机', 'V05_39_04', '2018.09.28', 'V05_38_61', '1.直角双色机', '合同', '', '陈星'], ['成都一汽富维海拉', 'V05_39_64', '2018.09.21', 'V05_39_50', '1.BED接口', '合同', '', '纪百丰'], ['宁波邦盛', 'V05_39_65', '2018.09.25', 'V05_39_61', '1.12组阀门；2.中子泄压，阀门泄压', '合同', '', '邵超军'], ['开平赛道', 'V05_39_66', '2018.09.25', 'V05_39_50', '1.生产数量达到设定报警不停机；2.储料SCL', '合同', '', '邵超军'], ['深圳喜高', 'V05_39_67', '2018.09.26', 'V05_39_62', '1.模温从底板一读取，热流道从温度底板二读取', '合同', '', '符杰'], ['捷克', 'V05_39_68', '2018.09.26', 'V05_39_50', '1.16段热流道的2块CAI888放在2块地板上，无法识别', '合同', '', '邵超军'], ['法雷奥', 'V05_39_69', '2018.09.27', 'V05_39_50', '1.中子泄压\n2.中子泵站油位\n3.油温检测', '合同', '', '邵超军'], ['美视伊', 'V05_39_71', '2018.09.27', 'V05_39_53', '1.美视伊条款', '合同', '', '邵超军'], ['上海波宏特', 'V05_39_72', '2018.09.29', 'V05_39_50', '1.华热辅机（干燥机，真空填料机，模温机），海天驱动机械手通讯', '合同', '', '应志峰'], ['法雷奥', 'V05_39_73', '2018.09.29', 'V05_39_50', '1.泵站油温，油位检测；2.2组测温；3.传送带；4.阀门泄压', '合同', '', '孙宇浩'], ['山东大学', 'V05_39_74', '2018.09.29', 'V05_39_50', '1.微发泡', '合同', '', '孙宇浩'], ['遂宁良泽', 'V05_39_75', '2018.09.29', 'V05_39_50', '1.开模联动；2.螺杆反转泄压', '合同', '', '孙宇浩']]
+* 2018.09.30 08:44:46          IP: 127.0.0.1更新软件版本[['常州瑞声', 'V02_20_26', '2018.09.28', 'V02_20_24', '1.解决某个机器ProductCounter报Runtime死机的问题', '售后', '', '符杰']]
+* 2018.09.30 08:44:53          IP: 127.0.0.1更新软件版本[['土耳其', 'V03_11_82', '', 'V03_11_80', '1.非CE增加循环启动功能', '售后', '', '孙宇浩']]
+* 2018.10.08 09:28:39          后台脚本程序启动
+* 2018.10.08 09:29:40          后台脚本程序启动
+* 2018.10.08 09:31:05          后台脚本程序启动
+* 2018.10.08 09:33:47          后台脚本程序启动

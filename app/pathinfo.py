@@ -46,4 +46,4 @@ if not os.path.isdir(CACHE_FILE_DIR):
 SOFTWARE_SRC_CODE_DIR = 'E:/工作重要备份/'
 if not os.path.isdir(SOFTWARE_SRC_CODE_DIR):
     # 如果部署在服务器上，搜索路径更改为G盘根目录
-    SOFTWARE_SRC_CODE_DIR = 'D:/迅雷下载'
+    SOFTWARE_SRC_CODE_DIR = 'G:/'

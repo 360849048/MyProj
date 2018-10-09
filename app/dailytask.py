@@ -1,5 +1,6 @@
 import time
 import datetime
+from app.pathinfo import *
 from app.softpathmap import mapEmptyPathVersionsPath, writePathInfo
 from app.log import log
 
@@ -22,6 +23,13 @@ def updatePathInfoAutomatically():
                     info_to_record += ver_info['path']
                     info_to_record += '\n'
             log.record(info_to_record)
+            # 清理缓存目录
+            if os.path.exists(CACHE_FILE_DIR):
+                for root, dirs, files in os.walk(CACHE_FILE_DIR):
+                    for file in files:
+                        os.remove(os.path.join(CACHE_FILE_DIR, file))
+                    for dir in dirs:
+                        os.rmdir(os.path.join(CACHE_FILE_DIR, dir))
         time.sleep(3600)
 
 

@@ -406,8 +406,8 @@ def startUpdate():
     global updaters, ALL_VERS_ID
     soft_type = request.args.get('softType')
     client_ip = request.remote_addr
-    record_info = 'IP: ' + client_ip + '更新软件版本：\n'
-    record_info += request.data.decode()
+    record_info = 'IP: ' + client_ip + '更新软件版本'
+    record_info += str(updaters[soft_type].vers_ready_to_append)
     log.record(record_info)
 
     if updaters[soft_type].startUpdate() is False:
@@ -473,6 +473,7 @@ def searchVersion():
     }
     keywords = re.split(r'\s+', search_str)
     key = 0
+    ver_list = []
     for soft_type in t_vers:
         ids_for_each_keyword = []
 
@@ -484,14 +485,24 @@ def searchVersion():
         for i in range(1, len(ids_for_each_keyword)):
             ids = tuple(soft_id for soft_id in ids if soft_id in ids_for_each_keyword[i])
         ret_data['itemsNum'] += len(ids)
+        # for soft_id in ids:
+            # ret_data['items'][key] = t_vers[soft_type].displayDetailedData(soft_id)
+            # key += 1
         for soft_id in ids:
-            ret_data['items'][key] = t_vers[soft_type].displayDetailedData(soft_id)
-            key += 1
+            ver_list.append(t_vers[soft_type].displayDetailedData(soft_id))
+    # 将搜索得到的版本号进行降序排序
+    ver_list = sorted(ver_list, key=lambda x: x['version'], reverse=True)
+    seq_list = list(i for i in range(1, ret_data['itemsNum'] + 1))
+    ret_data['items'] = dict(zip(seq_list, ver_list))
     return jsonify(ret_data)
 
 
-@app.route('/foo', methods=['GET'])
+@app.route('/foo', methods=['GET', 'POST'])
 def cookieTest():
+    print(request.data)
+    print(request.get_data())
+    print(request.form)
+    print(request.form.get('username'))
     response = make_response('ok')
     response.set_cookie('date', '20180807')
     print(request.cookies.get('username'))
