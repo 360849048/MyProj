@@ -11,18 +11,19 @@ from app.pathinfo import *
 from app.log import log
 
 if os.path.exists(CACHE_FILE_DIR):
-    for root, dirs, files in os.walk(CACHE_FILE_DIR):
-        for file in files:
-            os.remove(os.path.join(CACHE_FILE_DIR, file))
-        for dir in dirs:
-            os.rmdir(os.path.join(CACHE_FILE_DIR, dir))
+    shutil.rmtree(CACHE_FILE_DIR)
+    os.mkdir(CACHE_FILE_DIR)
 print('缓存文件清空完毕！')
 # 提前备份一个soft.db文件，万一写烂给留条后路撤退
 now = datetime.datetime.now()
 db_cpy_name = 'soft_cpy' + now.strftime('%Y%m%d%H%M%S') + '.db'
 db_cpy_path = os.path.join(os.path.dirname(SOFTWARE_VERSION_INFO_DB_PATH), db_cpy_name)
 shutil.copyfile(SOFTWARE_VERSION_INFO_DB_PATH, db_cpy_path)
-if input('是否重建数据库？这会清空原先数据库 (y/n)') == 'y':
+
+rebuild_db = input('是否重建数据库？这会清空原先数据库 (y/n)')
+remap_path = input('是否搜索源码路径？这可能需要很长时间 (y/n)')
+
+if rebuild_db == 'y':
     print('开始重建数据')
     rebuidSoftDb()
     print('开始导入数据到数据库...')
@@ -41,7 +42,7 @@ if input('是否重建数据库？这会清空原先数据库 (y/n)') == 'y':
     print('完成数据导入')
     log.record('重建软件版本数据库')
 
-if input('是否搜索源码路径？这可能需要很长时间 (y/n)') == 'y':
+if remap_path == 'y':
     ver_path_map = mapAllVersionsPath()
     writePathInfo(ver_path_map)
     log.record('重建软件版本路径关系')

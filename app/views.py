@@ -311,10 +311,16 @@ def createConfigFile():
                           mold_slider=mold_slider,
                           func1_to_progo1=func1_to_progo1,
                           func2_to_progo2=func2_to_progo2)
-    # debug时候查看硬件修改
-    # print(hkmaker.getConfigInfo())
-    if hkmaker.createFile() < 0:
-        return jsonify({'status': 'failure', 'description': '硬件配置文件生成失败'})
+
+    ret_status = hkmaker.createFile()
+    if ret_status < 0:
+        if ret_status == -1:
+            error_description = '标准程序不支持的模块配置'
+        elif ret_status == -2:
+            error_description = '后台在复制硬件配置文件时候发生了严重错误！请检查后台程序'
+        else:
+            error_description = '检查到重复配置的IO点'
+        return jsonify({'status': 'failure', 'description': '硬件配置文件生成失败：' + error_description})
     if ce_standard or e73_safety:
         mpnozmaker = SafetyFileMaker(nor_pilz=nor_pilz,
                                      e73_pilz=e73_pilz,

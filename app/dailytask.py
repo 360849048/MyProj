@@ -24,12 +24,15 @@ def updatePathInfoAutomatically():
                     info_to_record += '\n'
             log.record(info_to_record)
             # 清理缓存目录
-            if os.path.exists(CACHE_FILE_DIR):
-                for root, dirs, files in os.walk(CACHE_FILE_DIR):
-                    for file in files:
-                        os.remove(os.path.join(CACHE_FILE_DIR, file))
-                    for dir in dirs:
-                        os.rmdir(os.path.join(CACHE_FILE_DIR, dir))
+            try:
+                if os.path.exists(CACHE_FILE_DIR):
+                    for root, dirs, files in os.walk(CACHE_FILE_DIR):
+                        for file in files:
+                            os.remove(os.path.join(root, file))
+                        for dir in dirs:
+                            os.rmdir(os.path.join(root, dir))
+            except:
+                log.record('删除某些缓存文件失败...\n')
         time.sleep(3600)
 
 

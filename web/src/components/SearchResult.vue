@@ -148,7 +148,7 @@
   }
   tr:hover .in-one-line{
     white-space: normal;
-    max-height: 10rem;
+    max-height: 40rem;
     transition: .5s max-height;
   }
 </style>
