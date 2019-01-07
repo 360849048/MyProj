@@ -52,9 +52,6 @@
 </template>
 
 <script>
-  // 定义每页最多显示的信息条数
-  const pageItemAmount = 30;
-
   export default {
     name: "search-result",
     data(){

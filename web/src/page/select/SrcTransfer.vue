@@ -11,10 +11,6 @@
           </imm-type>
         </div>
 
-        <div class="col-md-6" id="imm-params">
-          <imm-config></imm-config>
-        </div>
-
       </div>
 
       <div class="row">
@@ -22,25 +18,17 @@
         <button class="btn btn-primary" type="submit" @click="foo">修改点位</button>
         <button class="btn btn-primary" type="submit" @click="bar">撤销</button>
       </div>
-      <div class="row">
-        <module-config
-          :module-name="module"
-          :ios="ios">
-        </module-config>
-      </div>
-    </div>
+  </div>
   </div>
 </template>
 <script>
-  import ImmType from './ImmType'
-  import ImmConfig from './ImmConfig'
-  import ModuleConfig from './iomaker/module/ModuleConfig'
+  import ImmType from './components/ImmType'
+  import ImmConfig from './components/ImmConfig'
 
   export default{
     components:{
       ImmType,
-      ImmConfig,
-      ModuleConfig
+      ImmConfig
     },
     data(){
       return{

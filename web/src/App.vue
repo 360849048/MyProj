@@ -6,7 +6,7 @@
 </template>
 
 <script>
-import NavView from "./components/Nav"
+import NavView from "./Nav"
 
 export default {
   name: 'app',

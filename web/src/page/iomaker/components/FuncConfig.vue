@@ -57,7 +57,7 @@
    *  * exthotrunnerchange：当外置热流道组数设置发生变化时，触发该事件
    *  * inthotrunnerchange：内置热流道组数设置发生变化时，触发该事件
    */
-  import FuncSwitch from './funcConfig/FuncSwitch'
+  import FuncSwitch from './FuncSwitch'
   export default {
     name: "function-config",
     components: {

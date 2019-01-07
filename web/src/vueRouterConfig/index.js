@@ -1,16 +1,14 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-import Home from '../components/Home.vue'
-// import Versions from '../components/Versions'
-import Srctransfer from '../components/SrcTransfer'
-// import Iomaker from '../components/IoMaker'
-import SearchResult from '../components/SearchResult'
+import Home from '../page/home/Home'
+import Srctransfer from '../page/select/SrcTransfer'
+import SearchResult from '../page/search/SearchResult'
 
 Vue.use(VueRouter);
 
 // 改用vue-router懒加载，缩短首次主页加载时间
-const Iomaker = resolve => require(['../components/IoMaker.vue'], resolve);
-const Versions = resolve => require(['../components/Versions.vue'], resolve);
+const Iomaker = () => import('../page/iomaker/IoMaker.vue');
+const Versions = () => import('../page/versions/Versions.vue');
 
 export default new VueRouter({
   // 三种模式介绍

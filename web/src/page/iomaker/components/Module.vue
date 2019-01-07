@@ -45,8 +45,8 @@
    * 7.透传子组件ModuleConfig的varanposupdate事件，将以同名事件触发并传递数据到父组件
    * 注意：为了少动脑子，这里底板2和底板3的Varan连接模块顺序只能设置成一样，用到了底板3属于超特殊程序，不建议用这软件配置
    */
-  import ModuleConfig from './module/ModuleConfig'
-  import ModuleSelector from './module/ModuleSelector'
+  import ModuleConfig from './ModuleConfig'
+  import ModuleSelector from './ModuleSelector'
 
   function getBigImmStdIO(_this){
     /**

@@ -158,10 +158,10 @@
    * 6.在IoList的IO列表上某项（尚未占用的IO）双击，自动将该IO填充到模块的最靠前空余的IO点上
    */
 
-  import IoList from './iomaker/IoList'
-  import Module from './iomaker/Module'
-  import InfoForm from './iomaker/InfoForm'
-  import FuncConfig from './iomaker/FuncConfig'
+  import IoList from './components/IoList'
+  import Module from './components/Module'
+  import InfoForm from './components/InfoForm'
+  import FuncConfig from './components/FuncConfig'
 
   export default {
     components:{
