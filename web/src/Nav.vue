@@ -34,32 +34,32 @@
               Tools
             </a>
             <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-            <router-link
-              class="dropdown-item"
-              href="###"
-              to="/srctransfer"
-              @click.native="curRoute=3"
-              :data-toggle="clientWidth<=992 ? 'collapse' : ''"
-              data-target="#navbarSupportedContent">
-              <i class="fa fa-minus-circle"></i>
-              Select
-            </router-link>
-            <router-link
-              class="dropdown-item"
-              href="###"
-              to="/makeio"
-              @click.native="curRoute=3"
-              :data-toggle="clientWidth<=992 ? 'collapse' : ''"
-              data-target="#navbarSupportedContent">
-              <i class="fa fa-files-o"></i>
-              IO
-            </router-link>
-            <div class="dropdown-divider"></div>
-            <a
-              class="dropdown-item"
-              href="###"
-              :data-toggle="clientWidth<=992 ? 'collapse' : ''"
-              data-target="#navbarSupportedContent">more...</a>
+              <router-link
+                class="dropdown-item"
+                href="###"
+                to="/srctransfer"
+                @click.native="curRoute=3"
+                :data-toggle="clientWidth<=992 ? 'collapse' : ''"
+                data-target="#navbarSupportedContent">
+                <i class="fa fa-minus-circle"></i>
+                Select
+              </router-link>
+              <router-link
+                class="dropdown-item"
+                href="###"
+                to="/makeio"
+                @click.native="curRoute=3"
+                :data-toggle="clientWidth<=992 ? 'collapse' : ''"
+                data-target="#navbarSupportedContent">
+                <i class="fa fa-files-o"></i>
+                IO
+              </router-link>
+              <div class="dropdown-divider"></div>
+              <a
+                class="dropdown-item"
+                href="###"
+                :data-toggle="clientWidth<=992 ? 'collapse' : ''"
+                data-target="#navbarSupportedContent">more...</a>
             </div>
         </li>
         <li
@@ -85,7 +85,8 @@
   </div>
 </template>
 
-<style lang="scss">
+<style lang="scss" scoped>
+  /* Overwrite default bootstrap style */
   .navbar-toggler {
     &:focus {
       outline: 0;
@@ -96,6 +97,27 @@
     flex: 1;
     border: none !important;
     text-align: right !important;
+  }
+  @media(max-width: 991px){
+    a:hover {
+      background-color: #fff;
+      border-radius: 5px;
+    }
+    a.disabled:hover {
+      background-color: inherit;
+    }
+    .dropdown-menu {
+      border: none !important;
+      background-color: inherit !important;
+      max-height: 0;
+      transition: max-height .5s ease;
+      overflow: hidden;
+      display: block !important;
+      padding: 0;
+    }
+    .dropdown-menu.show {
+      max-height: 130px;
+    }
   }
 </style>
 
@@ -121,13 +143,14 @@ export default {
     }
   },
   mounted () {
+    this.clientWidth = document.body.clientWidth;
+
     let _this = this;
     window.onresize = () => {
       if (_this.timer) {
         clearTimeout(_this.timer);
       }
       _this.timer = setTimeout(()=>{
-        console.log(document.body.clientWidth);
         _this.clientWidth = document.body.clientWidth;
       }, 50);
     }
