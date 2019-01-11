@@ -159,7 +159,7 @@ def mapAllVersionsPath():
 
 def mapEmptyPathVersionsPath():
     '''
-        为soft.db内存放的所有软件版本搜索源程序文件路径。
+        为soft.db内存放的未写入path信息的软件版本搜索源程序文件路径。
         该方法会遍历SOFTWARE_SRC_CODE_DIR目录下所有的文件，
         其中文件名为 *.zip, *.rar, *.7z 会进行所有版本进行正则匹配（指定后缀名以加快搜索速度）
         该方法内部循环次数为 (SOFTWARE_SRC_CODE_DIR目录下文件数 * software_version的数量)
@@ -209,9 +209,9 @@ def mapEmptyPathVersionsPath():
     return ver_path_map
 
 
-def writePathInfo(ver_path_map):
+def writeAllPathInfo(ver_path_map):
     '''
-        把新的版本--路径信息写入到数据库，会覆盖原先数据库中的path信息，原有path信息的可能被擦除
+        把新的版本--路径信息写入到数据库，会覆盖原先数据库中的path信息
         :param ver_path_map: 格式如
         {
             'V01': {1: {'version': 'V01_17_16}, 'path': 'G:/sigmatek/...'}, 2: {xxx}, ...,},

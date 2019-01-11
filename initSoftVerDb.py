@@ -5,7 +5,7 @@
 import datetime
 import shutil
 from app.rebuildSoftDb import rebuidSoftDb
-from app.softpathmap import mapAllVersionsPath, writePathInfo
+from app.softpathmap import mapAllVersionsPath, writeAllPathInfo
 from app.softupdater import Updater
 from app.pathinfo import *
 from app.log import log
@@ -44,5 +44,5 @@ if rebuild_db == 'y':
 
 if remap_path == 'y':
     ver_path_map = mapAllVersionsPath()
-    writePathInfo(ver_path_map)
+    writeAllPathInfo(ver_path_map)
     log.record('重建软件版本路径关系')

@@ -43,7 +43,7 @@
           </tr>
           </thead>
           <tbody>
-          <tr v-for="(msg, index) in softVers" :key="index">
+          <tr v-for="msg in softVers" :key="msg.id">
             <td scope="col"><div class="in-one-line">{{msg.client}}</div></td>
             <td scope="col"><div class="in-one-line">{{msg.version}}</div></td>
             <td scope="col"><div class="in-one-line">{{msg.date}}</div></td>
@@ -63,6 +63,8 @@
                     {{item}}&nbsp;
                     <i class="fa fa-download" aria-hidden="true"></i>
                   </a>
+                  <div class="dropdown-divider"></div>
+                  <a class="dropdown-item" href="#" @click="submitError(softType, msg.id)">信息有误，向后台反馈</a>
                 </div>
               </div>
             </td>
@@ -117,6 +119,8 @@
    *
    */
 
+  import axios from 'axios';
+
   // 定义每页最多显示的信息条数
   const pageItemAmount = 30;
 
@@ -169,7 +173,8 @@
                 reason: '这是一个例子',
                 remark: '',
                 author: 'XX',
-                path: 'G:/windows/system32/test.rar'
+                path: 'G:/windows/system32/test.rar',
+                id: 1
               },
               2: {
                 client: 'test1',
@@ -180,7 +185,8 @@
                 reason: '这也是一个例子',
                 remark: '',
                 author: '员工A',
-                path: ''
+                path: '',
+                id: 2
               },
               3: {
                 client: 'test2',
@@ -191,7 +197,8 @@
                 reason: '这还是一个例子',
                 remark: '',
                 author: '技术员B',
-                path: ''
+                path: '',
+                id: 3
               },
               4: {
                 client: 'test3',
@@ -202,7 +209,8 @@
                 reason: '这依旧是一个例子',
                 remark: '',
                 author: '管理人员C',
-                path: 'g:/sigmatek/测试/v0x-15-xx.rar;g:/临时/管理人员C/v0x_15_xx.7z'
+                path: 'g:/sigmatek/测试/v0x-15-xx.rar;g:/临时/管理人员C/v0x_15_xx.7z',
+                id: 4
               },
             };
           }
@@ -311,6 +319,25 @@
           }
         });
         $('#updateInfoCheckdialog').modal('hide');
+      },
+      submitError (type, id) {
+        axios.get(`/submiterror?type=${type}&id=${id}`)
+          .then((res) => {
+            res = res.data;
+            console.log(res);
+            this.$message({
+              message: '信息提交成功！请等待后台处理',
+              type: 'success'
+            })
+        })
+          .catch((err) => {
+            console.log(err);
+            this.$message({
+              showClose: true,
+              message: '网络请求发送失败，无法提交信息',
+              type: 'error'
+            });
+          });
       }
     },
     mounted(){

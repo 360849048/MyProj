@@ -513,3 +513,15 @@ def cookieTest():
     response.set_cookie('date', '20180807')
     print(request.cookies.get('username'))
     return response
+
+@app.route('/submiterror', methods=['GET'])
+def submitError():
+    soft_type = request.args.get('type')
+    err_id = request.args.get('id')
+    print(soft_type, err_id)
+    # TODO: 在soft.db中增加一列torefresh
+    # TODO：然后在dailytask模块中，对记录的这些勘误进行处理，处理成功则清除该条torefresh记录
+
+    info_to_record = 'IP: ' + request.remote_addr + '标记' + soft_type + '中存在错误：' + err_id
+    log.record(info_to_record)
+    return jsonify({'status': 'success'})
