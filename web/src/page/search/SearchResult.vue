@@ -40,6 +40,15 @@
                       {{item}}&nbsp;
                       <i class="fa fa-download" aria-hidden="true"></i>
                     </a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="###" v-if="msg.torefresh != 1" @click="submitError(softType, msg.id)">
+                      路径信息有误，向后台反馈
+                      <i class="fa fa-hand-paper-o"></i>
+                    </a>
+                    <a class="dropdown-item" v-else>
+                      该路径已被举报，注意文件可靠性
+                      <i class="fa fa-exclamation"></i>
+                    </a>
                   </div>
                 </div>
               </td>
@@ -110,6 +119,25 @@
           }
         })
       },
+      submitError (type, id) {
+        axios.get(`/submiterror?type=${type}&id=${id}`)
+          .then((res) => {
+            res = res.data;
+            console.log(res);
+            this.$message({
+              message: '信息提交成功！请等待后台处理',
+              type: 'success'
+            })
+          })
+          .catch((err) => {
+            console.log(err);
+            this.$message({
+              showClose: true,
+              message: '网络请求发送失败，无法提交信息',
+              type: 'error'
+            });
+          });
+      }
     },
     watch:{
       '$route'(to, from){

@@ -8,6 +8,7 @@ from app.configfile import HkFileMaker, FcfFileMaker, SysFileMaker, SafetyFileMa
 from app.pathinfo import *
 from app.softupdater import Updater
 from app.log import log
+from app.softrefresh import markToRefresh
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -518,10 +519,10 @@ def cookieTest():
 def submitError():
     soft_type = request.args.get('type')
     err_id = request.args.get('id')
-    print(soft_type, err_id)
-    # TODO: 在soft.db中增加一列torefresh
-    # TODO：然后在dailytask模块中，对记录的这些勘误进行处理，处理成功则清除该条torefresh记录
-
-    info_to_record = 'IP: ' + request.remote_addr + '标记' + soft_type + '中存在错误：' + err_id
+    # 将用户提交的错误错误路径版本进行标记（torefresh字段写1）
+    table_name = 't_' + soft_type
+    markToRefresh(table_name, int(err_id))
+    # 记录日志
+    info_to_record = 'IP: ' + request.remote_addr + '标记' + soft_type + '中id号是：' + err_id + '路径存在问题'
     log.record(info_to_record)
     return jsonify({'status': 'success'})

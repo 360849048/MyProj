@@ -233,10 +233,13 @@ def writeAllPathInfo(ver_path_map):
     }
     print('开始向数据库写入path信息')
     for ver_type in ver_path_map:
+        t_vers[ver_type].auto_commit = False
         for ver_id, ver_info in ver_path_map[ver_type].items():
             if ver_info['version'] == t_vers[ver_type].displayBriefData(ver_id, 'version')[0]:
-                print('Writing: %s -- %s' % (ver_info['version'], ver_info['path']))
+                # print('Writing: %s -- %s' % (ver_info['version'], ver_info['path']))
                 t_vers[ver_type].modifyLine(ver_id, path=ver_info['path'])
+        t_vers[ver_type].commitData()
+        t_vers[ver_type].auto_commit = True
     print('path信息写入数据库成功')
     return
 

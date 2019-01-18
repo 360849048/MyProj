@@ -64,7 +64,14 @@
                     <i class="fa fa-download" aria-hidden="true"></i>
                   </a>
                   <div class="dropdown-divider"></div>
-                  <a class="dropdown-item" href="#" @click="submitError(softType, msg.id)">信息有误，向后台反馈</a>
+                  <a class="dropdown-item" href="###" v-if="msg.torefresh != 1" @click="submitError(softType, msg.id)">
+                    路径信息有误，向后台反馈
+                    <i class="fa fa-hand-paper-o"></i>
+                  </a>
+                  <a class="dropdown-item" v-else>
+                    该路径已被举报，注意文件可靠性
+                    <i class="fa fa-exclamation"></i>
+                  </a>
                 </div>
               </div>
             </td>

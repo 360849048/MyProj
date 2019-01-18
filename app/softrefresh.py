@@ -11,16 +11,21 @@ def markToRefresh(table_name, ids):
     t_soft = TableManager(table_name, SOFTWARE_VERSION_INFO_DB_PATH)
     if isinstance(ids, int):
         t_soft.modifyLine(ids, torefresh='1')
-    else:
+    elif isinstance(ids, tuple) or isinstance(ids, list) or isinstance(ids, set):
+        # 多次commit很耗费性能，需要避免
+        t_soft.auto_commit = False
         for id in ids:
             t_soft.modifyLine(id, torefresh='1')
+        t_soft.commitData()
+        t_soft.auto_commit = True
 
 
 def handleRefresh():
     '''
     对数据库内所有表的内容进行搜索，对torefresh字段被写1的数据行的path字段清空
-    :return:
+    :return:   处理的版本数量
     '''
+    count = 0
     t_vers = {
         'V01': TableManager('t_V01', SOFTWARE_VERSION_INFO_DB_PATH),
         'V02': TableManager('t_V02', SOFTWARE_VERSION_INFO_DB_PATH),
@@ -30,5 +35,10 @@ def handleRefresh():
     }
     for soft_type in t_vers:
         ids = t_vers[soft_type].searchDataByKey(torefresh='1')
+        t_vers[soft_type].auto_commit = False
         for id in ids:
             t_vers[soft_type].modifyLine(id, path='', torefresh='')
+            count += 1
+        t_vers[soft_type].commitData()
+        t_vers[soft_type].auto_commit = True
+    return count

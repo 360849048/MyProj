@@ -3,6 +3,8 @@ import VueRouter from 'vue-router'
 import Home from '../page/home/Home'
 import Srctransfer from '../page/select/SrcTransfer'
 import SearchResult from '../page/search/SearchResult'
+import Bezier from '../page/bezier/Bezier'
+
 
 Vue.use(VueRouter);
 
@@ -22,6 +24,7 @@ export default new VueRouter({
     {path: '/srctransfer', component: Srctransfer},
     {path: '/makeio', component: Iomaker},
     {path: '/search', component: SearchResult},
+    {path: '/bezier', component: Bezier},
     {path: '*', redirect: '/home'}
   ]
 })

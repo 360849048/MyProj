@@ -3,6 +3,7 @@ import datetime
 from app.pathinfo import *
 from app.softpathmap import mapEmptyPathVersionsPath, writeAllPathInfo
 from app.log import log
+from app.softrefresh import handleRefresh
 
 
 def updatePathInfoAutomatically():
@@ -13,6 +14,9 @@ def updatePathInfoAutomatically():
     while True:
         now = datetime.datetime.now()
         if now.hour == 22:
+            # 首先将今天用户标记路径有误的版本进行path字段清空，这样后续就会对该版本路径进行重新搜索
+            handle_num = handleRefresh()
+            log.record('处理了路径标记版本，数量: ' + str(handle_num))
             ver_path_map = mapEmptyPathVersionsPath()
             writeAllPathInfo(ver_path_map)
             info_to_record = '更新数据库path信息\n'

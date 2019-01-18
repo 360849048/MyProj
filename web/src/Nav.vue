@@ -54,6 +54,16 @@
                 <i class="fa fa-files-o"></i>
                 IO
               </router-link>
+              <router-link
+                class="dropdown-item"
+                href="###"
+                to="/bezier"
+                @click.native="curRoute=3"
+                :data-toggle="clientWidth<=992 ? 'collapse' : ''"
+                data-target="#navbarSupportedContent">
+                <i class="fa fa-ils" aria-hidden="true"></i>
+                Bezier
+              </router-link>
               <div class="dropdown-divider"></div>
               <a
                 class="dropdown-item"
@@ -116,7 +126,7 @@
       padding: 0;
     }
     .dropdown-menu.show {
-      max-height: 130px;
+      max-height: 150px;
     }
   }
 </style>

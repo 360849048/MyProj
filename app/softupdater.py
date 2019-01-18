@@ -72,6 +72,7 @@ class Updater:
             self.running_update = True
             try:
                 t_soft = TableManager(self.table_name, self.version_db_path)
+                t_soft.auto_commit = False
                 for new_vers in self.vers_ready_to_append:
                     t_soft.appendLine(client=new_vers[0],
                                       version=new_vers[1],
@@ -82,6 +83,8 @@ class Updater:
                                       remark=new_vers[6],
                                       author=new_vers[7],
                                       path='')
+                t_soft.commitData()
+                t_soft.auto_commit = True
                 self.vers_ready_to_append = None
                 return True
             except:
