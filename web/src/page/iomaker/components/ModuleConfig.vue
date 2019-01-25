@@ -481,11 +481,11 @@
 <style scoped lang="scss">
   #module{
     width: 400px;
-    height: 600px;
-    overflow: auto;
+    height: auto;
     margin-top: 20px;
     &::-webkit-scrollbar{
       width: 6px;
+      height: 6px;
     }
     &::-webkit-scrollbar-thumb{
       border-radius: 10px;

@@ -1,7 +1,7 @@
 VE400
 FUNCT CONF FILE
 [VERSION: 2]
-[CRC: 16#0C5745B9]
+[CRC: 16#E787E9D0]
 InjectionUnitControl1.sMaintainActive,0,,{32768},{3},255,
 sSelctFrontMech.sFixDoorFun,0,,{32768},{19},255,
 SelectOutput2.ClassSvr,0,,{32768},{3},255,
@@ -35,7 +35,7 @@ OptionalFunction.sExtendHotRunner,0,,{32768},{19},255,
 OptionalFunction.sVP_overtimeFunc,0,,{32768},{19},255,
 OptionalFunction.sSemiAutoNoOutputRobotOperat,0,,{32768},{19},255,
 BarrelControl1.HeatingBandSwitch,0,,{32768},{3},255,
-BarrelControl1.sHeatingSafetyTempMonitor,0,,{32768},{3},255,
+BarrelControl1.sHeatingSafetyTempMonitor,1,,{32768},{3},255,
 CoreMove_CoreC.sCoreType,0,,{32768},{3},255,
 MainParameterCOMPL1\MainParameter1.A5FunctionSwitch,0,,{32768},{19},255,
 MainParameterCOMPL1\MainParameter1.SpecialFrontDoorCheck,0,,{32768},{19},255,
@@ -59,7 +59,7 @@ SelectEC73Func1.sSelectEC73Func,0,,{32768},{3},255,
 ElectricDoor1.sSemiAutoOpenMode,0,,{32768},{3},255,
 ElectricDoor1.sEleFuncUse,0,,{32768},{3},255,
 ElectricDoor1.sCheckSaftyUse,0,,{32768},{3},255,
-FrontDoorChannalSelect.sChannalSelect,0,,{32768},{3},255,
+FrontDoorChannalSelect.sChannalSelect,2,,{32768},{3},255,
 Key\Key_Access_Level.sLevel5,1,,{32768},{19},255,
 Key\Key_Access_Level.sLevel3,1,,{32768},{19},255,
 Key\Key_Access_Level.sLevel1_keep,0,,{32768},{3},255,
@@ -102,5 +102,5 @@ MainEjectorPara1.sReferenceMode,0,,{32768},{3},255,
 MainEjectorPara1\EjectorParameter1.sMoudSliderFBCheck,0,,{32768},{19},255,
 CoreControlB.sCoreType,0,,{32768},{3},255,
 CoreControlA.sCoreType,0,,{32768},{3},255,
-RearDoorChannalSelect.sChannalSelect,0,,{32768},{3},255,
+RearDoorChannalSelect.sChannalSelect,2,,{32768},{3},255,
 VP_DigitalSignal.Data,0,,{32768},{19},255,

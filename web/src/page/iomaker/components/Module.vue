@@ -248,6 +248,19 @@
   }
 </script>
 
-<style scoped>
-
+<style scoped lang="scss">
+  #module {
+    height: 100%;
+    padding: 15px;
+    overflow: auto;
+    &::-webkit-scrollbar{
+       height: 6px;
+      width: 6px;
+     }
+    &::-webkit-scrollbar-thumb{
+       border-radius: 10px;
+       -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+       background: #818080;
+     }
+  }
 </style>

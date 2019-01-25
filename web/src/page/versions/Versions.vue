@@ -26,7 +26,7 @@
       </ul>
     </div>
     <!-- 软件版本显示区域 -->
-    <div class="row" style="clear: both;">
+    <div style="clear: both;">
       <div class="col-12">
         <table class="table table-hover" v-loading="loading">
           <thead>
@@ -400,7 +400,7 @@
   }
   footer:hover{
     opacity: .9;
-    transition: .5s all;
+    transition: .5s opacity;
   }
   #pagination{
     display: flex;

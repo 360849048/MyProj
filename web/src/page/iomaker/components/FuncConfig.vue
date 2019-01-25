@@ -148,12 +148,12 @@
     /*border: 1px gray dotted;*/
     /* 设置一定的padding，消除底部滚动条 */
     padding: 15px;
-    margin-top: 10px;
-    height: 700px;
+    box-sizing: border-box;
+    height: 100%;
     overflow: auto;
     &::-webkit-scrollbar{
-       width: 6px;
-       /*display: none;*/
+      width: 6px;
+      height: 6px;
      }
     &::-webkit-scrollbar-thumb{
        border-radius: 10px;

@@ -3,7 +3,7 @@
       <h1>This is a page to show Search Result</h1>
       <h3>你搜索的关键字为：<span class="text-danger font-weight-bold">{{msg}}</span>&nbsp;(多个关键字请用空格隔开)</h3>
       <!-- 软件版本显示区域 -->
-      <div class="row" style="clear: both;">
+      <div style="clear: both;">
         <div class="col-12">
           <table class="table table-hover" v-loading="loading">
             <thead>
@@ -39,15 +39,6 @@
                        @click="downloadSrcCode(item)">
                       {{item}}&nbsp;
                       <i class="fa fa-download" aria-hidden="true"></i>
-                    </a>
-                    <div class="dropdown-divider"></div>
-                    <a class="dropdown-item" href="###" v-if="msg.torefresh != 1" @click="submitError(softType, msg.id)">
-                      路径信息有误，向后台反馈
-                      <i class="fa fa-hand-paper-o"></i>
-                    </a>
-                    <a class="dropdown-item" v-else>
-                      该路径已被举报，注意文件可靠性
-                      <i class="fa fa-exclamation"></i>
                     </a>
                   </div>
                 </div>
@@ -118,25 +109,6 @@
             alert('无法连接服务器');
           }
         })
-      },
-      submitError (type, id) {
-        axios.get(`/submiterror?type=${type}&id=${id}`)
-          .then((res) => {
-            res = res.data;
-            console.log(res);
-            this.$message({
-              message: '信息提交成功！请等待后台处理',
-              type: 'success'
-            })
-          })
-          .catch((err) => {
-            console.log(err);
-            this.$message({
-              showClose: true,
-              message: '网络请求发送失败，无法提交信息',
-              type: 'error'
-            });
-          });
       }
     },
     watch:{

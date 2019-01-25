@@ -67,7 +67,7 @@
   const pageItemAmount = 32;
 
   export default {
-    name: "io-list",
+      name: "io-list",
     props: ['boardModules1', 'boardModules2', 'boardModules3', 'boardModulesIOs1', 'boardModulesIOs2', 'boardModulesIOs3',
       'type', 'e73Safety', 'moldSlider', 'func1ToProgO1', 'func2ToProgO2'],
     data(){
@@ -263,7 +263,7 @@
     margin-top: 30px;
   }
   .nav.nav-tabs{
-    margin: 10px;
+    margin: 15px;
     .nav-item{
       display: inline-block;
       width: 100px;
@@ -277,11 +277,25 @@
     /* Overwrite default bootstrap style */
     width: 80%;
     display: inline-block;
-    padding: .15rem 1.25rem;
+    padding: .15rem .6rem;
     margin-bottom: 0.25rem;
     user-select: none;
     overflow: hidden;
     text-overflow:ellipsis;
     white-space: nowrap;
+  }
+  #iolist {
+    height: 100%;
+    overflow: auto;
+    padding: 15px;
+    &::-webkit-scrollbar{
+      width: 6px;
+      height: 6px;
+    }
+    &::-webkit-scrollbar-thumb{
+      border-radius: 10px;
+      -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+      background: #818080;
+    }
   }
 </style>

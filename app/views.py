@@ -206,7 +206,7 @@ def createIoFile():
 @app.route('/createconfigfile', methods=['POST'])
 def createConfigFile():
     '''
-        生成配置文件(.hk)
+        生成配置文件(.zip)
         同样只支持主底板和扩展底板一的编辑，更多的配置请自行特殊制作支持
         必须严格按照网页传输数据进行编程
     '''
@@ -230,6 +230,8 @@ def createConfigFile():
     for idx in range(len(board_2)):
         if board_2[idx] != '':
             board_2_modules_ios.append([board_2[idx], board_2_ios[idx]])
+
+    customer = data['customer']
 
     # 硬件配置文件
     ce_standard = data['ceStandard']
@@ -268,13 +270,13 @@ def createConfigFile():
     elif data['type'].upper() == 'VE2':
         imm_type = 'VE' + clamp_force + 'II-' + injection
     if ce_standard:
-        dst_file_dir = CACHE_FILE_DIR + data['evaluationNum'] + imm_type + '(CE)/'
-        zip_file_path = CACHE_FILE_DIR + data['evaluationNum'] + imm_type + '(CE).zip'
-        zip_file_url = URL_DIR + data['evaluationNum'] + imm_type + '(CE).zip'
+        dst_file_dir = CACHE_FILE_DIR + data['evaluationNum'] + customer + imm_type + '(CE)/'
+        zip_file_path = CACHE_FILE_DIR + data['evaluationNum'] + customer + imm_type + '(CE).zip'
+        zip_file_url = URL_DIR + data['evaluationNum'] + customer + imm_type + '(CE).zip'
     else:
-        dst_file_dir = CACHE_FILE_DIR + data['evaluationNum'] + imm_type + '/'
-        zip_file_path = CACHE_FILE_DIR + data['evaluationNum'] + imm_type + '.zip'
-        zip_file_url = URL_DIR + data['evaluationNum'] + imm_type + '.zip'
+        dst_file_dir = CACHE_FILE_DIR + data['evaluationNum'] + customer + imm_type + '/'
+        zip_file_path = CACHE_FILE_DIR + data['evaluationNum'] + customer + imm_type + '.zip'
+        zip_file_url = URL_DIR + data['evaluationNum'] + customer + imm_type + '.zip'
     if os.path.isdir(dst_file_dir):
         shutil.rmtree(dst_file_dir)
     os.mkdir(dst_file_dir)

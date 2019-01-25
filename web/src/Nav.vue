@@ -1,5 +1,5 @@
 <template>
-  <div id="#nav">
+  <div id="nav">
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <a class="navbar-brand" href="###">NEW!</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -167,3 +167,10 @@ export default {
   }
 }
 </script>
+<style>
+  #nav {
+    position: relative;
+    z-index: 999;
+    opacity: .97;
+  }
+</style>

@@ -138,13 +138,13 @@
 <style lang="scss" scoped>
   #infoform{
     /*border: 1px gray dotted;*/
-    padding: 5px;
-    margin-top: 10px;
-    height: 700px;
+    padding: 15px;
+    height: 100%;
+    box-sizing: border-box;
     overflow: auto;
     &::-webkit-scrollbar{
       width: 6px;
-      /*display: none;*/
+      height: 6px;
     }
     &::-webkit-scrollbar-thumb{
       border-radius: 10px;

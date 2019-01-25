@@ -1,7 +1,7 @@
 <template>
     <div id="iomaker" v-loading="waiting">
       <div class="container-fluid">
-        <div class="row">
+        <div class="row ">
           <!-- 信息录入 -->
           <transition name="fade-left">
             <div class="col-sm-4" v-show="curStep === 1">
@@ -149,9 +149,9 @@
   /**
    * 数据处理逻辑：
    * 本模块主要协调各个子模块的通讯，并向后台POST一些数据进行IO表和配置文件的生成。
-   * 1.从infoForm收集机器基础信息，并根据immType解析机器具体参数信息：机器类型、单双注射、大机选配
-   *   为了避免频繁触发imminfochange事件，通过设置this.getInfo=true可以从FuncForm读取一次信息
-   * 2.从FuncForm获取主底板IO修改信息：功能点12的配置等信息，某些特殊功能涉及到IO点配置，这些信息也会传递到IoList组件。
+   * 1.从InfoForm收集机器基础信息，并根据immType解析机器具体参数信息：机器类型、单双注射、大机选配
+   *   为了避免频繁触发imminfochange事件，通过设置this.getInfo=true可以从InfoForm读取一次信息
+   * 2.从FuncConfig获取主底板IO修改信息：功能点12的配置等信息，某些特殊功能涉及到IO点配置，这些信息也会传递到IoList组件。
    * 3.从Module获取模块和模块上的IO配置信息，并将配置信息传递到IoList组件
    * 4.页脚处放置的一些按钮，用来移动展示页面以及向后台POST机器信息
    * 5.IoList接受HTML5的drag事件，ModuleConfig接受HTML5的drop事件，通过鼠标拖拽的方法可实现模块点位的配置
@@ -164,6 +164,7 @@
   import FuncConfig from './components/FuncConfig'
 
   export default {
+    name: 'IoMaker',
     components:{
       IoList,
       Module,
@@ -545,23 +546,24 @@
   footer{
     background-color: #eee;
     display: flex;
+    flex-wrap: wrap;
     justify-content: center;
-    opacity: .7;
+    opacity: .8;
     i{
       color: #ccc;
       cursor: pointer;
     }
     a{
       margin:{
-        left: 50px;
-        right: 50px;
+        left: 40px;
+        right: 40px;
       }
       text-decoration: none;
       color: #ccc;
       outline: none;
     }
     .enable{
-      transition: all .5s;
+      transition: color .5s;
       &:hover{
         color: black;
       }
@@ -573,5 +575,22 @@
   #srcmaker{
     /* 防止底部被footer遮挡 */
     padding-bottom: 3rem;
+  }
+  /*#iomaker:after {*/
+    /*content: '';*/
+    /*display: block;*/
+    /*width: 100%;*/
+    /*height: 50px;*/
+    /*opacity: 0;*/
+  /*}*/
+  .container-fluid {
+    position: absolute;
+    top: 56px;
+    bottom: 48px;
+    left: 0;
+    right: 0;
+    .row {
+      height: 100%;
+    }
   }
 </style>
