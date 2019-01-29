@@ -126,7 +126,7 @@ class IOFile:
     def __init__(self, imm_type, main_board_modules=None, board_1_modules=None, big=False,
                  evaluation_num=None, production_num=None, type_string=None, customer=None,
                  safety_standard=None, technical_clause=None, dual_inj=False, external_hotrunner_num=0,
-                 energy_dee=False, varan_conn_module_pos=0):
+                 energy_dee=False, varan_conn_module_pos=0, psg_hotrunner=False):
         ''' imm_type:           'ZEs', 'ZE', 'VE2', 'VE2s'
             main_board_modules: [['CTO163', {'DO3': ['中文名', 'EnglishName'], ...}], ['CDM163', {'DI5': ['中文名', 'EnglishName'], ...}], ...]
             board_1_modules:    [['CIV512', {}], ['CTO163', {'DO3': ['中文名', 'EnglishName'], ...}], ['CDM163', {'DI5': ['中文名', 'EnglishName'], ...}], ...]
@@ -157,6 +157,8 @@ class IOFile:
         self.external_hotrunner_num = external_hotrunner_num
         # 能耗模块DEE
         self.energy_dee = energy_dee
+        # PSG热流道
+        self.psg_hotrunner = psg_hotrunner
 
         if main_board_modules is not None:
             self.main_board_modules = []
@@ -504,6 +506,23 @@ class IOFile:
                 dee_cell = hardware_sort.cell(row=ejekeb_cell.row, column=cur_work_col)
                 copyCell(ejekeb_cell, dee_cell)
                 dee_cell.value = 'DEE021'
+        # 使用外置热流道，在Ethernet后面增加CCP521
+        if self.external_hotrunner_num > 0:
+            hardware_sort = self.std_workbook['硬件排布']
+            ethernet_cell = searchCells(hardware_sort, 'Ethernet')
+            if ethernet_cell is not None:
+                ccp521_cell = hardware_sort.cell(row=ethernet_cell.row, column=ethernet_cell.col_idx + 4)
+                copyCell(ethernet_cell, ccp521_cell)
+                ccp521_cell.value = 'CCP521'
+        # 使用PSG热流道，在Ethernet后面增加SE051
+        if self.psg_hotrunner:
+            hardware_sort = self.std_workbook['硬件排布']
+            ethernet_cell = searchCells(hardware_sort, 'Ethernet')
+            if ethernet_cell is not None:
+                se051_cell = hardware_sort.cell(row=ethernet_cell.row, column=ethernet_cell.col_idx + 4)
+                copyCell(ethernet_cell, se051_cell)
+                se051_cell.value = 'SE051'
+
 
     def modifyDefaultIO(self, io_type, origin_io_name, new_io_cname, new_io_ename):
         ''' 修改主底板或主底板扩展槽(VE2)上默认的IO

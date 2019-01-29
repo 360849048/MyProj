@@ -1,84 +1,19 @@
 from app.sqljob import TableManager
 from app.exceler import IOFile
-
-
-DO_VALVE_1_OPEN = 41
-DO_VALVE_2_OPEN = 43
-DO_VALVE_3_OPEN = 45
-DO_VALVE_4_OPEN = 47
-DO_VALVE_5_OPEN = 49
-DO_VALVE_6_OPEN = 51
-DO_VALVE_7_OPEN = 53
-DO_VALVE_8_OPEN = 55
-
-DO_CORE_D_IN = 57
-DO_CORE_D_OUT = 58
-DO_CORE_E_IN = 59
-DO_CORE_E_OUT = 60
-DO_CORE_F_IN = 61
-DO_CORE_F_OUT = 62
-
-DO_PROGRAMMABLE_1 = 73
-DO_PROGRAMMABLE_2 = 74
-DO_PROGRAMMABLE_3 = 75
-DO_PROGRAMMABLE_4 = 76
-DO_PROGRAMMABLE_5 = 77
-DO_PROGRAMMABLE_6 = 78
-
-DO_AIR_5 = 81
-DO_AIR_6 = 82
-DO_AIR_7 = 83
-DO_AIR_8 = 84
-
-DO_FLAP_BAD = 107
-
-DO_BAD_PRODUCT_2 = 110
-
-DO_PRESSURE_RELEASE = 120
-
-DO_CORE_2_OUT_END = 121
-DO_CORE_2_IN_END = 122
-
-
-DI_CORE_D_IN_END = 57
-DI_CORE_D_OUT_END = 58
-DI_CORE_E_IN_END = 59
-DI_CORE_E_OUT_END = 60
-DI_CORE_F_IN_END = 61
-DI_CORE_F_OUT_END = 62
-
-DI_PROGRAMMABLE_1 = 73
-DI_PROGRAMMABLE_2 = 74
-DI_PROGRAMMABLE_3 = 75
-DI_PROGRAMMABLE_4 = 76
-DI_PROGRAMMABLE_5 = 77
-DI_PROGRAMMABLE_6 = 78
-
-DI_MCS_OK = 89
-DI_QMC_MODE = 90
-DI_FIXED_MOLD_HALF_MODE = 91
-DI_FLAP_GOOD = 92
-DI_FLAP_BAD = 93
-DI_MOV_MOLD_HALF_MODE = 94
-
-DI_PRESSURE_RELEASE_BTN = 112
-DI_CORE_2_OUT = 113
-DI_CORE_2_IN = 114
-
+from app.pathinfo import *
 
 
 class IOMaker:
     def __init__(self, imm_type, board_1_modules_ios=None, board_2_modules_ios=None, big=False,
                  evaluation_num=None, production_num=None, type_string=None, customer=None,
                  safety_standard=None, technical_clause=None, dual_inj=False, external_hotrunner_num=0,
-                 energy_dee=False, varan_conn_module_pos=0):
+                 energy_dee=False, varan_conn_module_pos=0, psg_hotrunner=False):
         '''
             imm_type:           'ZEs', 'ZE', 'VE2', 'VE2s'
             board_1_modules_ios: [['CTO163', {'DO3': OutputID, ...}], ['CDM163', {'DI5': InputID, ...}], ...]
             board_2_modules_ios:    [['CTO163', {'DO3': OutputID, ...}], ['CDM163', {'DI5': InputID, ...}], ...]
         '''
-        # TODO: 数据库位置需要小心
-        self.path_db = './app/libfiles/data.db'
+        self.path_db = IO_INFO_DB_PATH
         self.t_di = TableManager('digital_input', self.path_db)
         self.t_do = TableManager('digital_output', self.path_db)
         self.t_ai = TableManager('Analog_input', self.path_db)
@@ -99,6 +34,7 @@ class IOMaker:
 
         self.dual_inj = dual_inj
         self.energy_dee = energy_dee
+        self.psg_hotrunner = psg_hotrunner
 
         if external_hotrunner_num > 0:
             self.external_hot_runner_cai888_configuration = {
@@ -173,7 +109,8 @@ class IOMaker:
                               dual_inj=self.dual_inj,
                               external_hotrunner_num=external_hotrunner_num,
                               energy_dee=self.energy_dee,
-                              varan_conn_module_pos=varan_conn_module_pos)
+                              varan_conn_module_pos=varan_conn_module_pos,
+                              psg_hotrunner=self.psg_hotrunner)
 
     # 修改主底板默认点位，每个点位的修改都用一个方法特殊处理
     def func1ToInjSignal(self):

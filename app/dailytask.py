@@ -14,7 +14,17 @@ def updatePathInfoAutomatically():
     while True:
         now = datetime.datetime.now()
         if now.hour == 22:
-            # 首先将今天用户标记路径有误的版本进行path字段清空，这样后续就会对该版本路径进行重新搜索
+            # 首先清理缓存目录
+            try:
+                if os.path.exists(CACHE_FILE_DIR):
+                    for root, dirs, files in os.walk(CACHE_FILE_DIR):
+                        for file in files:
+                            os.remove(os.path.join(root, file))
+                        for dir in dirs:
+                            os.rmdir(os.path.join(root, dir))
+            except:
+                log.record('删除某些缓存文件失败...\n')
+            # 将今天用户标记路径有误的版本进行path字段清空，这样后续就会对该版本路径进行重新搜索
             handle_num = handleRefresh()
             log.record('处理了路径标记版本，数量: ' + str(handle_num))
             ver_path_map = mapEmptyPathVersionsPath()
@@ -27,16 +37,6 @@ def updatePathInfoAutomatically():
                     info_to_record += ver_info['path']
                     info_to_record += '\n'
             log.record(info_to_record)
-            # 清理缓存目录
-            try:
-                if os.path.exists(CACHE_FILE_DIR):
-                    for root, dirs, files in os.walk(CACHE_FILE_DIR):
-                        for file in files:
-                            os.remove(os.path.join(root, file))
-                        for dir in dirs:
-                            os.rmdir(os.path.join(root, dir))
-            except:
-                log.record('删除某些缓存文件失败...\n')
         time.sleep(3600)
 
 

@@ -77,6 +77,7 @@
           6: {name: '7号改可编程输入1', status: false},
           7: {name: '功能点1改可编程输出1', status: false},
           8: {name: '功能点2改可编程输出2', status: false},
+          98: {name: 'PSG热流道', status: false},
           99: {name: '外置热流道', status: false},
           101: {name: '阀门', status: false},
           102: {name: '吹气', status: false},
@@ -133,6 +134,13 @@
             this.funcs[8].status = false;
             this.$message({
               message: '请将可编程IO输出2配到模块',
+              type: 'warning'
+            });
+          }
+          if(cval[98].status && cval[99].status){
+            this.funcs[99].status = false;
+            this.$message({
+              message: 'PSG热流道只需要SE051，不需要额外的CAI888',
               type: 'warning'
             });
           }

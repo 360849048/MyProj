@@ -157,6 +157,7 @@ def createIoFile():
         external_hotrunner_num = int(data['extHotrunnerNum'])
     else:
         external_hotrunner_num = 0
+    psg_hotrunner = data['funcConfig']['98']['status']
 
     if data['type'].upper() == 'ZES':
         imm_type = 'ZE' + clamp_force + 's-' + injection
@@ -183,7 +184,8 @@ def createIoFile():
                       dual_inj=dual_inj,
                       external_hotrunner_num=external_hotrunner_num,
                       energy_dee=energy_dee,
-                      varan_conn_module_pos=varan_conn_module_pos)
+                      varan_conn_module_pos=varan_conn_module_pos,
+                      psg_hotrunner=psg_hotrunner)
     if func1_inj_signal:
         iomaker.func1ToInjSignal()
     if func2_charge_signal:
