@@ -20,6 +20,7 @@ class IOMaker:
         self.t_ao = TableManager('Analog_output', self.path_db)
         self.t_ti = TableManager('Temperature_input', self.path_db)
         self.t_to = TableManager('Temperature_output', self.path_db)
+        self.t_func_list = TableManager('FuncOutput_List', self.path_db)
 
         self.imm_type = imm_type
         self.board_1_modules_ios = None
@@ -124,6 +125,20 @@ class IOMaker:
         io_type = 'DO'
         origin_io_name = '功能点2'
         new_io_cname, new_io_ename = ('储料开始', 'Charge Start')
+        self.xlsxObj.modifyDefaultIO(io_type=io_type, origin_io_name=origin_io_name,
+                                     new_io_cname=new_io_cname, new_io_ename=new_io_ename)
+
+    def func1Config(self, value):
+        io_type = 'DO'
+        origin_io_name = '功能点1'
+        new_io_cname, new_io_ename = self.t_func_list.displayBriefData(value + 1, 'CName', 'EName')
+        self.xlsxObj.modifyDefaultIO(io_type=io_type, origin_io_name=origin_io_name,
+                                     new_io_cname=new_io_cname, new_io_ename=new_io_ename)
+
+    def func2Config(self, value):
+        io_type = 'DO'
+        origin_io_name = '功能点2'
+        new_io_cname, new_io_ename = self.t_func_list.displayBriefData(value + 1, 'CName', 'EName')
         self.xlsxObj.modifyDefaultIO(io_type=io_type, origin_io_name=origin_io_name,
                                      new_io_cname=new_io_cname, new_io_ename=new_io_ename)
 

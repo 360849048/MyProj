@@ -18,7 +18,9 @@
               :type="type"
               @functionsupdate="getFuncConfig"
               @exthotrunnerchange="getExtHotrunnerNum"
-              @inthotrunnerchange="getIntHotrunnerNum">
+              @inthotrunnerchange="getIntHotrunnerNum"
+              @funcoutput1change="getFuncOutput1"
+              @funcoutput2change="getFuncOutput2">
               </func-config>
             </div>
           </transition>
@@ -193,8 +195,8 @@
         designNote: '',
         // 机器功能配置信息，包括主底板默认IO修改信息
         funcConfig: {
-          1: {name: '功能点1注射信号', status: false},
-          2: {name: '功能点2储料信号', status: false},
+          // 1: {name: '功能点1注射信号', status: false},
+          // 2: {name: '功能点2储料信号', status: false},
           3: {name: 'E73', status: false},
           4: {name: '喷嘴改阀门1', status: false},
           5: {name: 'DEE能耗模块', status: false},
@@ -210,6 +212,8 @@
         },
         extHotrunnerNum: 3,
         intHotrunnerNum: 0,
+        funcOutput1: 0,
+        funcOutput2: 0,
         // 解析immType后得到的数据
         isBigImm: false,
         isDualInj: false,
@@ -283,6 +287,12 @@
       getIntHotrunnerNum(e){
         this.intHotrunnerNum = e;
       },
+      getFuncOutput1 (e) {
+        this.funcOutput1 = e;
+      },
+      getFuncOutput2 (e) {
+        this.funcOutput2 = e;
+      },
       getNewIoAppend(e){
         this.newIoToAppend = e;
       },
@@ -319,6 +329,8 @@
           technicalClause: this.technicalClause,
           designNote: this.designNote,
           funcConfig: this.funcConfig,
+          funcOutput1: this.funcOutput1,
+          funcOutput2: this.funcOutput2,
           pilzNor: this.pilzNor,
           pilzE73: this.pilzE73,
           extHotrunnerNum: this.extHotrunnerNum,

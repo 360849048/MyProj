@@ -4,6 +4,10 @@
       <div class="col-xl-6">
         <h2>IO表相关修改</h2>
         <hr>
+        <div class="func-menu">
+          <func-menu name="功能点1" :list="funcOutputItems" @itemchange="handlefuncoutput1"></func-menu>
+          <func-menu name="功能点2" :list="funcOutputItems" @itemchange="handlefuncoutput2"></func-menu>
+        </div>
         <!-- v-if里面不能用 === -->
         <div v-for="(item, index) in funcs" v-if="index <= 100" class="p-1">
           <func-switch
@@ -58,10 +62,14 @@
    *  * inthotrunnerchange：内置热流道组数设置发生变化时，触发该事件
    */
   import FuncSwitch from './FuncSwitch'
+  import FuncMenu from './FuncMenu'
+  import axios from 'axios'
+
   export default {
     name: "function-config",
     components: {
-      FuncSwitch
+      FuncSwitch,
+      FuncMenu
     },
     props: ['type'],
     data(){
@@ -69,8 +77,8 @@
         funcs: {
           // 新增功能序号依次从小往大增加
           // 不要去修改外置热流道序号，极易出bug
-          1: {name: '功能点1注射信号', status: false},
-          2: {name: '功能点2储料信号', status: false},
+          // 1: {name: '功能点1注射信号', status: false},
+          // 2: {name: '功能点2储料信号', status: false},
           3: {name: 'E73', status: false},
           4: {name: '喷嘴改阀门1', status: false},
           5: {name: 'DEE能耗模块', status: false},
@@ -85,7 +93,10 @@
           104: {name: '可编程IO', status: false}
         },
         extHotrunnerNum: 3,
-        intHotrunnerNum: 0
+        intHotrunnerNum: 0,
+        funcOutputItems: [],
+        funcOutput1: 0,
+        funcOutput2: 0
       }
     },
     methods: {
@@ -98,6 +109,14 @@
       },
       handleIntHot(){
         this.$emit('inthotrunnerchange', this.intHotrunnerNum);
+      },
+      handlefuncoutput1 (e) {
+        this.funcOutput1 = e;
+        this.$emit('funcoutput1change', this.funcOutput1);
+      },
+      handlefuncoutput2 (e) {
+        this.funcOutput2 = e;
+        this.$emit('funcoutput2change', this.funcOutput2);
       }
     },
     watch:{
@@ -123,17 +142,17 @@
               type: 'error'
             });
           }
-          if(cval[7].status && cval[1].status){
+          if(cval[7].status && this.funcOutput1 !== 0){
             this.funcs[7].status = false;
             this.$message({
-              message: '请将可编程IO输出1配到模块',
+              message: '功能点1已占用，请将可编程IO输出1配到模块',
               type: 'warning'
             });
           }
-          if(cval[8].status && cval[2].status){
+          if(cval[8].status && this.funcOutput2 !== 0){
             this.funcs[8].status = false;
             this.$message({
-              message: '请将可编程IO输出2配到模块',
+              message: '功能点2已占用，请将可编程IO输出2配到模块',
               type: 'warning'
             });
           }
@@ -147,6 +166,24 @@
         },
         deep: true,
       }
+    },
+    mounted () {
+      axios.get('/funcoutputitems').then( (res) => {
+        this.funcOutputItems = res.data;
+      }).catch( (e)=> {
+        console.log(e);
+        this.funcOutputItems = [
+          '关闭',
+          '注射开始',
+          '储料开始',
+          '可编程输出1',
+          '可编程输出2',
+          '包装箱满',
+          '吹气5',
+          '吹气6',
+          '液压回油阀(特殊)'
+        ];
+      });
     }
   }
 </script>
@@ -180,5 +217,8 @@
   }
   .fade-enter, .fade-leave-to{
     opacity: 0;
+  }
+  .func-menu {
+    margin-left: 15px;
   }
 </style>

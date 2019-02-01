@@ -597,7 +597,8 @@ class HkFileMaker:
 class FcfFileMaker:
     def __init__(self, imm_type, ce_standard=False, functions=None,
                  std_file_dir=STD_FCF_FILE_DIR,
-                 dst_file_dir=CACHE_FILE_DIR):
+                 dst_file_dir=CACHE_FILE_DIR,
+                 func_output1=0, func_output2=0):
         '''
             functions: {'injSig': True, 'chargeSig': False, 'internalHotrunnerNum': 0, 'dee': False}
         '''
@@ -613,6 +614,8 @@ class FcfFileMaker:
                 if 'CE' not in file_name:
                     self.std_file_path = os.path.join(std_file_dir, imm_type, file_name)
                     self.dst_file_path = os.path.join(dst_file_dir, file_name)
+        self.func_output1 = func_output1
+        self.func_output2 = func_output2
 
     def createFile(self):
         if not os.path.isfile(self.std_file_path):
@@ -627,12 +630,16 @@ class FcfFileMaker:
             lines = fp.readlines()
             for line in lines:
                 # TODO: 打开相应的功能
-                if 'injSig' in self.functions and self.functions['injSig'] and \
-                        re.search(r"SelectOutput1\.ClassSvr", line):
-                    lines[row_need_modified] = re.sub(r",\d+,,", r",1,,", line)
-                if 'chargeSig' in self.functions and  self.functions['chargeSig'] and \
-                        re.search(r"SelectOutput2\.ClassSvr", line):
-                    lines[row_need_modified] = re.sub(r",\d+,,", r",2,,", line)
+                # if 'injSig' in self.functions and self.functions['injSig'] and \
+                #         re.search(r"SelectOutput1\.ClassSvr", line):
+                #     lines[row_need_modified] = re.sub(r",\d+,,", r",1,,", line)
+                # if 'chargeSig' in self.functions and  self.functions['chargeSig'] and \
+                #         re.search(r"SelectOutput2\.ClassSvr", line):
+                #     lines[row_need_modified] = re.sub(r",\d+,,", r",2,,", line)
+                if self.func_output1 != 0 and re.search(r"SelectOutput1\.ClassSvr", line):
+                    lines[row_need_modified] = re.sub(r",\d+,,", r"," + str(self.func_output1) + ",,", line)
+                if self.func_output2 != 0 and re.search(r"SelectOutput2\.ClassSvr", line):
+                    lines[row_need_modified] = re.sub(r",\d+,,", r"," + str(self.func_output2) + ",,", line)
                 if 'internalHotrunnerNum' in self.functions and int(self.functions['internalHotrunnerNum']) > 0 and \
                         re.search(r"MoldHeating\.sMoldHeatingSelection", line):
                     lines[row_need_modified] = re.sub(r",\d+,,", "," + str(self.functions['internalHotrunnerNum']) + ",,", line)

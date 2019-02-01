@@ -92,6 +92,14 @@ def getPilzList():
     ret_data['e73'].append('其他')
     return jsonify(ret_data)
 
+@app.route('/funcoutputitems', methods=['GET'])
+def getOutputItems():
+    t_func_list = TableManager('FuncOutput_List', IO_INFO_DB_PATH)
+    ret_data = []
+    for each_id in t_func_list.getAllId():
+        ret_data.append(t_func_list.displayBriefData(each_id, 'CName')[0])
+    return jsonify(ret_data)
+
 @app.route('/createxlxs', methods=['POST'])
 def createIoFile():
     '''
@@ -134,8 +142,10 @@ def createIoFile():
     # 这个是改造后规范显示的immType字符串，json中的immType值不适合取文件名
     imm_type = ''
     # 默认的主底板IO是否修改
-    func1_inj_signal = data['funcConfig']['1']['status']
-    func2_charge_signal = data['funcConfig']['2']['status']
+    # func1_inj_signal = data['funcConfig']['1']['status']
+    # func2_charge_signal = data['funcConfig']['2']['status']
+    func_output1 = data['funcOutput1']
+    func_output2 = data['funcOutput2']
     e73_safety = data['funcConfig']['3']['status']
     nozzle_to_valve = data['funcConfig']['4']['status']
     if e73_safety or data['type'].upper() == 'VE2':
@@ -186,10 +196,14 @@ def createIoFile():
                       energy_dee=energy_dee,
                       varan_conn_module_pos=varan_conn_module_pos,
                       psg_hotrunner=psg_hotrunner)
-    if func1_inj_signal:
-        iomaker.func1ToInjSignal()
-    if func2_charge_signal:
-        iomaker.func2ToChargeSignal()
+    # if func1_inj_signal:
+    #     iomaker.func1ToInjSignal()
+    # if func2_charge_signal:
+    #     iomaker.func2ToChargeSignal()
+    if func_output1 != 0:
+        iomaker.func1Config(func_output1)
+    if func_output2 != 0:
+        iomaker.func2Config(func_output2)
     if nozzle_to_valve:
         iomaker.nozzleToValve()
     if e73_safety and data['type'].upper() != 'VE2':
@@ -285,8 +299,10 @@ def createConfigFile():
 
     # 功能配置选项，注意key值和configfile.py中FcfFileMaker中属性名字对应
     functions = {}
-    functions['injSig'] = data['funcConfig']['1']['status']
-    functions['chargeSig'] = data['funcConfig']['2']['status']
+    # functions['injSig'] = data['funcConfig']['1']['status']
+    # functions['chargeSig'] = data['funcConfig']['2']['status']
+    func_output1 = data['funcOutput1']
+    func_output2 = data['funcOutput2']
     functions['dee'] = data['funcConfig']['5']['status']
     functions['internalHotrunnerNum'] = data['intHotrunnerNum']
     functions['valve'] = data['funcConfig']['101']['status']
@@ -297,7 +313,9 @@ def createConfigFile():
     fcfmaker = FcfFileMaker(imm_type=data['type'],
                             functions=functions,
                             ce_standard=ce_standard,
-                            dst_file_dir=dst_file_dir)
+                            dst_file_dir=dst_file_dir,
+                            func_output1=func_output1,
+                            func_output2=func_output2)
     if fcfmaker.createFile() != 0:
         return jsonify({'status': 'failure', 'description': '功能配置文件生成失败'})
     sysmaker = SysFileMaker(ce_standard=ce_standard,
