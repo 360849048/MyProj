@@ -1,26 +1,44 @@
 <template>
   <div id="svgContainer" ref="svgContainer" @mouseup="handleDotMouseUp">
     <div class="info-wrapper" v-show="showInfo">
-        <div class="title no-select">三次贝塞尔曲线测试</div>
-        <div class="type-select">
-          <div class="custom-control custom-radio custom-control-inline">
-            <input type="radio" id="customRadio1" name="customRadio" class="custom-control-input"  value="0" v-model="drawType">
-            <label class="custom-control-label" for="customRadio1">方式1</label>
-          </div>
-          <div class="custom-control custom-radio custom-control-inline">
-            <input type="radio" id="customRadio2" name="customRadio" class="custom-control-input" value="1" v-model="drawType">
-            <label class="custom-control-label" for="customRadio2">方式2</label>
-          </div>
+      <div class="title no-select">三次贝塞尔曲线测试</div>
+      <div class="type-select">
+        <div class="custom-control custom-radio custom-control-inline">
+          <input type="radio" id="customRadio1" name="drawTypeRadio" class="custom-control-input" value=0 v-model="drawType">
+          <label class="custom-control-label" for="customRadio1">方式1</label>
         </div>
-        <div class="tips">tips: 拖动红点以改变曲线</div>
-        <div class="ctrl-widget" @click="showInfo=false">
-          <i class="fa fa-angle-left fa-3x"></i>
+        <div class="custom-control custom-radio custom-control-inline">
+          <input type="radio" id="customRadio2" name="drawTypeRadio" class="custom-control-input" value=1 v-model="drawType">
+          <label class="custom-control-label" for="customRadio2">方式2</label>
         </div>
+      </div>
+      <div class="c-adjust" v-show="drawType==='1'">
+        <span class="demonstration">系数</span>
+        <el-slider v-model="bezierC" :min=0 :max=100 :format-tooltip="formatTooltip"></el-slider>
+      </div>
+      <div class="ctrl-type" v-show="drawType==='1'">
+        <div class="custom-control custom-radio">
+          <input type="radio" id="customRadio3" name="ctrlDotCalcType" class="custom-control-input" value=0 v-model="ctrlType">
+          <label class="custom-control-label" for="customRadio3">光滑曲线连接所有点</label>
+        </div>
+        <div class="custom-control custom-radio">
+          <input type="radio" id="customRadio4" name="ctrlDotCalcType" class="custom-control-input" value=1 v-model="ctrlType">
+          <label class="custom-control-label" for="customRadio4">S曲线连接相邻点</label>
+        </div>
+      </div>
+      <div class="toggle-dotsdisp custom-control custom-checkbox">
+        <input type="checkbox" class="custom-control-input" id="customCheck1" value=true v-model="showDots">
+        <label class="custom-control-label" for="customCheck1">显示点</label>
+      </div>
+      <div class="tips">tips: 拖动红点以改变曲线</div>
+      <div class="ctrl-widget" @click="showInfo=false">
+        <i class="fa fa-angle-left fa-3x"></i>
+      </div>
     </div>
     <div class="svg-wrapper" ref="svgWrapper">
       <svg xmlns="http://www.w3.org/2000/svg" version="1.1"  @click="handleSvgClick">
         <path :d="pathDesc" fill="transparent" stroke="black" stroke-width="5"></path>
-        <template v-for="(dot, idx) in dots">
+        <template v-for="(dot, idx) in dots" v-if="showDots">
           <circle :cx="dot.x" :cy="dot.y" r="5" fill="red" :data-idx="idx"
             @mousedown="handleDotMouseDown"
             ></circle>
@@ -52,7 +70,12 @@
 
   const calcBezierCtrlDot = function (prevDot, curDot, nextDot, c=0.5) {
     /**
-     * 以相邻中点(可通过系数c控制比例)平移法，获取三次贝赛尔曲线的控制点a, b。
+     * 计算三次贝赛尔曲线的控制点a, b，使曲线光滑的连接所有的点（a，b两个控制点属于两条不同的三次贝塞尔曲线）。
+     * 具体方法如下：
+     *  将某一个点curDot与相邻两个点（prevDoo, nextDot）分别连接，构成两条线段，在这两条线段上，按系数c分别获取到一个点，
+     *  默认c=0.5时，取到的是这两条线段的中点。
+     *  连接这两个中点，得到一条线段。
+     *  平移这条线段，并使得它的中点正好与curDot重合，此时线段的两端点a和b就是curDot前后的两个控制点
      */
     let tempDot1 = {x: (prevDot.x + curDot.x) * c, y: (prevDot.y + curDot.y) * c};
     let tempDot2 = {x: (curDot.x + nextDot.x) * c, y: (curDot.y + nextDot.y) * c};
@@ -64,25 +87,37 @@
     return [a, b];
   };
 
+  const calcBezierCtrlDot2 = function (prevDot, curDot, nextDot, c=0.5) {
+    /**
+     * 以S曲线的方式，计算三次贝塞尔曲线的控制点a，b（a，b两个控制点属于两条不同的三次贝塞尔曲线）。
+     */
+    let a = {x: curDot.x, y: (prevDot.y - curDot.y) * c + curDot.y};
+    let b = {x: curDot.x, y: (nextDot.y - curDot.y) * c + curDot.y};
+    return [a, b];
+  };
+
   export default {
     name: "bezier",
     data () {
       return {
         dots: [
-          {x: 100, y: 200},
-          {x: 200, y: 200},
-          {x: 300, y: 200},
-          {x: 400, y: 200},
-          {x: 500, y: 200},
-          {x: 600, y: 200},
-          {x: 700, y: 200},
+          {y: 100, x: 200},
+          {y: 200, x: 200},
+          {y: 300, x: 200},
+          {y: 400, x: 200},
+          {y: 500, x: 200},
+          {y: 600, x: 200},
+          {y: 700, x: 200},
         ],
         curSelectedDot: 0,
         inputX: 0,
         inputY: 0,
         showInputs: false,
         showInfo: true,
-        drawType: 1
+        showDots: true,
+        drawType: '0',
+        ctrlType: '0',
+        bezierC: 50
       }
     },
     computed: {
@@ -91,7 +126,7 @@
         // 要求点的数量必须满足：3*三次贝塞尔C数量 + 1
         // 即this.dots数量必须是 4、7、10、...
         let desc = '';
-        if (this.drawType == 0) {
+        if (this.drawType === '0') {
           // 将某些点作为控制点，直接生成三次贝塞尔曲线
           if (this.dots.length < 4 || this.dots.length % 3 !== 1) return;
           desc = `M${this.dots[0].x} ${this.dots[0].y}`;
@@ -100,7 +135,6 @@
             desc += `C${this.dots[i*3+1].x} ${this.dots[i*3+1].y} ${this.dots[i*3+2].x} ${this.dots[i*3+2].y} ${this.dots[i*3+3].x} ${this.dots[i*3+3].y}`
           }
         } else {
-          // TODO:以光滑三次贝塞尔曲线穿过所有点。
           // 2个点就可以构成一条三次贝塞尔曲线
           // 取控制点的方法：
           // 获取相邻原始点的中点，并连接这两个中点构成一条线段，
@@ -120,7 +154,11 @@
               nextDot = this.dots[1];
 
               allDots.push(this.dots[0]);
-              [a, b] = calcBezierCtrlDot(prevDot, curDot, nextDot);
+              if (this.ctrlType === '0') {
+                [a, b] = calcBezierCtrlDot(prevDot, curDot, nextDot, this.bezierC/100);
+              } else {
+                [a, b] = calcBezierCtrlDot2(prevDot, curDot, nextDot, this.bezierC/100);
+              }
               allDots.push(b);
             } else if(i === lastDotIdx) {
               offsetX = this.dots[lastDotIdx].x - this.dots[0].x;
@@ -128,14 +166,22 @@
               prevDot = this.dots[lastDotIdx - 1];
               nextDot = {x: this.dots[1].x + offsetX, y: this.dots[1].y + offsetY};
 
-              [a, b] = calcBezierCtrlDot(prevDot, curDot, nextDot);
+              if (this.ctrlType === '0') {
+                [a, b] = calcBezierCtrlDot(prevDot, curDot, nextDot, this.bezierC/100);
+              } else {
+                [a, b] = calcBezierCtrlDot2(prevDot, curDot, nextDot, this.bezierC/100);
+              }
               allDots.push(a);
               allDots.push(this.dots[lastDotIdx]);
             } else {
               prevDot = this.dots[i - 1];
               nextDot = this.dots[i + 1];
 
-              [a, b] = calcBezierCtrlDot(prevDot, curDot, nextDot);
+              if (this.ctrlType === '0') {
+                [a, b] = calcBezierCtrlDot(prevDot, curDot, nextDot, this.bezierC/100);
+              } else {
+                [a, b] = calcBezierCtrlDot2(prevDot, curDot, nextDot, this.bezierC/100);
+              }
               allDots.push(a);
               allDots.push(curDot);
               allDots.push(b);
@@ -178,6 +224,9 @@
         this.dots[this.curSelectedDot].x = parseInt(this.inputX);
         this.dots[this.curSelectedDot].y = parseInt(this.inputY);
         this.showInputs = false;
+      },
+      formatTooltip(val) {
+        return val / 100;
       }
     },
   }
@@ -213,6 +262,9 @@
       &:hover {
         cursor: pointer;
       }
+    }
+    .c-adjust {
+      margin: 10px;
     }
   }
   .svg-wrapper {
