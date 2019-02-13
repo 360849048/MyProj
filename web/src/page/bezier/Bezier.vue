@@ -90,6 +90,7 @@
   const calcBezierCtrlDot2 = function (prevDot, curDot, nextDot, c=0.5) {
     /**
      * 以S曲线的方式，计算三次贝塞尔曲线的控制点a，b（a，b两个控制点属于两条不同的三次贝塞尔曲线）。
+     * 注意：这里S曲线针对垂直排布的点位
      */
     let a = {x: curDot.x, y: (prevDot.y - curDot.y) * c + curDot.y};
     let b = {x: curDot.x, y: (nextDot.y - curDot.y) * c + curDot.y};
@@ -123,11 +124,11 @@
     computed: {
       pathDesc () {
         // Path路径描述，这里绘制三次贝塞尔曲线，格式：M10 10C20 20 30 30 40 40C50 50 60 60 70...
-        // 要求点的数量必须满足：3*三次贝塞尔C数量 + 1
-        // 即this.dots数量必须是 4、7、10、...
         let desc = '';
         if (this.drawType === '0') {
           // 将某些点作为控制点，直接生成三次贝塞尔曲线
+          // 要求点的数量必须满足：3*三次贝塞尔C数量 + 1
+          // 即this.dots数量必须是 4、7、10、...
           if (this.dots.length < 4 || this.dots.length % 3 !== 1) return;
           desc = `M${this.dots[0].x} ${this.dots[0].y}`;
 
@@ -135,10 +136,7 @@
             desc += `C${this.dots[i*3+1].x} ${this.dots[i*3+1].y} ${this.dots[i*3+2].x} ${this.dots[i*3+2].y} ${this.dots[i*3+3].x} ${this.dots[i*3+3].y}`
           }
         } else {
-          // 2个点就可以构成一条三次贝塞尔曲线
-          // 取控制点的方法：
-          // 获取相邻原始点的中点，并连接这两个中点构成一条线段，
-          // 平移这条线段经过原始点，此时中点就是两个控制点（这两个控制点分别属于前后两条曲线）
+          // 将this.dots中的所有点用曲线连接起来，控制点由程序自动得到
           if (this.dots.length < 3) return;
           let prevDot, nextDot, curDot;
           let lastDotIdx = this.dots.length - 1;

@@ -436,13 +436,13 @@
         this.clampForce = temp[0];
         // 判断是否是ZEs ZE VE2s VE2等4中机型
         if(substr1.indexOf('ZE') > -1){
-          if(substr1.indexOf('S') > -1){
+          if(substr1.indexOf('S') > -1 || substr1.includes('Ⅲ') || substr1.includes('III')){
             this.type = 'ZEs';
           }else{
             this.type = 'ZE';
           }
         }else if(substr1.indexOf('VE') > -1){
-          if(substr1.indexOf('S') > -1){
+          if(substr1.indexOf('S') > -1 || substr1.includes('Ⅲ') || substr1.includes('III')){
             this.type = 'VE2s';
           }else{
             this.type = 'VE2';
