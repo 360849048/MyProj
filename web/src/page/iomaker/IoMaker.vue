@@ -4,7 +4,7 @@
         <div class="row ">
           <!-- 信息录入 -->
           <transition name="fade-left">
-            <div class="col-sm-4" v-show="curStep === 1">
+            <div class="col-sm-4 wrapper" v-show="curStep === 1">
               <info-form
                 :getInfo="getInfo"
                 @imminfochange="getImmInfo">
@@ -13,7 +13,7 @@
           </transition>
           <!-- 功能配置 -->
           <transition name="vanish-left">
-            <div class="col-sm-8" v-show="curStep === 1">
+            <div class="col-sm-8 wrapper" v-show="curStep === 1">
               <func-config
               :type="type"
               @functionsupdate="getFuncConfig"
@@ -26,7 +26,7 @@
           </transition>
           <!-- IO选择区域 -->
           <transition name="vanish-right">
-            <div class="col-sm-8" v-show="curStep === 2">
+            <div class="col-sm-8 wrapper" v-show="curStep === 2">
               <io-list
                 :boardModules1="boardModules1"
                 :boardModules2="boardModules2"
@@ -45,7 +45,7 @@
           </transition>
           <!-- 模块显示区 -->
           <transition name="fade-right">
-            <div class="col-sm-4" id="module_area" v-show="curStep === 2" >
+            <div class="col-sm-4 wrapper" id="module_area" v-show="curStep === 2" >
               <module
                 :big-imm="isBigImm"
                 :type="type"
@@ -605,5 +605,8 @@
     .row {
       height: 100%;
     }
+  }
+  .wrapper {
+    height: 100%;
   }
 </style>
