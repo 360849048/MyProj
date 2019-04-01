@@ -2,6 +2,7 @@ var path = require('path');
 var webpack = require('webpack');
 var HtmlWebpackPlugin = require('html-webpack-plugin');
 var CleanWebpackPlugin = require('clean-webpack-plugin');
+var CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
   entry: './src/main.js',
@@ -94,8 +95,12 @@ module.exports = {
       filename: 'index.html',
     }),
     new CleanWebpackPlugin({
-      cleanOnceBeforeBuildPatterns: ['./*', '!./assets'],
-    })
+      // cleanOnceBeforeBuildPatterns: ['./*', '!./assets'],
+    }),
+    new CopyWebpackPlugin([
+      {from: './src/assets/', to: './assets/'}
+    ])
+
   ]
 };
 
