@@ -161,3 +161,8 @@
 * 2019.04.01 15:02:20          后台脚本程序启动
 * 2019.04.01 15:02:33          IP: 127.0.0.1创建IO表：
 {"boardModules1":["CIO021","CDM163","CDM163",""],"boardModules2":["","","",""],"boardModules3":["","","",""],"boardModulesIOs1":[{"di3":"83","di4":"84","di5":"85","di6":"97","di7":"98","di8":"99","do1":"97","do2":"98","do3":"113"},{"di1":"57","di2":"58","di3":"73","di4":"74","di5":"75","di6":"76","di7":"77","di8":"78","do1":"57","do2":"58","do3":"73","do4":"74","do5":"75","do6":"76","do7":"77","do8":"78"},{"di1":"112","di2":"119","do1":"120"},{}],"boardModulesIOs2":[{},{},{},{}],"boardModulesIOs3":[{},{},{},{}],"varanConnModulePos":0,"evaluationNum":"2019-0218","productionNum":"6070000431","immType":"ZE5500S/3500","customer":"意大利，沈海明","safetyStandard":"CE","technicalClause":"","designNote":"","funcConfig":{"3":{"name":"E73","status":false},"4":{"name":"喷嘴改阀门1","status":false},"5":{"name":"DEE能耗模块","status":false},"6":{"name":"7号改可编程输入1","status":false},"7":{"name":"功能点1改可编程输出1","status":false},"8":{"name":"功能点2改可编程输出2","status":false},"98":{"name":"PSG热流道","status":false},"99":{"name":"外置热流道","status":false},"101":{"name":"阀门","status":false},"102":{"name":"吹气","status":false},"103":{"name":"中子","status":false},"104":{"name":"可编程IO","status":false}},"funcOutput1":0,"funcOutput2":0,"pilzNor":"","pilzE73":"","extHotrunnerNum":3,"intHotrunnerNum":0,"isBigImm":true,"isDualInj":true,"clampForce":"5500","injection":"3500","type":"ZEs","ceStandard":true}
+* 2019.04.01 20:19:00          后台脚本程序启动
+* 2019.04.01 20:35:41          后台脚本程序启动
+* 2019.04.01 20:37:29          后台脚本程序启动
+* 2019.04.01 20:39:56          后台脚本程序启动
+* 2019.04.01 20:42:58          后台脚本程序启动
