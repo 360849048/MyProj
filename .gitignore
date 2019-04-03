@@ -2,3 +2,4 @@
 /testfiles/
 cache/
 *.pyc
+log.txt

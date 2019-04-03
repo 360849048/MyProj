@@ -8,7 +8,7 @@ module.exports = {
   entry: './src/main.js',
   output: {
     path: path.resolve(__dirname, './dist'),
-    filename: 'build.[hash:6].js',
+    filename: process.env.NODE_ENV === 'development'? 'bundle.js' :'build.[hash:6].js',
     // 下面属性用来规定打包后的主文件(build.js)加载懒加载文件(0.build.js)的调用路径
     publicPath: process.env.NODE_ENV === 'production' ? './static/' : '/dist/'
   },
@@ -83,7 +83,9 @@ module.exports = {
   devServer: {
     historyApiFallback: true,
     noInfo: true,
-    overlay: true
+    overlay: true,
+    // contentBase: './'
+    watchContentBase: true
   },
   performance: {
     hints: false
@@ -91,7 +93,7 @@ module.exports = {
   devtool: '#eval-source-map',
   plugins: [
     new HtmlWebpackPlugin({
-      template: './src/index.html',
+      template: process.env.NODE_ENV === 'production' ? './src/index.html' : './index.html',
       filename: 'index.html',
     }),
     new CleanWebpackPlugin({
