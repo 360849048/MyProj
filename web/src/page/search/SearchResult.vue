@@ -30,7 +30,7 @@
               <td scope="col"><div class="in-one-line">{{msg.remark}}</div></td>
               <td scope="col"><div class="in-one-line">{{msg.author}}</div></td>
               <td scope="col">
-                <div class="dropright" v-show="msg.path !== ''">
+                <div class="dropright" v-if="msg.path !== '' && msg.path !== null">
                   <i class="fa fa-bolt text-danger pointer" aria-hidden="true" aria-haspopup="true" aria-expanded="false"
                      data-toggle="dropdown">
                   </i>

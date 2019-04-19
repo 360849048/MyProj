@@ -381,25 +381,34 @@ IOS_AMOUNT = _getIoAmount()
 
 
 # ##################################### Version #################################
-@app.route('/queryversions', methods=['GET'])
+@app.route('/api/ver/query', methods=['GET'])
 def getVersion():
     '''
         根据请求的版本类型以及版本区间（不是数据库的id号）返回版本数据
         当某个版本类型下的所有版本数据按一定顺序（这里按名字降序排列）后，取
         位于第start_seq和end_seq之间的版本数据
         :return 格式如 {'itemsNum': 123, 'items': {'client': xxx, 'version': xxx , ...}}
+
+        * 2019.04.16: （Bug fix）当数据库中某一行数据被删除，再次遍历该数据时返回null，导致前端页面错误
     '''
     soft_type = request.args.get('softType')
     start_seq = int(request.args.get('start'))
     end_seq = int(request.args.get('end'))
     table_name = 't_' + soft_type
     t_soft = TableManager(table_name, SOFTWARE_VERSION_INFO_DB_PATH)
-    ret_data = {'itemsNum': len(ALL_VERS_ID[soft_type]), 'items': {}}
+    all_ids = t_soft.getAllId('version', desc=True)
+    ret_data = {'itemsNum': len(all_ids), 'items': {}}
     key = 0
-    for soft_id in ALL_VERS_ID[soft_type][start_seq: end_seq]:
-        # 即使end_seq超过ALL_VERS_ID的长度也无所谓，不会影响结果
-        ret_data['items'][key] = t_soft.displayDetailedData(soft_id)
+    query_soft_num = end_seq - start_seq + 1
+    for soft_id in all_ids[start_seq:]:
+        if key >= query_soft_num:
+            break
+        temp_data = t_soft.displayDetailedData(soft_id)
+        if not temp_data:
+            continue
+        ret_data['items'][key] = temp_data
         key += 1
+
     return jsonify(ret_data)
 
 
@@ -413,7 +422,7 @@ updaters = {
     'V05': Updater('t_V05', 'V05'),
     'T05': Updater('t_T05', 'T05'),
 }
-@app.route('/checkupdate', methods=['GET'])
+@app.route('/api/ver/checkupdate', methods=['GET'])
 def checkUpdate():
     '''
         检查某类版本的更新信息
@@ -421,49 +430,27 @@ def checkUpdate():
         :return: 成功返回格式如 {'status': success, 'newVers': [{'client': xx, 'version': xx, ...}, {...}, ,,]}
                   失败返回格式如 {'status': failure, 'description': 'xxxx'}
     '''
-    global ALL_VERS_ID, updaters
+    global updaters
     soft_type = request.args.get('softType')
     vers_ready_to_update = updaters[soft_type].getUpdateInfo()
     if vers_ready_to_update == -1:
-        return jsonify({'status': 'failure', 'description': '无法打开xls文件路径，检查后台 "软件版本登记表.xls" 文件路径'})
+        return jsonify({'status': 'failure', 'description': '无法打开xls文件路径或xls文件内没有正确的sheet，检查后台 "软件版本登记表.xls" 文件路径'})
     elif vers_ready_to_update == 0:
         return jsonify({'status': 'failure', 'description': '其他线程正在更新数据，稍后刷新重试'})
-    return jsonify({'status': 'success', 'newVers': vers_ready_to_update})
+    return jsonify({'status': 'success', 'info': vers_ready_to_update})
 
-@app.route('/startupdate', methods=['GET'])
+@app.route('/api/ver/startupdate', methods=['GET'])
 def startUpdate():
-    global updaters, ALL_VERS_ID
+    global updaters
     soft_type = request.args.get('softType')
     client_ip = request.remote_addr
     record_info = 'IP: ' + client_ip + '更新软件版本'
-    record_info += str(updaters[soft_type].vers_ready_to_append)
+    record_info += str(updaters[soft_type].vers_ready_to_update)
     log.record(record_info)
 
     if updaters[soft_type].startUpdate() is False:
         return jsonify({'status': 'failure', 'description': '更新信息已过期或后台繁忙，请重试'})
-    ALL_VERS_ID = _getAllVersionsId()
     return jsonify({'status': 'success'})
-
-# 以降序获取所有版本的ID号
-# 避免频繁搜索数据库，这里一次性读取掉所有版本ID号
-def _getAllVersionsId():
-    t_vers = {
-        'V01': TableManager('t_V01', SOFTWARE_VERSION_INFO_DB_PATH),
-        'V02': TableManager('t_V02', SOFTWARE_VERSION_INFO_DB_PATH),
-        'V03V04': TableManager('t_V03V04', SOFTWARE_VERSION_INFO_DB_PATH),
-        'V05': TableManager('t_V05', SOFTWARE_VERSION_INFO_DB_PATH),
-        'T05': TableManager('t_T05', SOFTWARE_VERSION_INFO_DB_PATH)
-    }
-    return {
-        'V01': t_vers['V01'].getAllId('version', desc=True),
-        'V02': t_vers['V02'].getAllId('version', desc=True),
-        'V03V04': t_vers['V03V04'].getAllId('version', desc=True),
-        'V05': t_vers['V05'].getAllId('version', desc=True),
-        'T05': t_vers['T05'].getAllId('version', desc=True)
-    }
-
-
-ALL_VERS_ID = _getAllVersionsId()
 
 @app.route('/downloadsrccode', methods=['GET'])
 def downloadSrcCode():

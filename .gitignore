@@ -3,4 +3,4 @@
 cache/
 *.pyc
 log.txt
-./app/static/
+/app/static/

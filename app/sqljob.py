@@ -288,10 +288,12 @@ class TableManager:
         return lines
 
     def displayDetailedData(self, id):
-        if id not in self.getAllId():
-            return
+        # if id not in self.getAllId():
+        #     return None
         self.c.execute("SELECT * FROM %s WHERE id=?" % self.table, (str(id), ))
         line = self.c.fetchone()
+        if not line:
+            return None
         # return line[1:]
         temp_cols = list(self.columns)
         temp_cols.insert(0, "id")
@@ -318,19 +320,6 @@ class TableManager:
         result = self.c.fetchall()
         for item in result:
             ids.append(item[0])
-        '''
-        # 打印各个列表关键字匹配的结果
-        dict_ids = {}
-        for k, v in column.items():
-            ids.clear()
-            sql = "SELECT id FROM %s WHERE %s LIKE %r" % (self.__table_name, str(k), '%'+str(v)+'%')
-            self.c.execute(sql)
-            result = self.c.fetchall()
-            for item in result:
-                ids.append(item[0])
-            dict_ids[k] = tuple(ids)
-        print(dict_ids)
-        '''
         ids = tuple(ids)
         return ids
 
@@ -379,3 +368,7 @@ if __name__ == '__main__':
             key += 1
     print(ret_data)
     print('一共耗时: ', time.time() - time_mark)
+
+    for i in range(5):
+        ids = t_vers['V05'].searchDataByKey(client='印度',date='2018.08.30',reason='合同',author='应志峰',record='1.吹气功能特殊',version='V05_39_51', base='V05_39_50')
+        print(ids)

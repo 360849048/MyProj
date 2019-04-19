@@ -53,7 +53,7 @@
             <td scope="col"><div class="in-one-line">{{msg.remark}}</div></td>
             <td scope="col"><div class="in-one-line">{{msg.author}}</div></td>
             <td scope="col">
-              <div class="dropright" v-show="msg.path !== ''">
+              <div class="dropright" v-if="msg.path !== '' && msg.path !== null">
                 <i class="fa fa-bolt text-danger pointer" aria-hidden="true" aria-haspopup="true" aria-expanded="false"
                    data-toggle="dropdown">
                 </i>
@@ -102,8 +102,11 @@
             </button>
           </div>
           <div class="modal-body">
-            <ul v-if="versReadyToUpdate.length > 0">
-              <li v-for="ver in versReadyToUpdate">{{ver[0]}} {{ver[1]}} {{ver[7]}}</li>
+            <ul v-if="versReadyToAppend.length > 0" class="version-update-info text-success">
+              <li v-for="ver in versReadyToAppend">+ {{ver}}</li>
+            </ul>
+            <ul v-if="versReadyToDelete.length > 0" class="version-update-info text-danger">
+              <li v-for="ver in versReadyToDelete">- {{ver}}</li>
             </ul>
             <p v-else>已经是最新！</p>
           </div>
@@ -141,7 +144,8 @@
         softType: 'V05',
         itemsNum: pageItemAmount,
         pageItemAmount: pageItemAmount,
-        versReadyToUpdate: [],
+        versReadyToAppend: [],
+        versReadyToDelete: [],
         curPage: 1
       }
     },
@@ -149,7 +153,7 @@
       getVers(firstSeq, lastSeq){
         let _this = this;
         $.ajax({
-          url: "/queryversions",
+          url: "/api/ver/query",
           type: 'GET',
           dataType: 'json',
           data: {"softType": _this.softType, "start": firstSeq, 'end': lastSeq},
@@ -232,7 +236,7 @@
       checkUpdateInfo(){
         let _this = this;
         $.ajax({
-          url: "/checkupdate",
+          url: "/api/ver/checkupdate",
           type: 'GET',
           dataType: 'json',
           data: {"softType": _this.softType},
@@ -245,7 +249,8 @@
           success: function(data){
             if(data.status.toUpperCase() === 'SUCCESS'){
               $('#updateInfoCheckdialog').modal('show');
-              _this.versReadyToUpdate = data.newVers;
+              _this.versReadyToAppend = data.info.new;
+              _this.versReadyToDelete = data.info.expire;
             }else{
               _this.$message({
                 showClose: true,
@@ -289,7 +294,7 @@
       startUpdate(){
         let _this = this;
         $.ajax({
-          url: "/startupdate",
+          url: "/api/ver/startupdate",
           type: 'GET',
           dataType: 'json',
           data: {"softType": _this.softType},
@@ -308,7 +313,8 @@
               });
               // 更新后刷新页面
               _this.gotoPage(1);
-              _this.versReadyToUpdate = [];
+              _this.versReadyToAppend = [];
+              _this.versReadyToDelete = [];
             }else{
               _this.$message({
                 showClose: true,
@@ -405,5 +411,9 @@
   #pagination{
     display: flex;
     justify-content: center;
+  }
+  .version-update-info {
+    list-style: none;
+    font-weight: bold;
   }
 </style>
