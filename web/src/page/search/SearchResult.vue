@@ -121,7 +121,7 @@
       // 初次进入该组件时候，并不会触发$route的更改，所以需要在这里处理
       this.msg = this.$route.query.text;
       this.searchVers(this);
-    }
+    },
   }
 </script>
 

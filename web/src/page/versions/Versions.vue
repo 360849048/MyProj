@@ -103,10 +103,10 @@
           </div>
           <div class="modal-body">
             <ul v-if="versReadyToAppend.length > 0" class="version-update-info text-success">
-              <li v-for="ver in versReadyToAppend">+ {{ver}}</li>
+              <li v-for="(ver, idx) in versReadyToAppend" :key='idx'>+ {{ver}}</li>
             </ul>
             <ul v-if="versReadyToDelete.length > 0" class="version-update-info text-danger">
-              <li v-for="ver in versReadyToDelete">- {{ver}}</li>
+              <li v-for="(ver, idx) in versReadyToDelete" :key='idx'>- {{ver}}</li>
             </ul>
             <p v-else>已经是最新！</p>
           </div>
@@ -335,9 +335,7 @@
       },
       submitError (type, id) {
         axios.get(`/submiterror?type=${type}&id=${id}`)
-          .then((res) => {
-            res = res.data;
-            console.log(res);
+          .then(() => {
             this.$message({
               message: '信息提交成功！请等待后台处理',
               type: 'success'
@@ -355,6 +353,24 @@
     },
     mounted(){
       this.getVers(0, pageItemAmount);
+      axios.get("/api/ver/checkupdate", {
+        params: {
+          softType: this.softType
+        }
+      })
+        .then((res) => {
+          res = res.data;
+          console.log(res);
+          if (res.status === 'success' && (res.info.expire.length > 0 || res.info.new.length > 0)) {
+            this.$notify.info({
+              title: '有新的更新！',
+              message: "请手动点击左上角刷新图标进行更新"
+            });
+          }
+        })
+        .catch((err) => {
+          console.log(err);
+        });
     },
     watch: {
       softType: {
@@ -365,7 +381,7 @@
           }
         }
       }
-    }
+    },
   }
 </script>
 <style scoped>

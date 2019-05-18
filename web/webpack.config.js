@@ -85,7 +85,13 @@ module.exports = {
     noInfo: true,
     overlay: true,
     // contentBase: './'
-    watchContentBase: true
+    watchContentBase: true,
+    proxy: {
+      "/api": {
+        target: "http://localhost:5000"
+      }
+    }
+    
   },
   performance: {
     hints: false

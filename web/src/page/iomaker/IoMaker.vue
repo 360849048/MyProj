@@ -26,7 +26,7 @@
           </transition>
           <!-- IO选择区域 -->
           <transition name="vanish-right">
-            <div class="col-sm-8 wrapper" v-show="curStep === 2">
+            <div class="col-sm-6 wrapper" v-show="curStep === 2">
               <io-list
                 :boardModules1="boardModules1"
                 :boardModules2="boardModules2"
@@ -45,7 +45,7 @@
           </transition>
           <!-- 模块显示区 -->
           <transition name="fade-right">
-            <div class="col-sm-4 wrapper" id="module_area" v-show="curStep === 2" >
+            <div class="col-sm-6 wrapper" id="module_area" v-show="curStep === 2" >
               <module
                 :big-imm="isBigImm"
                 :type="type"

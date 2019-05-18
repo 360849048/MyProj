@@ -392,6 +392,8 @@ def getVersion():
         * 2019.04.16: （Bug fix）当数据库中某一行数据被删除，再次遍历该数据时返回null，导致前端页面错误
     '''
     soft_type = request.args.get('softType')
+    if soft_type not in ['V01', 'V02', 'V03V04', 'V05', 'T05']:
+        return jsonify({'itemsNum': 0, 'items': {}})
     start_seq = int(request.args.get('start'))
     end_seq = int(request.args.get('end'))
     table_name = 't_' + soft_type

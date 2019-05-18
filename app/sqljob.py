@@ -175,7 +175,7 @@ class DbManager:
         return self.c.fetchall()
 
 class TableManager:
-    def __init__(self, table_name, path_db, columns4init=('如果不是创建新表，不需要填写该参数',)):
+    def __init__(self, table_name, path_db, columns4init=('如果不是创建新表，不需要填写该参数',), create_table=False):
         # 修改表内容后自动保存
         self.auto_commit = True
         self.table = table_name
@@ -183,8 +183,9 @@ class TableManager:
 
         self.conn = sqlite3.connect(path_db)
         self.c = self.conn.cursor()
-        sql = ("CREATE TABLE IF NOT EXISTS %s(id integer PRIMARY KEY AUTOINCREMENT" + ",%s text" * len(self.columns) + ")") % ((self.table,) + self.columns)
-        self.c.execute(sql)
+        if create_table:
+            sql = ("CREATE TABLE IF NOT EXISTS %s(id integer PRIMARY KEY AUTOINCREMENT" + ",%s text" * len(self.columns) + ")") % ((self.table,) + self.columns)
+            self.c.execute(sql)
         self.columns = self._getColumns()
 
     def __del__(self):

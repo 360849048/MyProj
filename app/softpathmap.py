@@ -74,7 +74,7 @@ def _createEmptyPathVersDict():
     for key in ver_path_map:
         for id in t_vers[key].getAllId():
             ver, path = t_vers[key].displayBriefData(id, 'version', 'path')
-            if path == '':
+            if ver != '' and (not path or path == ''):
                 ver_path_map[key][id] = {'version': ver, 'path': ''}
     return ver_path_map
 
