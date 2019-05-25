@@ -17,7 +17,7 @@
             @statusupdate="getFuncStatus">
           </func-switch>
         </div>
-        <transition name="fade">
+        <Fade>
           <form v-show="funcs[99].status">
             <label id="extHotrunnerLabel">外置热流道组数</label>
             <el-input-number :min="1" :max="10" label="热流道组数"
@@ -25,7 +25,7 @@
                              @change="handleExtHot">
             </el-input-number>
           </form>
-        </transition>
+        </Fade>
       </div>
       <div class="col-xl-6">
         <h2>功能配置</h2>
@@ -60,18 +60,22 @@
    *  * functionsupdate：当功能的开闭状态发生变化时，触发该事件
    *  * exthotrunnerchange：当外置热流道组数设置发生变化时，触发该事件
    *  * inthotrunnerchange：内置热流道组数设置发生变化时，触发该事件
+   *  * funcoutput1change: 功能点1选项发生变更
+   *  * funcoutput2change: 功能点2选项发生变更
    */
-  import FuncSwitch from './FuncSwitch'
-  import FuncMenu from './FuncMenu'
-  import axios from 'axios'
+  import FuncSwitch from '@/common/switch/FuncSwitch'
+  import FuncMenu from '@/common/switch/FuncMenu'
+  import Fade from '@/common/animation/Fade'
+  import { mapActions } from 'vuex'
 
   export default {
     name: "function-config",
     components: {
       FuncSwitch,
-      FuncMenu
+      FuncMenu,
+      Fade
     },
-    props: ['type'],
+    props: ['type', 'funcOutputItems'],
     data(){
       return{
         funcs: {
@@ -94,7 +98,6 @@
         },
         extHotrunnerNum: 3,
         intHotrunnerNum: 0,
-        funcOutputItems: [],
         funcOutput1: 0,
         funcOutput2: 0
       }
@@ -117,7 +120,8 @@
       handlefuncoutput2 (e) {
         this.funcOutput2 = e;
         this.$emit('funcoutput2change', this.funcOutput2);
-      }
+      },
+      ...mapActions(['count'])
     },
     watch:{
       funcs:{
@@ -166,24 +170,6 @@
         },
         deep: true,
       }
-    },
-    mounted () {
-      axios.get('/funcoutputitems').then( (res) => {
-        this.funcOutputItems = res.data;
-      }).catch( (e)=> {
-        console.log(e);
-        this.funcOutputItems = [
-          '关闭',
-          '注射开始',
-          '储料开始',
-          '可编程输出1',
-          '可编程输出2',
-          '包装箱满',
-          '吹气5',
-          '吹气6',
-          '液压回油阀(特殊)'
-        ];
-      });
     }
   }
 </script>

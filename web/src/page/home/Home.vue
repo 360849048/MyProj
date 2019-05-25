@@ -22,10 +22,14 @@
         </div>
         <button type="submit" class="btn btn-primary">Submit</button>
       </form>
+    {{testData}}
   </div>
 </template>
 
 <script>
+  import { mapState } from 'vuex'
+
+
   export default{
     data(){
       return{
@@ -51,6 +55,9 @@
           }
         });
       }
+    },
+    computed: {
+      ...mapState(['testData'])
     }
   }
 </script>

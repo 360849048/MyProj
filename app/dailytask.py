@@ -13,7 +13,7 @@ def updatePathInfoAutomatically():
     log.record('后台脚本程序启动')
     while True:
         now = datetime.datetime.now()
-        if now.hour == 22:
+        if now.hour == 1:
             # 首先清理缓存目录
             try:
                 if os.path.exists(CACHE_FILE_DIR):

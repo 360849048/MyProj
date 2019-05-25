@@ -7,23 +7,28 @@
         <i class="fa fa-angle-left fa-x"></i>
       </div>
     </div>
-    <transition name="fade">
+    <Fade>
       <div class="drop-menu" v-show="showMenu && list.length" ref="menu">
         <div class="popper-arrow" ref="popperArrow"></div>
         <div class="item-wrapper"  v-for='(item, idx) in list' :key="idx">
           <div class="item" :class="{'selected': idx===value}" @click=choseItem(idx)>{{item}}</div>
         </div>
       </div>
-    </transition>
+    </Fade>
   </div>
 </template>
 
 <script>
+  import Fade from '@/common/animation/Fade'
+
   export default {
     name: "func-menu",
     props: {
       name: String,
       list: Array,
+    },
+    components: {
+      Fade
     },
     data () {
       return {
@@ -34,7 +39,7 @@
     methods: {
       toggleMenu () {
         if (!this.showMenu){
-          this.$refs.popperArrow.style.left = this.$refs.arrow.offsetLeft - this.$refs.value.offsetLeft + 23  + 'px';
+          this.$refs.popperArrow.style.left = this.$refs.arrow.offsetLeft - this.$refs.value.offsetLeft + 24  + 'px';
         }
         this.showMenu = !this.showMenu;
       },
@@ -68,7 +73,7 @@
     position: relative;
     .drop-menu {
       position: absolute;
-      left: 30%;
+      left: 6rem;
       margin-left: -15px;
       font-size: 25px;
       background: #fff;
@@ -116,15 +121,13 @@
     width: 100%;
     height: 100%;
     display: flex;
-    justify-content: left;
+    justify-content: flex-start;
     align-items: center;
-    /*outline: red 1px solid;*/
-    text-align: left;
     line-height: 25px;
     font-size: 25px;
     padding: 0 5px;
     .title {
-      width: 30%;
+      width: 6rem;
       font-size: 20px;
       /*outline: red 1px dotted;*/
       text-overflow: ellipsis;
@@ -150,11 +153,5 @@
   }
   .rotate {
     transform: rotate(90deg) !important;
-  }
-  .fade-enter-active, .fade-leave-active {
-    transition: opacity .3s;
-  }
-  .fade-enter, .fade-leave-to {
-    opacity: 0;
   }
 </style>

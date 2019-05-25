@@ -22,7 +22,7 @@ def pageNotFound(e):
 
 
 # ##################################### IO #################################
-@app.route('/io', methods=['GET'])
+@app.route('/api/io/iolist', methods=['GET'])
 def getIo():
     io_type = request.args.get('type')
     start_id = int(request.args.get('start'))
@@ -52,7 +52,7 @@ def getIo():
 
     return jsonify(ret_data)
 
-@app.route('/big', methods=['GET'])
+@app.route('/api/io/bigstdmodule', methods=['GET'])
 def getBigIo():
     # 获取大机选配CIO021或CIO011的IO点配置信息
     # 数据返回格式为{'name': 'CIO021(或CIO011)', ios: {'di3': '83--开门', ..., 'do2': '113--润滑马达2'}}
@@ -80,7 +80,7 @@ def getBigIo():
             ret_data['ios'][k] = str(v) + '--' + t_do.displayBriefData(v, 'CName')[0]
     return jsonify(ret_data)
 
-@app.route('/pilzlist', methods=['GET'])
+@app.route('/api/io/pilzlist', methods=['GET'])
 def getPilzList():
     ret_data = {'normal': [], 'e73': []}
     for file_name in os.listdir(NOR_SAFETY_RELAY_FILE_DIR):
@@ -92,7 +92,7 @@ def getPilzList():
     ret_data['e73'].append('其他')
     return jsonify(ret_data)
 
-@app.route('/funcoutputitems', methods=['GET'])
+@app.route('/api/io/funcoutlist', methods=['GET'])
 def getOutputItems():
     t_func_list = TableManager('FuncOutput_List', IO_INFO_DB_PATH)
     ret_data = []
@@ -100,7 +100,7 @@ def getOutputItems():
         ret_data.append(t_func_list.displayBriefData(each_id, 'CName')[0])
     return jsonify(ret_data)
 
-@app.route('/createxlxs', methods=['POST'])
+@app.route('/api/io/createxlxs', methods=['POST'])
 def createIoFile():
     '''
         生成IO表文件(.xlsx)
@@ -219,7 +219,7 @@ def createIoFile():
 
     return jsonify({'status': 'success', 'url': io_url})
 
-@app.route('/createconfigfile', methods=['POST'])
+@app.route('/api/io/createconfigfile', methods=['POST'])
 def createConfigFile():
     '''
         生成配置文件(.zip)
@@ -454,7 +454,7 @@ def startUpdate():
         return jsonify({'status': 'failure', 'description': '更新信息已过期或后台繁忙，请重试'})
     return jsonify({'status': 'success'})
 
-@app.route('/downloadsrccode', methods=['GET'])
+@app.route('/api/ver/downloadsrccode', methods=['GET'])
 def downloadSrcCode():
     '''
         为网页端准备下载文件（根据提供的路径复制文件到cache/），然后返回url提供下载
@@ -476,7 +476,7 @@ def downloadSrcCode():
     src_code_url = os.path.join(URL_DIR, file_name)
     return jsonify({'status': 'success', 'url': src_code_url})
 
-@app.route('/searchversions', methods=['GET'])
+@app.route('/api/ver/searchversions', methods=['GET'])
 def searchVersion():
     search_str = request.args.get('text')
     ret_data = {'itemsNum': 0, 'items': {}}
@@ -526,7 +526,7 @@ def cookieTest():
     print(request.cookies.get('username'))
     return response
 
-@app.route('/submiterror', methods=['GET'])
+@app.route('/api/ver/submiterror', methods=['GET'])
 def submitError():
     soft_type = request.args.get('type')
     err_id = request.args.get('id')

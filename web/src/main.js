@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import App from './App.vue'
 import router from './vueRouterConfig'
+import store from './store'
 import { Loading, Notification, InputNumber, Message, Pagination, Select, Option, Slider } from 'element-ui'
 
 Vue.use(Loading);
@@ -15,6 +16,7 @@ Vue.use(Slider);
 
 new Vue({
   el: '#app',
+  store,
   render: h => h(App),
   router
 });

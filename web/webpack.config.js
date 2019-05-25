@@ -76,7 +76,8 @@ module.exports = {
   },
   resolve: {
     alias: {
-      'vue$': 'vue/dist/vue.esm.js'
+      'vue$': 'vue/dist/vue.esm.js',
+      '@': path.resolve(__dirname, 'src')
     },
     extensions: ['*', '.js', '.vue', '.json']
   },
@@ -91,7 +92,7 @@ module.exports = {
         target: "http://localhost:5000"
       }
     }
-    
+
   },
   performance: {
     hints: false

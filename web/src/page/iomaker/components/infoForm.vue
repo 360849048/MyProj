@@ -36,9 +36,9 @@
       <div class="input-group-prepend">
         <label class="input-group-text" for="infoArea">设计说明</label>
       </div>
-      <textarea class="form-control" id="infoArea" aria-label="With textarea" placeholder="这里不用填" v-model="designNote" style="height: 280px;"></textarea>
+      <textarea class="form-control" id="infoArea" aria-label="With textarea" placeholder="这里用来解析订单号，可以不用填" v-model="designNote" style="height: 280px;"></textarea>
     </div>
-    <button class="btn btn-secondary" id="autoFillBtn" @click="parseParams">自动填单</button>
+    <button class="btn btn-secondary" id="autoFillBtn" @click="parseParams">解析设计说明</button>
   </div>
 </template>
 
@@ -122,10 +122,9 @@
       getInfo(){
         if(this.getInfo === true){
           if(this.immType === ''){
-            this.$notify.error({
-              title: '漏填了重要信息',
-              message: '注意啦，必须填写机器类型',
-              position: 'top-left'
+            this.$message({
+              message: '请填写机型！',
+              type: 'error'
             });
           }
           this._emitParams(this);

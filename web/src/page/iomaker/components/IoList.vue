@@ -1,52 +1,50 @@
 <template>
     <div id="iolist">
-      <div class="row">
-        <!--  左侧IO类型选择导航 -->
-        <div class="col-sm-2">
-          <div class="nav flex-column nav-pills io-nav" id="v-pills-tab" role="tablist" aria-orientation="vertical">
-            <a class="nav-link active" data-toggle="pill" href="#" role="tab" @click="ioType='di'">DI</a>
-            <a class="nav-link"  data-toggle="pill" href="#" role="tab" @click="ioType='do'">DO</a>
-            <a class="nav-link"  data-toggle="pill" href="#" role="tab" @click="ioType='ai'">AI</a>
-            <a class="nav-link"  data-toggle="pill" href="#" role="tab" @click="ioType='ao'">AO</a>
-            <a class="nav-link"  data-toggle="pill" href="#" role="tab" @click="ioType='ti'">TI</a>
-            <a class="nav-link"  data-toggle="pill" href="#" role="tab" @click="ioType='to'">TO</a>
-          </div>
+      <!--  左侧IO类型选择导航 -->
+      <div class="io-type">
+        <div class="nav flex-column nav-pills io-nav" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+          <a class="nav-link active" data-toggle="pill" href="#" role="tab" @click="ioType='di'">DI</a>
+          <a class="nav-link"  data-toggle="pill" href="#" role="tab" @click="ioType='do'">DO</a>
+          <a class="nav-link"  data-toggle="pill" href="#" role="tab" @click="ioType='ai'">AI</a>
+          <a class="nav-link"  data-toggle="pill" href="#" role="tab" @click="ioType='ao'">AO</a>
+          <a class="nav-link"  data-toggle="pill" href="#" role="tab" @click="ioType='ti'">TI</a>
+          <a class="nav-link"  data-toggle="pill" href="#" role="tab" @click="ioType='to'">TO</a>
         </div>
-        <div class="col-sm-10">
-          <!-- 上方页码标签 -->
-          <ul class="nav nav-tabs">
-            <li class="nav-item" v-for="eachPage in pages" @click="gotoPage(eachPage)">
-              <a class="nav-link" :class="{'active': curPage === eachPage}" href="##">{{eachPage}}</a>
-            </li>
-          </ul>
-          <!-- IO显示区 -->
-          <div class="row" v-loading="loading">
-            <div class="col-sm-6">
-              <ul>
-                <li v-for="(input, index) in ios" v-if="index < Math.ceil((curPageStartItem + curPageEndItem)/2)">
-                  <div class="alert" role="alert"
-                       :class="[checkUsed(index) ? 'alert-secondary' : 'alert-primary']"
-                       :data-index="index" :data-name="input"
-                       draggable="true" @dragstart="dragIO"
-                       @dblclick="dblClickIO">
-                    {{index}}&nbsp;&nbsp;&nbsp;{{input}}
-                  </div>
-                </li>
-              </ul>
-            </div>
-            <div class="col-sm-6">
-              <ul>
-                <li v-for="(input, index) in ios" v-if="index >= Math.ceil((curPageStartItem + curPageEndItem)/2)">
-                  <div class="alert alert-primary" role="alert"
-                       :class="[checkUsed(index) ? 'alert-secondary' : 'alert-primary']"
-                       :data-index="index" :data-name="input"
-                       draggable="true" @dragstart="dragIO"
-                       @dblclick="dblClickIO">
-                    {{index}}&nbsp;&nbsp;&nbsp;{{input}}
-                  </div>
-                </li>
-              </ul>
-            </div>
+      </div>
+      <div class="io-area">
+        <!-- 上方页码标签 -->
+        <ul class="nav nav-tabs">
+          <li class="nav-item" v-for="eachPage in pages" @click="gotoPage(eachPage)">
+            <a class="nav-link" :class="{'active': curPage === eachPage}" href="##">{{eachPage}}</a>
+          </li>
+        </ul>
+        <!-- IO显示区 -->
+        <div class="disp-area" v-loading="loading">
+          <div class="column column-1">
+            <ul>
+              <li v-for="(input, index) in ios" v-if="index < Math.ceil((curPageStartItem + curPageEndItem)/2)">
+                <div class="alert" role="alert"
+                     :class="[checkUsed(index) ? 'alert-secondary' : 'alert-primary']"
+                     :data-index="index" :data-name="input"
+                     draggable="true" @dragstart="dragIO"
+                     @dblclick="dblClickIO">
+                  {{index}}&nbsp;&nbsp;&nbsp;{{input}}
+                </div>
+              </li>
+            </ul>
+          </div>
+          <div class="column column-2">
+            <ul>
+              <li v-for="(input, index) in ios" v-if="index >= Math.ceil((curPageStartItem + curPageEndItem)/2)">
+                <div class="alert alert-primary" role="alert"
+                     :class="[checkUsed(index) ? 'alert-secondary' : 'alert-primary']"
+                     :data-index="index" :data-name="input"
+                     draggable="true" @dragstart="dragIO"
+                     @dblclick="dblClickIO">
+                  {{index}}&nbsp;&nbsp;&nbsp;{{input}}
+                </div>
+              </li>
+            </ul>
           </div>
         </div>
       </div>
@@ -67,7 +65,7 @@
   const pageItemAmount = 32;
 
   export default {
-      name: "io-list",
+    name: "io-list",
     props: ['boardModules1', 'boardModules2', 'boardModules3', 'boardModulesIOs1', 'boardModulesIOs2', 'boardModulesIOs3',
       'type', 'e73Safety', 'moldSlider', 'func1ToProgO1', 'func2ToProgO2'],
     data(){
@@ -124,7 +122,7 @@
 
         let _this = this;
         $.ajax({
-          url: "/io",
+          url: "/api/io/iolist",
           type: 'GET',
           dataType: 'json',
           beforeSend: function(){
@@ -259,23 +257,9 @@
   ul{
     list-style-type: none;
   }
-  .io-nav{
-    margin-top: 30px;
-  }
-  .nav.nav-tabs{
-    margin: 15px;
-    .nav-item{
-      display: inline-block;
-      width: 100px;
-      text-align: center;
-    }
-  }
-  .alert .badge-light{
-    float: right;
-  }
   .alert{
     /* Overwrite default bootstrap style */
-    width: 80%;
+    width: 100%;
     display: inline-block;
     padding: .15rem .6rem;
     margin-bottom: 0.25rem;
@@ -287,7 +271,7 @@
   #iolist {
     height: 100%;
     overflow: auto;
-    padding: 15px;
+    display: flex;
     &::-webkit-scrollbar{
       width: 6px;
       height: 6px;
@@ -296,6 +280,42 @@
       border-radius: 10px;
       -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
       background: #818080;
+    }
+    .io-type {
+      margin-top: 30px;
+      max-width: 20%;
+    }
+    .io-area {
+      width: 80%;
+      .nav.nav-tabs{
+        margin: 15px;
+        .nav-item{
+          display: inline-block;
+          width: 20%;
+          text-align: center;
+        }
+      }
+      .disp-area {
+        display: flex;
+        .column {
+          padding-left: .8rem;
+        }
+      }
+      @media screen and (min-width: 992px) {
+        .disp-area {
+          .column {
+            width: 50%;
+          }
+        }
+      }
+      @media screen and (max-width: 992px) {
+        .disp-area {
+          flex-wrap: wrap;
+          .column {
+            width: 100%;
+          }
+        }
+      }
     }
   }
 </style>

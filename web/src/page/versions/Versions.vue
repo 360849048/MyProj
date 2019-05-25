@@ -108,7 +108,7 @@
             <ul v-if="versReadyToDelete.length > 0" class="version-update-info text-danger">
               <li v-for="(ver, idx) in versReadyToDelete" :key='idx'>- {{ver}}</li>
             </ul>
-            <p v-else>已经是最新！</p>
+            <p v-if="versReadyToAppend.length ===0 &&  versReadyToDelete.length === 0">已经是最新！</p>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>

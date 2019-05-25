@@ -55,7 +55,7 @@
      */
     if(_this.bigImm){
       $.ajax({
-        url: '/big',
+        url: '/api/io/bigstdmodule',
         type: 'GET',
         dataType: 'json',
         data: {"type": _this.type},
@@ -172,7 +172,7 @@
               let cai888DefaultIos = {};
               let _this = this;
               $.when($.ajax({
-                url: "/io",
+                url: "/api/io/iolist",
                 type: 'GET',
                 dataType: 'json',
                 beforeSend: function(){
@@ -192,7 +192,7 @@
                   console.log('AJAX获取CAI888的TI名称失败');
                 }
               }), $.ajax({
-                url: "/io",
+                url: "/api/io/iolist",
                 type: 'GET',
                 dataType: 'json',
                 beforeSend: function(){

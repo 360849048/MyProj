@@ -5,7 +5,7 @@
           :data-index="index" data-type="di"
           @dragover.prevent="" @drop="dropIO">
         <span class="badge badge-pill badge-success io-index">DI&nbsp;&nbsp;{{index}}</span>
-        <div class="alert alert-primary io-name" role="alert" v-if="item" @dblclick="dblclickIO">
+        <div class="alert alert-primary io-name" npm runrole="alert" v-if="item" @dblclick="dblclickIO">
           {{item | nameOnly}}
         </div>
       </li>

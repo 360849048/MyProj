@@ -16,6 +16,7 @@
             <div class="col-sm-8 wrapper" v-show="curStep === 1">
               <func-config
               :type="type"
+              :funcOutputItems="funcOutputItems"
               @functionsupdate="getFuncConfig"
               @exthotrunnerchange="getExtHotrunnerNum"
               @inthotrunnerchange="getIntHotrunnerNum"
@@ -26,7 +27,7 @@
           </transition>
           <!-- IO选择区域 -->
           <transition name="vanish-right">
-            <div class="col-sm-6 wrapper" v-show="curStep === 2">
+            <div class="col-sm-5 wrapper" v-show="curStep === 2">
               <io-list
                 :boardModules1="boardModules1"
                 :boardModules2="boardModules2"
@@ -45,7 +46,7 @@
           </transition>
           <!-- 模块显示区 -->
           <transition name="fade-right">
-            <div class="col-sm-6 wrapper" id="module_area" v-show="curStep === 2" >
+            <div class="col-sm-7 wrapper" id="module_area" v-show="curStep === 2" >
               <module
                 :big-imm="isBigImm"
                 :type="type"
@@ -164,6 +165,7 @@
   import Module from './components/Module'
   import InfoForm from './components/InfoForm'
   import FuncConfig from './components/FuncConfig'
+  import axios from 'axios'
 
   export default {
     name: 'IoMaker',
@@ -237,7 +239,9 @@
         // POST后等待后台返回数据
         waiting: false,
         // 控制弹出modal的样式， 0：IO     1: 配置文件
-        modalType: 0
+        modalType: 0,
+        // 功能点1和2可配置的选项
+        funcOutputItems: []
       }
     },
     methods:{
@@ -345,10 +349,10 @@
         let _this = this;
         let url;
         if(this.modalType === 0){
-          url = '/createxlxs';
+          url = '/api/io/createxlxs';
         }
         if(this.modalType === 1){
-          url = '/createconfigfile';
+          url = '/api/io/createconfigfile';
         }
         $.ajax({
           type: 'POST',
@@ -482,7 +486,7 @@
     mounted(){
       let _this = this;
       $.ajax({
-        url: "/pilzlist",
+        url: "/api/io/pilzlist",
         type: 'GET',
         dataType: 'json',
         success: function(data){
@@ -491,6 +495,23 @@
         error: function(){
           console.log('AJAX请求失败，无法获取Pilz文件列表');
         }
+      });
+      // 获取功能点1和2可配置选项
+      axios.get('/api/io/funcoutlist').then( (res) => {
+        this.funcOutputItems = res.data;
+      }).catch( (e)=> {
+        console.log(e);
+        this.funcOutputItems = [
+          '关闭',
+          '注射开始',
+          '储料开始',
+          '可编程输出1',
+          '可编程输出2',
+          '包装箱满',
+          '吹气5',
+          '吹气6',
+          '液压回油阀(特殊)'
+        ];
       });
     }
   }

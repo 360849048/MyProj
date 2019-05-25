@@ -65,7 +65,7 @@
     methods: {
       searchVers(_this) {
         $.ajax({
-          url: 'searchversions',
+          url: '/api/ver/searchversions',
           data: {text: _this.msg},
           type: 'GET',
           dataType: 'json',
