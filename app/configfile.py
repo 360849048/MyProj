@@ -5,6 +5,9 @@ import zipfile
 from app.pathinfo import *
 
 
+CMM103_IO_NUM = {'DI': 56, 'DO': 40, 'AI': 6, 'AO': 4, 'TI': 11, 'TO': 8}
+MODULE_SYS_IO_NUM = {'DI': 56, 'DO': 40, 'AI': 3, 'AO': 2, 'TI': 8, 'TO': 8}
+
 class HkFileMaker:
     def __init__(self, imm_type, ce_standard=False, board_1_modules_ios=None, board_2_modules_ios=None, energy_dee=False,
                  varan_module_pos=0, e73=False, mold_slider=False, func1_to_progo1=False, func2_to_progo2=False,
@@ -25,8 +28,10 @@ class HkFileMaker:
         self.varan_module_pos = int(varan_module_pos)
         if imm_type == 'VE2':
             self.e73 = False
+            self.std_io_num = MODULE_SYS_IO_NUM
         else:
             self.e73 = e73
+            self.std_io_num = CMM103_IO_NUM
         if e73 or imm_type == 'VE2':
             self.mold_slider = False
         else:
@@ -50,7 +55,7 @@ class HkFileMaker:
         self.std_file_path = ''
         self.dst_file_path = ''
         for file_name in os.listdir(os.path.join(std_file_dir, self.imm_type)):
-            if self.ce_standard:
+            if self.ce_standard is True:
                 if 'BCD' in file_name and self.imm_type in file_name:
                     if self.std_file_path == '':
                         self.std_file_path = os.path.join(std_file_dir, self.imm_type, file_name)
@@ -592,6 +597,35 @@ class HkFileMaker:
             ret_info['pos'] = int(result.group(3))
             return ret_info
         return None
+
+    def getStdIoInfo(self):
+        '''
+
+        :return: 默认底板/模块系统上的IO配置信息，格式如：
+            {'DI': [9, 10, 0, ...], 'DO': [], ...}
+            0代表该位置未配置IO
+        '''
+        std_io_config = {'DI': [0 for i in range(self.std_io_num['DI'])],
+                         'DO': [0 for i in range(self.std_io_num['DO'])],
+                         'AI': [0 for i in range(self.std_io_num['AI'])],
+                         'AO': [0 for i in range(self.std_io_num['AO'])],
+                         'TI': [0 for i in range(self.std_io_num['TI'])],
+                         'TO': [0 for i in range(self.std_io_num['TO'])]}
+
+        if self.std_file_path != '':
+            with open(self.std_file_path, 'r') as fp:
+                lines = fp.readlines()
+                for line in lines:
+                    parsed_result = self._parseLineInfo(line)
+                    if parsed_result is not None:
+                        if parsed_result['type'] == 'IO':
+                            io_type = parsed_result['name']
+                            io_seq = parsed_result['seq']
+                            io_pos = parsed_result['pos']
+                            if io_pos != 0:
+                                if io_pos <= self.std_io_num[io_type]:
+                                    std_io_config[io_type][io_pos - 1] = io_seq
+        return std_io_config
 
 
 class FcfFileMaker:

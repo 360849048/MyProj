@@ -1,7 +1,7 @@
 <template>
     <div id="iomaker" v-loading="waiting">
       <div class="container-fluid">
-        <div class="row ">
+        <div class="row">
           <!-- 信息录入 -->
           <transition name="fade-left">
             <div class="col-sm-4 wrapper" v-show="curStep === 1">
@@ -15,45 +15,58 @@
           <transition name="vanish-left">
             <div class="col-sm-8 wrapper" v-show="curStep === 1">
               <func-config
-              :type="type"
-              :funcOutputItems="funcOutputItems"
-              @functionsupdate="getFuncConfig"
-              @exthotrunnerchange="getExtHotrunnerNum"
-              @inthotrunnerchange="getIntHotrunnerNum"
-              @funcoutput1change="getFuncOutput1"
-              @funcoutput2change="getFuncOutput2">
-              </func-config>
+                :type="type"
+                :funcOutputItems="funcOutputItems"
+                @functionsupdate="getFuncConfig"
+                @exthotrunnerchange="getExtHotrunnerNum"
+                @inthotrunnerchange="getIntHotrunnerNum"
+                @funcoutput1change="getFuncOutput1"
+                @funcoutput2change="getFuncOutput2"
+              />
             </div>
           </transition>
           <!-- IO选择区域 -->
           <transition name="vanish-right">
             <div class="col-sm-5 wrapper" v-show="curStep === 2">
-              <io-list
-                :boardModules1="boardModules1"
-                :boardModules2="boardModules2"
-                :boardModules="boardModules3"
-                :boardModulesIOs1="boardModulesIOs1"
-                :boardModulesIOs2="boardModulesIOs2"
-                :boardModulesIOs3="boardModulesIOs3"
-                :type="type"
-                :e73Safety="funcConfig[3].status"
-                :moldSlider="funcConfig[6].status"
-                :func1ToProgO1="funcConfig[7].status"
-                :func2ToProgO2="funcConfig[8].status"
-                @newioappend="getNewIoAppend">
-              </io-list>
+              <!--<io-list-->
+                <!--:allIO="allIO"-->
+                <!--:loading="!ajaxIOLoadOK"-->
+                <!--:usedIO="usedIO"-->
+                <!--@newioappend="getNewIoAppend"-->
+              <!--/>-->
+              <div class="test1"></div>
             </div>
           </transition>
-          <!-- 模块显示区 -->
+          <!-- IO硬件配置区 -->
           <transition name="fade-right">
-            <div class="col-sm-7 wrapper" id="module_area" v-show="curStep === 2" >
-              <module
-                :big-imm="isBigImm"
-                :type="type"
-                :new-io-to-append="newIoToAppend"
-                @modulesupdate="getModuleInfo"
-                @varanposupdate="getVaranConnModulePosInfo">
-              </module>
+            <div class="col-sm-7 wrapper hardware-area" v-show="curStep===2">
+              <!--<hardware-title-->
+                <!--:type="type"-->
+                <!--:mainBoardSlots="mainBoardSlots"-->
+                <!--:extendBoard1Slots="extendBoard1Slots"-->
+                <!--:extendBoard2Slots="extendBoard2Slots"-->
+                <!--@moduleselectupdate="getHardwareTitleInfo"-->
+              <!--/>-->
+              <!--<hardware-module-->
+                <!--:moduleName="curModuleName"-->
+                <!--:ioConfig="curModuleIoConfig"-->
+                <!--:allIO="allIO"-->
+                <!--:ioInfoLoaded="ajaxIOLoadOK"-->
+                <!--:curBoard="curHardwareTitleIdx"-->
+                <!--:newIoToAppend="newIoToAppend"-->
+                <!--v-if="curHardwareTitleIdx > 1"-->
+                <!--@moduleiosupdate="getHardwareModuleIoInfo"-->
+                <!--@varanposupdate="getVaranConnModulePosInfo"-->
+              <!--/>-->
+              <!--<std-io-->
+                <!--v-else-->
+                <!--:ioType="curStdIoType"-->
+                <!--:stdIo="stdIo"-->
+                <!--:loading="!ajaxIOLoadOK"-->
+                <!--:allIO="allIO"-->
+                <!--@stdioupdate="getConfiguredStdIoInfo"-->
+              <!--/>-->
+              <div class="test2"></div>
             </div>
           </transition>
         </div>
@@ -78,6 +91,7 @@
           <a href="#" class="fa-2x enable" @click="resetAllInfo" data-toggle="modal">重置</a>
         </div>
         <i class="fa fa-angle-right fa-3x" :class="{'enable': curStep !== 2}" aria-hidden="true" @click="slideNext"></i>
+        <button class="btn btn-primary" @click="getMainBoardModifiedIo"></button>
       </footer>
       <!-- 配置信息确认模态框 -->
       <div class="modal fade" id="checkInfoBeforeSubmit" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
@@ -128,11 +142,11 @@
                 <span>E73</span>
               </div>
               <hr>
-              主底板模块: {{boardModules1}}<br>
+              主底板模块: {{mainBoardSlots}}<br>
               <hr>
-              扩展底板一：{{boardModules2}}<br>
+              扩展底板一：{{extendBoard1Slots}}<br>
               <hr>
-              扩展底板二：{{boardModules3}}<br>
+              扩展底板二：{{extendBoard2Slots}}<br>
               <hr>
               能耗模块：<span class="font-weight-bold" :class="{'text-danger': funcConfig[5].status}">{{funcConfig[5].status}}</span>
               <hr>
@@ -149,23 +163,20 @@
     </div>
 </template>
 <script>
-  /**
-   * 数据处理逻辑：
-   * 本模块主要协调各个子模块的通讯，并向后台POST一些数据进行IO表和配置文件的生成。
-   * 1.从InfoForm收集机器基础信息，并根据immType解析机器具体参数信息：机器类型、单双注射、大机选配
-   *   为了避免频繁触发imminfochange事件，通过设置this.getInfo=true可以从InfoForm读取一次信息
-   * 2.从FuncConfig获取主底板IO修改信息：功能点12的配置等信息，某些特殊功能涉及到IO点配置，这些信息也会传递到IoList组件。
-   * 3.从Module获取模块和模块上的IO配置信息，并将配置信息传递到IoList组件
-   * 4.页脚处放置的一些按钮，用来移动展示页面以及向后台POST机器信息
-   * 5.IoList接受HTML5的drag事件，ModuleConfig接受HTML5的drop事件，通过鼠标拖拽的方法可实现模块点位的配置
-   * 6.在IoList的IO列表上某项（尚未占用的IO）双击，自动将该IO填充到模块的最靠前空余的IO点上
-   */
+
 
   import IoList from './components/IoList'
   import Module from './components/Module'
   import InfoForm from './components/InfoForm'
   import FuncConfig from './components/FuncConfig'
+  import HardwareTitle from './components/HardwareTitle'
+  import HardwareModule from './components/HardwareModule'
+  import StdIo from './components/StdIo'
   import axios from 'axios'
+
+  // 标准中没有“第八段加热”，为了方便配置CAI888，特新增16号AI点：“第八段加热”
+  const CAI888_IO_CONFIG = {'TI1': 1, 'TI2': 2, 'TI3': 3, 'TI4': 4, 'TI5': 5, 'TI6': 6, 'TI7': 7, 'TI8': 16,
+  'TO1': 1, 'TO2': 2, 'TO3': 3, 'TO4': 4, 'TO5': 5, 'TO6': 6, 'TO7': 7, 'TO8': 8};
 
   export default {
     name: 'IoMaker',
@@ -173,20 +184,13 @@
       IoList,
       Module,
       InfoForm,
-      FuncConfig
+      FuncConfig,
+      HardwareTitle,
+      HardwareModule,
+      StdIo,
     },
     data(){
       return{
-        // 格式如同： ['CDM163', 'CTO163', '', '']
-        boardModules1: ['', '', '', ''],
-        boardModules2: ['', '', '', ''],
-        boardModules3: ['', '', '', ''],
-        // 格式如下：[{'di1': '70', 'do3': '43'}]
-        boardModulesIOs1: [{}, {}, {}, {}],
-        boardModulesIOs2: [{}, {}, {}, {}],
-        boardModulesIOs3: [{}, {}, {}, {}],
-        // Varan连接模块安装位置，0代表在KEB之后，1代表在KEB之前
-        varanConnModulePos: 0,
         // 机器基础信息
         evaluationNum: '',
         productionNum: '',
@@ -197,14 +201,12 @@
         designNote: '',
         // 机器功能配置信息，包括主底板默认IO修改信息
         funcConfig: {
-          // 1: {name: '功能点1注射信号', status: false},
-          // 2: {name: '功能点2储料信号', status: false},
           3: {name: 'E73', status: false},
-          4: {name: '喷嘴改阀门1', status: false},
+          // 4: {name: '喷嘴改阀门1', status: false},
           5: {name: 'DEE能耗模块', status: false},
-          6: {name: '7号改可编程输入1', status: false},
-          7: {name: '功能点1改可编程输出1', status: false},
-          8: {name: '功能点2改可编程输出2', status: false},
+          // 6: {name: '7号改可编程输入1', status: false},
+          // 7: {name: '功能点1改可编程输出1', status: false},
+          // 8: {name: '功能点2改可编程输出2', status: false},
           98: {name: 'PSG热流道', status: false},
           99: {name: '外置热流道', status: false},
           101: {name: '阀门', status: false},
@@ -241,8 +243,125 @@
         // 控制弹出modal的样式， 0：IO     1: 配置文件
         modalType: 0,
         // 功能点1和2可配置的选项
-        funcOutputItems: []
+        funcOutputItems: [],
+        // 所有的IO点，格式为{'DI': ['开门止', 'xxx', ...], 'DO': ['xx', ...], ...}
+        allIO: {'DI': [], 'DO': [], 'AI': [], 'AO': [], 'TI': [], 'TO': []},
+        ajaxIOLoadOK: false,
+        // 底板/模块系统IO点位配置, 格式为{ 'DI': [9, 10 ,..., 0, 17], 'DO': [], ...}
+        // 其中数组元素依次代表某个位置配置的IO序号，0表示未配置
+        stdIo: {'DI': [], 'DO': [], 'AI': [], 'AO': [], 'TI': [], 'TO': []},
+        // ajax获取到的标准底板/模块系统IO点，格式与stdIo一致
+        originStdIo: {'DI': [], 'DO': [], 'AI': [], 'AO': [], 'TI': [], 'TO': []},
+        // HardwareTitle
+        curHardwareTitleIdx: 1,
+        curHardwareSlotIdx: 1,
+        mainBoardSlots: ['', '', '', ''],
+        extendBoard1Slots: ['', '', '', ''],
+        extendBoard2Slots: ['', '', '', ''],
+        // HardwareIO
+        mainBoardModuleIos: [{}, {}, {}, {}],
+        extendBoard1ModulesIos: [{}, {}, {}, {}],
+        extendBoard2ModulesIos: [{}, {}, {}, {}],
+        // Varan连接模块安装位置，0代表在KEB之后，1代表在KEB之前
+        varanConnModulePos: 0,
       }
+    },
+    computed: {
+      curModuleName () {
+        let name = '';
+        switch (this.curHardwareTitleIdx) {
+          case 1:
+            name = this.mainBoardSlots[0];
+            break;
+          case 2:
+            name = this.mainBoardSlots[this.curHardwareSlotIdx - 1];
+            break;
+          case 3:
+            name = this.extendBoard1Slots[this.curHardwareSlotIdx - 1];
+            break;
+          case 4:
+            name = this.extendBoard2Slots[this.curHardwareSlotIdx - 1];
+            break;
+        }
+        return name;
+      },
+      curModuleIoConfig () {
+        let ioConfig = {};
+        switch (this.curHardwareTitleIdx) {
+          case 1:
+            ioConfig = this.mainBoardModuleIos[0];
+            break;
+          case 2:
+            ioConfig = this.mainBoardModuleIos[this.curHardwareSlotIdx - 1];
+            break;
+          case 3:
+            ioConfig = this.extendBoard1ModulesIos[this.curHardwareSlotIdx - 1];
+            break;
+          case 4:
+            ioConfig = this.extendBoard2ModulesIos[this.curHardwareSlotIdx - 1];
+            break;
+        }
+        return ioConfig;
+      },
+      curStdIoType () {
+        let ioType = '';
+        if (this.curHardwareTitleIdx === 1) {
+          switch (this.curHardwareSlotIdx) {
+            case 1:
+              ioType = 'DI';
+              break;
+            case 2:
+              ioType = "DO";
+              break;
+            case 3:
+              ioType = 'AI';
+              break;
+            case 4:
+              ioType = 'AO';
+              break;
+            case 5:
+              ioType = 'TI';
+              break;
+            case 6:
+              ioType = 'TO';
+              break;
+          }
+        }
+        return ioType;
+      },
+      usedIO () {
+        let _usedIo = {'DI': [], 'DO': [], 'AI': [], 'AO': [], 'TI': [], 'TO': []};
+        if (!this.ajaxIOLoadOK) {
+          return _usedIo;
+        }
+        for (let ioType in this.stdIo) {
+          // 计入底板上已使用的IO点
+          for (let item of this.stdIo[ioType]) {
+            if (item != 0) {
+              _usedIo[ioType].push(item);
+            }
+          }
+        }
+        for (let module of this.mainBoardModuleIos) {
+          for (let key in module) {
+            let ioType = key.slice(0, 2);
+            _usedIo[ioType].push(module[key]);
+          }
+        }
+        for (let module of this.extendBoard1ModulesIos) {
+          for (let key in module) {
+            let ioType = key.slice(0, 2);
+            _usedIo[ioType].push(module[key]);
+          }
+        }
+        for (let module of this.extendBoard2ModulesIos) {
+          for (let key in module) {
+            let ioType = key.slice(0, 2);
+            _usedIo[ioType].push(module[key]);
+          }
+        }
+        return _usedIo;
+      },
     },
     methods:{
       getImmInfo(e){
@@ -255,29 +374,6 @@
         this.designNote = e.designNote;
         // 清除获取信息标志位
         this.getInfo = false;
-      },
-      getModuleInfo(e){
-        for(let i=0; i<e.boardModules1.length; i++){
-          if(e.boardModules1[i] !== this.boardModules1[i]){
-            this.$set(this.boardModules1, i, e.boardModules1[i])
-          }
-        }
-        for(let i=0; i<e.boardModules2.length; i++){
-          if(e.boardModules2[i] !== this.boardModules2[i]){
-            this.$set(this.boardModules2, i, e.boardModules2[i])
-          }
-        }
-        for(let i=0; i<e.boardModules3.length; i++){
-          if(e.boardModules3[i] !== this.boardModules3[i]){
-            this.$set(this.boardModules3, i, e.boardModules3[i])
-          }
-        }
-        this.boardModulesIOs1 = e.boardModulesIOs1;
-        this.boardModulesIOs2 = e.boardModulesIOs2;
-        this.boardModulesIOs3 = e.boardModulesIOs3;
-
-        // 及时清空新加IO信息，防止重复添加该IO
-        this.newIoToAppend = '';
       },
       getFuncConfig(e){
         this.funcConfig = e;
@@ -318,12 +414,12 @@
           }
         }
         let dataToPost = {
-          boardModules1: this.boardModules1,
-          boardModules2: this.boardModules2,
-          boardModules3: this.boardModules3,
-          boardModulesIOs1: this.boardModulesIOs1,
-          boardModulesIOs2: this.boardModulesIOs2,
-          boardModulesIOs3: this.boardModulesIOs3,
+          boardModules1: this.mainBoardSlots,
+          boardModules2: this.extendBoard1Slots,
+          boardModules3: this.extendBoard2Slots,
+          boardModulesIOs1: this.mainBoardModuleIos,
+          boardModulesIOs2: this.extendBoard1ModulesIos,
+          boardModulesIOs3: this.extendBoard2ModulesIos,
           varanConnModulePos: this.varanConnModulePos,
           evaluationNum: this.evaluationNum,
           productionNum: this.productionNum,
@@ -402,6 +498,94 @@
       popModalConfig(){
         this.getInfo = true;
         this.modalType = 1;
+      },
+      getHardwareTitleInfo (e) {
+        this.curHardwareTitleIdx = e.curTitleIdx;
+        this.curHardwareSlotIdx = e.curSlotIdx;
+        switch (e.curTitleIdx) {
+          case 2:
+            for (let i=0; i<this.mainBoardSlots.length; i++) {
+              if (this.mainBoardSlots[i] !== e.slots[i]) {
+                this.$set(this.mainBoardSlots, i, e.slots[i]);
+                if (e.slots[i] === 'CAI888') {
+                  this.$set(this.mainBoardModuleIos, i, CAI888_IO_CONFIG);
+                } else {
+                  this.$set(this.mainBoardModuleIos, i, {});
+                }
+              }
+            }
+            break;
+          case 3:
+            for (let i=0; i<this.extendBoard1Slots.length; i++) {
+              if (this.extendBoard1Slots[i] !== e.slots[i]) {
+                this.$set(this.extendBoard1Slots, i, e.slots[i]);
+                if (e.slots[i] === 'CAI888') {
+                  this.$set(this.extendBoard1ModulesIos, i, CAI888_IO_CONFIG);
+                } else {
+                  this.$set(this.extendBoard1ModulesIos, i, {});
+                }
+              }
+            }
+            break;
+          case 4:
+            for (let i=0; i<this.extendBoard2Slots.length; i++) {
+              if (this.extendBoard2Slots[i] !== e.slots[i]) {
+                this.$set(this.extendBoard2Slots, i, e.slots[i]);
+                if (e.slots[i] === 'CAI888') {
+                  this.$set(this.extendBoard2ModulesIos, i, CAI888_IO_CONFIG);
+                } else {
+                  this.$set(this.extendBoard2ModulesIos, i, {});
+                }
+              }
+            }
+            break;
+        }
+      },
+      getHardwareModuleIoInfo (e) {
+        switch (this.curHardwareTitleIdx) {
+          case 1:
+            alert('当前主底板页面不应出现模块IO刷新啊,js代码出现了严重问题');
+            break;
+          case 2:
+            this.$set(this.mainBoardModuleIos, this.curHardwareSlotIdx - 1, e);
+            break;
+          case 3:
+            this.$set(this.extendBoard1ModulesIos, this.curHardwareSlotIdx - 1, e);
+            break;
+          case 4:
+            this.$set(this.extendBoard2ModulesIos, this.curHardwareSlotIdx - 1, e);
+            break;
+        }
+        this.newIoToAppend = '';
+      },
+      getBigImmStdIO () {
+        if (this.isBigImm) {
+          axios.get(`/api/io/bigstdmodule?type=${this.type}`).then( res => {
+            this.$set(this.mainBoardSlots, 0, res.data.name);
+            this.$set(this.mainBoardModuleIos, 0, res.data.ios);
+          }).catch( e => {
+            console.log(e);
+          })
+        } else {
+          this.$set(this.mainBoardSlots, 0, '');
+        }
+      },
+      getConfiguredStdIoInfo (e) {
+        this.stdIo[this.curStdIoType] = e;
+      },
+      getMainBoardModifiedIo () {
+        // 返回格式: {'DI7': 23, 'DO36': 0, ...}
+        let mainBoardModifiedIo = {};
+
+        for (let ioType in this.stdIo) {
+          for (let i=0; i<this.stdIo[ioType].length; i++) {
+            if (this.stdIo[ioType][i] !== this.originStdIo[ioType][i]) {
+              mainBoardModifiedIo[ioType + (i + 1)] = this.stdIo[ioType][i];
+            }
+          }
+        }
+        console.log(mainBoardModifiedIo);
+        return mainBoardModifiedIo;
       }
     },
     watch: {
@@ -481,6 +665,40 @@
           this.ceStandard = false;
           this.pilzNor = '';
         }
+      },
+      isBigImm () {
+        this.getBigImmStdIO();
+      },
+      type: {
+        handler (cv, ov) {
+          if ((cv === 'VE2' && ov !== 'VE2') || (ov === 'VE2' && cv !== 'VE2')){
+            // 需额外考虑ZE4500s直接切换到VE4500这种特殊情况，此时isBigImm未变化，但是大机选配不一样！
+            this.getBigImmStdIO();
+          }
+          axios.get("/api/io/stdio", {
+            params: {
+              type: cv,
+              ceStandard: this.ceStandard
+            }
+          }).then(res => {
+            this.stdIo = res.data.stdIo;
+            this.originStdIo = JSON.parse(JSON.stringify(this.stdIo));
+          }).catch ( e => {
+            console.log(e);
+          });
+        }
+      },
+      ceStandard () {
+        axios.get("/api/io/stdio", {
+          params: {
+            type: this.type,
+            ceStandard: this.ceStandard
+          }
+        }).then(res => {
+          this.stdIo = res.data.stdIo;
+        }).catch ( e => {
+          console.log(e);
+        });
       }
     },
     mounted(){
@@ -513,6 +731,12 @@
           '液压回油阀(特殊)'
         ];
       });
+      axios.get('/api/io/allio').then( res => {
+        this.allIO = res.data;
+        this.ajaxIOLoadOK = true;
+      }).catch( e => {
+        console.log(e);
+      });
     }
   }
 </script>
@@ -522,7 +746,7 @@
   }
   .fade-left-enter, .fade-left-leave-to{
     opacity: 0;
-    margin-left: -33.4%;
+    margin-left: -40%;
   }
   .fade-right-enter-active, .fade-right-leave-active{
     transition: all .5s ease;
@@ -536,14 +760,14 @@
   }
   .vanish-left-enter, .vanish-left-leave-to{
     opacity: 0;
-    margin-left: -66.7%
+    margin-left: -60%
   }
   .vanish-right-enter-active, .vanish-right-leave-active{
-    transition: all .5s ease;
+    transition: .5s ease;
   }
   .vanish-right-enter, .vanish-right-leave-to{
     opacity: 0;
-    margin-right: -66.7%;
+    margin-right: -60%;
   }
   #slidePrev, #slideNext{
     $height: 25rem;
@@ -610,13 +834,6 @@
     /* 防止底部被footer遮挡 */
     padding-bottom: 3rem;
   }
-  /*#iomaker:after {*/
-    /*content: '';*/
-    /*display: block;*/
-    /*width: 100%;*/
-    /*height: 50px;*/
-    /*opacity: 0;*/
-  /*}*/
   .container-fluid {
     position: absolute;
     top: 56px;
@@ -629,5 +846,29 @@
   }
   .wrapper {
     height: 100%;
+  }
+  .hardware-area {
+    overflow: auto;
+    height: 100%;
+    box-sizing: border-box;
+    &::-webkit-scrollbar{
+      height: 6px;
+      width: 6px;
+    }
+    &::-webkit-scrollbar-thumb{
+      border-radius: 10px;
+      -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+      background: #818080;
+    }
+  }
+  .test1 {
+    width: 100%;
+    height: 100%;
+    background-color: yellow;
+  }
+  .test2 {
+    width: 100%;
+    height: 100%;
+    background-color: red;
   }
 </style>

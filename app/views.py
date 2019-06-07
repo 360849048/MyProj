@@ -27,16 +27,16 @@ def getIo():
     io_type = request.args.get('type')
     start_id = int(request.args.get('start'))
     end_id = int(request.args.get('end'))
-    # io_type可以是'di', 'do', 'ai', 'ao', 'ti', 'to'
-    if io_type == 'di':
+    # io_type可以是'DI', 'DO', 'AI', 'AO', 'TI', 'TO'
+    if io_type == 'DI':
         t_io = TableManager('digital_input', IO_INFO_DB_PATH)
-    elif io_type == 'do':
+    elif io_type == 'DO':
         t_io = TableManager('digital_output', IO_INFO_DB_PATH)
-    elif io_type == 'ai':
+    elif io_type == 'AI':
         t_io = TableManager('analog_input', IO_INFO_DB_PATH)
-    elif io_type == 'ao':
+    elif io_type == 'AO':
         t_io = TableManager('analog_output', IO_INFO_DB_PATH)
-    elif io_type == 'ti':
+    elif io_type == 'TI':
         t_io = TableManager('temperature_input', IO_INFO_DB_PATH)
     else:
         t_io = TableManager('temperature_output', IO_INFO_DB_PATH)
@@ -57,27 +57,27 @@ def getBigIo():
     # 获取大机选配CIO021或CIO011的IO点配置信息
     # 数据返回格式为{'name': 'CIO021(或CIO011)', ios: {'di3': '83--开门', ..., 'do2': '113--润滑马达2'}}
     cio021_io = {
-        'di3': 83,
-        'di4': 84,
-        'di5': 85,
-        'di6': 97,
-        'di7': 98,
-        'di8': 99,
-        'do1': 97,
-        'do2': 98,
-        'do3': 113
+        'DI3': 83,
+        'DI4': 84,
+        'DI5': 85,
+        'DI6': 97,
+        'DI7': 98,
+        'DI8': 99,
+        'DO1': 97,
+        'DO2': 98,
+        'DO3': 113
     }
     if request.args.get('type').upper() == 'VE2':
         ret_data = {'name': 'CIO011', 'ios': {}}
     else:
         ret_data = {'name': 'CIO021', 'ios': {}}
-    t_di = TableManager('digital_input', IO_INFO_DB_PATH)
-    t_do = TableManager('digital_output', IO_INFO_DB_PATH)
+    # t_di = TableManager('digital_input', IO_INFO_DB_PATH)
+    # t_do = TableManager('digital_output', IO_INFO_DB_PATH)
     for k, v in cio021_io.items():
-        if k.startswith('di'):
-            ret_data['ios'][k] = str(v) + '--' + t_di.displayBriefData(v, 'CName')[0]
-        if k.startswith('do'):
-            ret_data['ios'][k] = str(v) + '--' + t_do.displayBriefData(v, 'CName')[0]
+        if k.startswith('DI'):
+            ret_data['ios'][k] = str(v)  # + '--' + t_di.displayBriefData(v, 'CName')[0]
+        if k.startswith('DO'):
+            ret_data['ios'][k] = str(v)  # + '--' + t_do.displayBriefData(v, 'CName')[0]
     return jsonify(ret_data)
 
 @app.route('/api/io/pilzlist', methods=['GET'])
@@ -355,25 +355,61 @@ def createConfigFile():
 
     return jsonify({'status': 'success', 'url': zip_file_url})
 
+@app.route('/api/io/allio', methods=['GET'])
+def getAllIo():
+    ret_data = {'DI': [], 'DO': [], 'AI': [], 'AO': [], 'TI': [], 'TO': []}
+    t_di = TableManager('digital_input', IO_INFO_DB_PATH)
+    t_do = TableManager('digital_output', IO_INFO_DB_PATH)
+    t_ai = TableManager('analog_input', IO_INFO_DB_PATH)
+    t_ao = TableManager('analog_output', IO_INFO_DB_PATH)
+    t_ti = TableManager('temperature_input', IO_INFO_DB_PATH)
+    t_to = TableManager('temperature_output', IO_INFO_DB_PATH)
+    for i in range(1, IOS_AMOUNT['DI']+1):
+        ret_data['DI'].append(t_di.displayBriefData(i, 'CName')[0])
+    for i in range(1, IOS_AMOUNT['DO'] + 1):
+        ret_data['DO'].append(t_do.displayBriefData(i, 'CName')[0])
+    for i in range(1, IOS_AMOUNT['AI']+1):
+        ret_data['AI'].append(t_ai.displayBriefData(i, 'CName')[0])
+    for i in range(1, IOS_AMOUNT['AO']+1):
+        ret_data['AO'].append(t_ao.displayBriefData(i, 'CName')[0])
+    for i in range(1, IOS_AMOUNT['TI']+1):
+        ret_data['TI'].append(t_ti.displayBriefData(i, 'CName')[0])
+    for i in range(1, IOS_AMOUNT['TO']+1):
+        ret_data['TO'].append(t_to.displayBriefData(i, 'CName')[0])
+    return jsonify(ret_data)
+
+@app.route('/api/io/stdio', methods = ['GET'])
+def getStdIo():
+    imm_type = request.args.get('type')
+    ce_standard = request.args.get('ceStandard')
+    if ce_standard is None or ce_standard == 'false':
+        # GET方式传递的Boolean有问题！得到的是false而不是False
+        ce_standard = False
+    else:
+        ce_standard = True
+    hk_info = HkFileMaker(imm_type=imm_type, ce_standard=ce_standard)
+
+    return jsonify({'status': 'success', 'stdIo': hk_info.getStdIoInfo()})
+
 
 # 避免频繁搜索数据库获取IO长度，这里一次性读取掉所有IO的数目
 # 通过函数中获取，可能可以尽早销毁这些被创建的TableManager
 def _getIoAmount():
     t_ios = {
-        'di': TableManager('digital_input', IO_INFO_DB_PATH),
-        'do': TableManager('digital_output', IO_INFO_DB_PATH),
-        'ai': TableManager('analog_input', IO_INFO_DB_PATH),
-        'ao': TableManager('analog_output', IO_INFO_DB_PATH),
-        'ti': TableManager('temperature_input', IO_INFO_DB_PATH),
-        'to': TableManager('temperature_output', IO_INFO_DB_PATH)
+        'DI': TableManager('digital_input', IO_INFO_DB_PATH),
+        'DO': TableManager('digital_output', IO_INFO_DB_PATH),
+        'AI': TableManager('analog_input', IO_INFO_DB_PATH),
+        'AO': TableManager('analog_output', IO_INFO_DB_PATH),
+        'TI': TableManager('temperature_input', IO_INFO_DB_PATH),
+        'TO': TableManager('temperature_output', IO_INFO_DB_PATH)
     }
     return {
-        'di': len(t_ios['di'].getAllId()),
-        'do': len(t_ios['do'].getAllId()),
-        'ai': len(t_ios['ai'].getAllId()),
-        'ao': len(t_ios['ao'].getAllId()),
-        'ti': len(t_ios['ti'].getAllId()),
-        'to': len(t_ios['to'].getAllId())
+        'DI': len(t_ios['DI'].getAllId()),
+        'DO': len(t_ios['DO'].getAllId()),
+        'AI': len(t_ios['AI'].getAllId()),
+        'AO': len(t_ios['AO'].getAllId()),
+        'TI': len(t_ios['TI'].getAllId()),
+        'TO': len(t_ios['TO'].getAllId())
     }
 
 

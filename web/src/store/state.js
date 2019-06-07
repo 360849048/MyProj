@@ -1,3 +1,3 @@
 export default {
-  testData: 1
+  testData: 1,
 }

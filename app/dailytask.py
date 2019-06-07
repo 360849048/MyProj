@@ -8,7 +8,7 @@ from app.softrefresh import handleRefresh
 
 def updatePathInfoAutomatically():
     '''
-        每天的22点到23点之间启动后台自动数据更新功能
+        每天固定时间段内启动后台自动数据更新功能
     '''
     log.record('后台脚本程序启动')
     while True:

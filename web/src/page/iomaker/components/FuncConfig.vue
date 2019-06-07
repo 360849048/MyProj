@@ -81,14 +81,12 @@
         funcs: {
           // 新增功能序号依次从小往大增加
           // 不要去修改外置热流道序号，极易出bug
-          // 1: {name: '功能点1注射信号', status: false},
-          // 2: {name: '功能点2储料信号', status: false},
           3: {name: 'E73', status: false},
-          4: {name: '喷嘴改阀门1', status: false},
+          // 4: {name: '喷嘴改阀门1', status: false},
           5: {name: 'DEE能耗模块', status: false},
-          6: {name: '7号改可编程输入1', status: false},
-          7: {name: '功能点1改可编程输出1', status: false},
-          8: {name: '功能点2改可编程输出2', status: false},
+          // 6: {name: '7号改可编程输入1', status: false},
+          // 7: {name: '功能点1改可编程输出1', status: false},
+          // 8: {name: '功能点2改可编程输出2', status: false},
           98: {name: 'PSG热流道', status: false},
           99: {name: '外置热流道', status: false},
           101: {name: '阀门', status: false},
