@@ -14,16 +14,26 @@
                 'badge-danger': ioType === 'DO',
                 'badge-info': ioType === 'AI' || ioType === 'TI',
                 'badge-warning': ioType === 'AO' || ioType === 'TO'}"
+                :data-index="ioIdx"
           >
             {{ioIdx}}
           </span>
           <div
             class="alert alert-primary io-name"
+            :class="[checkChanged(ioIdx) ? 'alert-danger' : 'alert-primary']"
             role="alert"
             v-if="io"
             @dblclick="dblclickIo(ioIdx)"
+            :data-index="ioIdx"
           >
             {{io}}
+          </div>
+          <div
+            class="alert alert-primary io-name opacity02"
+            v-else-if="getIoBefore(ioIdx)"
+            :data-index="ioIdx"
+          >
+            {{getIoBefore(ioIdx)}}
           </div>
         </li>
       </ul>
@@ -40,6 +50,7 @@
     props: {
       ioType: String,
       stdIo: Object,
+      originStdIo: Object,
       loading: Boolean,
       allIO: Object,
     },
@@ -71,7 +82,7 @@
           ioSection[idx][i] = this.ios[i];
         }
         return ioSection;
-      }
+      },
     },
     methods: {
       dblclickIo (ioIdx) {
@@ -100,7 +111,13 @@
         }
         newStdIoConfig[stdIoIdx - 1] = item;
         this.$emit('stdioupdate', newStdIoConfig);
-      }
+      },
+      checkChanged (idx) {
+        return this.stdIo[this.ioType][idx - 1] !== this.originStdIo[this.ioType][idx - 1]
+      },
+      getIoBefore (idx) {
+        return this.allIO[this.ioType][this.originStdIo[this.ioType][idx - 1] - 1];
+      },
     }
   }
 </script>
@@ -158,6 +175,9 @@
       .item {
         width: 50%;
       }
+    }
+    .opacity02 {
+      opacity: .2;
     }
   }
 </style>

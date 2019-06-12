@@ -1,4 +1,3 @@
-import os
 import shutil
 import re
 import zipfile
@@ -9,17 +8,15 @@ CMM103_IO_NUM = {'DI': 56, 'DO': 40, 'AI': 6, 'AO': 4, 'TI': 11, 'TO': 8}
 MODULE_SYS_IO_NUM = {'DI': 56, 'DO': 40, 'AI': 3, 'AO': 2, 'TI': 8, 'TO': 8}
 
 class HkFileMaker:
-    def __init__(self, imm_type, ce_standard=False, board_1_modules_ios=None, board_2_modules_ios=None, energy_dee=False,
-                 varan_module_pos=0, e73=False, mold_slider=False, func1_to_progo1=False, func2_to_progo2=False,
-                 std_file_dir=STD_HK_FILE_DIR,
+    def __init__(self, imm_type, ce_standard=False, board_1_modules_ios=None, board_2_modules_ios=None,
+                 energy_dee=False, varan_module_pos=0, main_board_modified_io=None, std_file_dir=STD_HK_FILE_DIR,
                  dst_file_dir=CACHE_FILE_DIR):
         '''
             imm_type:           'ZEs', 'ZE', 'VE2', 'VE2s'
             board_1_modules_ios: [['CTO163', {'DO3': OutputID, ...}], ['CDM163', {'DI5': InputID, ...}], ...]
             board_2_modules_ios:    [['CTO163', {'DO3': OutputID, ...}], ['CDM163', {'DI5': InputID, ...}], ...]
             varan_module_pos:   0：CIV512等连接模块放在KEB之后； 1：CIV512等连接模块放在KEB之前
-            e73:          将CMM102底板7,8输入点配置为E73相关点位（不支持VE2）
-            mold_slider:  模具滑块信号，将CMM102底板7号点配置为可编程IO（不支持VE2，不支持与E73共存）
+            main_board_modified_io: {'DI7': InputID, 'DO37': OutputID, ...}
         '''
         self.imm_type = imm_type
         self.board_1_modules_ios = board_1_modules_ios
@@ -27,22 +24,21 @@ class HkFileMaker:
         self.dee = energy_dee
         self.varan_module_pos = int(varan_module_pos)
         if imm_type == 'VE2':
-            self.e73 = False
             self.std_io_num = MODULE_SYS_IO_NUM
         else:
-            self.e73 = e73
             self.std_io_num = CMM103_IO_NUM
-        if e73 or imm_type == 'VE2':
-            self.mold_slider = False
-        else:
-            self.mold_slider = mold_slider
-        self.func1_to_progo1 = func1_to_progo1
-        self.func2_to_progo2 = func2_to_progo2
 
         if imm_type.endswith('s'):
             self.ce_standard = ce_standard
         else:
             self.ce_standard = False
+
+        self.main_board_modified_io = main_board_modified_io
+        # 清空HK文件中某些IO的位置信息
+        # 因为如果仅仅按照io_config_info将IO点配置到各个新位置，原来老位置的IO点会残留。
+        # 例如io_config_info: {'DI':{41: 53, 73: 81}, 'DO': {16: 23}, ...}，
+        # 但是原先HK文件中，41号位置配置了80号IO，因此需要先将第80号IO写0，否则会导致多个IO配到同一个地方
+        self.io_reset_info = {'DI': set(), 'DO': set(), 'AI': set(), 'AO': set(), 'TI': set(), 'TO': set()}
 
         # 为了生成文件的可靠性，只有status==0才允许某些操作
         # status: 0     正常
@@ -81,9 +77,6 @@ class HkFileMaker:
         else:
             self.varan_config_info = [0, 0, 0, 5]
 
-        if self.status == 0:
-            self._getConfigInfo()
-
     def _getConfigInfo(self):
         '''
             根据实际机器硬件配置文件记录的规矩，解析模块，IO配置信息
@@ -91,18 +84,8 @@ class HkFileMaker:
             module_config_info = {'1': [], '2': [], '3': [1, 3, 0, 0], '4': [5, 3, 0]}     key是board的序号，value是底板上的模块序号数，这里不显示Varan模块
             varan_config_info = [3, 5]   Varan总线上依次的模块名： 0:未配置  1:CIV512  2:CIV521  3:CMM10X  4:DEE021  5:F6
         '''
-        # 提前将E73的点位配置好，防止后面重复配置
-        if self.e73:
-            self.io_config_info['DI'][110] = 7
-            self.io_config_info['DI'][111] = 8
-        if self.mold_slider:
-            self.io_config_info['DI'][73] = 7
-        if self.func1_to_progo1:
-            self.io_config_info['DO'][73] = 35
-        if self.func2_to_progo2:
-            self.io_config_info['DO'][74] = 36
-
         if self.board_1_modules_ios is not None:
+            # 解析主底板上的各模块以及模块上的IO配置信息
             #  board_1_modules_count格式： {'CDM163': 2, 'CTO163': 1}
             board_1_modules_count = {}
             for idx in range(len(self.board_1_modules_ios)):
@@ -237,6 +220,7 @@ class HkFileMaker:
                                 # 同样的IO已经配置过了，不允许重复配置
                                 self.status = -3
                         self.io_config_info[io_type][io_seq] = io_pos
+                        self.io_reset_info[io_type].add(io_pos)
 
         if self.board_2_modules_ios is not None and len(self.board_2_modules_ios) > 0:
             board_2_modules_count = {}
@@ -404,6 +388,7 @@ class HkFileMaker:
                                 # 同样的IO已经配置过了，不允许重复配置
                                 self.status = -3
                         self.io_config_info[io_type][io_seq] = io_pos
+                        self.io_reset_info[io_type].add(io_pos)
 
         # 能耗模块DEE是否启用
         if self.dee:
@@ -426,17 +411,30 @@ class HkFileMaker:
                     else:
                         self.varan_config_info.insert(1, 2)
 
-
-        # 不要去尝试配置TI和TO点位，容易出错！
+        # 不要去尝试配置模块上的TI和TO点位，容易出错！
         self.io_config_info['TI'] = {}
         self.io_config_info['TO'] = {}
 
-    def getConfigInfo(self):
-        return {
-            'module_config_info': self.module_config_info,
-            'io_config_info': self.io_config_info,
-            'varan_config_info': self.varan_config_info
-        }
+        if self.main_board_modified_io is not None:
+            # 解析主底板上的IO配置信息
+            # main_board_modified_io = {'DI7': 111, 'AO36': 45}
+            for k, v in self.main_board_modified_io.items():
+                io_type = k[:2]
+                io_seq = v
+                io_pos = int(k[2:])
+                self.io_reset_info[io_type].add(io_pos)
+                if io_seq == 0:
+                    continue
+                if io_type == 'AI' and self.imm_type.upper() != 'VE2':
+                    # 还原CMM103的AI点位置，默认底板的AI位置是1,2,9,10,16,17
+                    if io_pos in [1, 2]:
+                        self.io_config_info[io_type][io_seq] = io_pos
+                    if io_pos in [3, 4]:
+                        self.io_config_info[io_type][io_seq] = io_pos + 6
+                    if io_pos in [5, 6]:
+                        self.io_config_info[io_type][io_seq] = io_pos + 11
+                else:
+                    self.io_config_info[io_type][io_seq] = io_pos
 
     def createFile(self):
         '''
@@ -444,8 +442,9 @@ class HkFileMaker:
             :return     >=0    文件的修改行数
                         -1      标准程序不支持的模块配置
                         -2      文件复制时候发生错误
-                        -3      存在重复配置的IO点
         '''
+        if self.status == 0:
+            self._getConfigInfo()
         if self.status < 0:
             print("当前状态不允许生成硬件配置文件, status:", self.status)
             return -1
@@ -464,44 +463,17 @@ class HkFileMaker:
             re_exp = re.compile(r',\d+,,')
             # 备份标准硬件配置文件，用来后面的修改行数比较
             lines_duplicated = lines.copy()
-            # 标准已经配置好的IO，原则上不允许更改
-            std_configured_io = set()
             for line in lines:
                 parsed_result = self._parseLineInfo(line)
                 if parsed_result is not None:
                     # 定位IO行
                     if parsed_result['type'] == 'IO':
                         io_type = str(parsed_result['name'])
-                        io_seq = int(parsed_result['seq'])
-                        io_pos = int(parsed_result['pos'])
-                        if io_pos != 0:
-                            # 这是标准已经配好的IO
-                            std_configured_io.add(io_type + str(io_seq))
-                        if self.e73 and io_type == 'DI':
-                            # 对于原先已经被配置好的IO点，必须先清空其配置信息，否则会导致多个IO被配置到相同的位置
-                            if io_pos == 7 or io_pos == 8:
-                                lines[row_need_modified] = re_exp.sub(',0,,', line)
-                                std_configured_io.remove(io_type + str(io_seq))
-                        if self.mold_slider and io_type == 'DI':
-                            # 对于原先已经被配置好的IO点，必须先清空其配置信息，否则会导致多个IO被配置到相同的位置
-                            if io_pos == 7:
-                                lines[row_need_modified] = re_exp.sub(',0,,', line)
-                                std_configured_io.remove(io_type + str(io_seq))
-                        if self.func1_to_progo1 and io_type == 'DO':
-                            # 对于原先已经被配置好的IO点，必须先清空其配置信息，否则会导致多个IO被配置到相同的位置
-                            if io_pos == 35:
-                                lines[row_need_modified] = re_exp.sub(',0,,', line)
-                                std_configured_io.remove(io_type + str(io_seq))
-                        if self.func2_to_progo2 and io_type == 'DO':
-                            # 对于原先已经被配置好的IO点，必须先清空其配置信息，否则会导致多个IO被配置到相同的位置
-                            if io_pos == 36:
-                                lines[row_need_modified] = re_exp.sub(',0,,', line)
-                                std_configured_io.remove(io_type + str(io_seq))
+                        io_seq = parsed_result['seq']
+                        io_pos = parsed_result['pos']
+                        if io_pos in self.io_reset_info[io_type]:
+                            lines[row_need_modified] = re_exp.sub(',0,,', line)
                         if io_seq in self.io_config_info[io_type]:
-                            #   io_config_info = {'DI':{41: 41, 73: 81}, 'DO': {}, 'AI': {}, ... }
-                            if (io_type + str(io_seq)) in std_configured_io:
-                                print('对标准已经配好的IO进行了重复配置，该IO是%s%d' % (io_type, io_seq))
-                                return -3
                             lines[row_need_modified] = re_exp.sub(',' + str(self.io_config_info[io_type][io_seq]) + ',,', line)
                     # 定位Module行
                     if parsed_result['type'] == 'Module':
@@ -564,13 +536,13 @@ class HkFileMaker:
             elif title == 'Digtal_Out_SWC1':
                 ret_info['name'] = 'DO'
             elif title == 'Analog_IO_SWC1':
-                if seq.endswith('0'):
+                if seq.startswith('0') and seq.endswith('0'):
                     ret_info['name'] = 'AO'
                     seq = seq[:-1]
                 else:
                     ret_info['name'] = 'AI'
             elif title == 'Analog_IO_SWC2':
-                if seq.endswith('0'):
+                if seq.endswith('0') and seq.startswith('0'):
                     ret_info['name'] = 'TO'
                     seq = seq[:-1]
                 else:
@@ -623,8 +595,18 @@ class HkFileMaker:
                             io_seq = parsed_result['seq']
                             io_pos = parsed_result['pos']
                             if io_pos != 0:
-                                if io_pos <= self.std_io_num[io_type]:
-                                    std_io_config[io_type][io_pos - 1] = io_seq
+                                if io_type == 'AI' and self.imm_type != 'VE2':
+                                    # CMM103底板AI点居然是1,2,9,10,16,17 -.-!
+                                    if io_pos in [1, 2]:
+                                        std_io_config['AI'][io_pos - 1] = io_seq
+                                    if io_pos in [9, 10]:
+                                        std_io_config['AI'][io_pos - 7] = io_seq
+                                    if io_pos in [16, 17]:
+                                        std_io_config['AI'][io_pos - 12] = io_seq
+                                else:
+                                    if io_pos <= self.std_io_num[io_type]:
+                                        std_io_config[io_type][io_pos - 1] = io_seq
+
         return std_io_config
 
 

@@ -1,86 +1,73 @@
 <template>
     <div id="iomaker" v-loading="waiting">
       <div class="container-fluid">
-        <div class="row">
-          <!-- 信息录入 -->
-          <transition name="fade-left">
-            <div class="col-sm-4 wrapper" v-show="curStep === 1">
-              <info-form
-                :getInfo="getInfo"
-                @imminfochange="getImmInfo">
-              </info-form>
-            </div>
-          </transition>
-          <!-- 功能配置 -->
-          <transition name="vanish-left">
-            <div class="col-sm-8 wrapper" v-show="curStep === 1">
-              <func-config
-                :type="type"
-                :funcOutputItems="funcOutputItems"
-                @functionsupdate="getFuncConfig"
-                @exthotrunnerchange="getExtHotrunnerNum"
-                @inthotrunnerchange="getIntHotrunnerNum"
-                @funcoutput1change="getFuncOutput1"
-                @funcoutput2change="getFuncOutput2"
-              />
-            </div>
-          </transition>
-          <!-- IO选择区域 -->
-          <transition name="vanish-right">
-            <div class="col-sm-5 wrapper" v-show="curStep === 2">
-              <!--<io-list-->
-                <!--:allIO="allIO"-->
-                <!--:loading="!ajaxIOLoadOK"-->
-                <!--:usedIO="usedIO"-->
-                <!--@newioappend="getNewIoAppend"-->
-              <!--/>-->
-              <div class="test1"></div>
-            </div>
-          </transition>
-          <!-- IO硬件配置区 -->
-          <transition name="fade-right">
-            <div class="col-sm-7 wrapper hardware-area" v-show="curStep===2">
-              <!--<hardware-title-->
-                <!--:type="type"-->
-                <!--:mainBoardSlots="mainBoardSlots"-->
-                <!--:extendBoard1Slots="extendBoard1Slots"-->
-                <!--:extendBoard2Slots="extendBoard2Slots"-->
-                <!--@moduleselectupdate="getHardwareTitleInfo"-->
-              <!--/>-->
-              <!--<hardware-module-->
-                <!--:moduleName="curModuleName"-->
-                <!--:ioConfig="curModuleIoConfig"-->
-                <!--:allIO="allIO"-->
-                <!--:ioInfoLoaded="ajaxIOLoadOK"-->
-                <!--:curBoard="curHardwareTitleIdx"-->
-                <!--:newIoToAppend="newIoToAppend"-->
-                <!--v-if="curHardwareTitleIdx > 1"-->
-                <!--@moduleiosupdate="getHardwareModuleIoInfo"-->
-                <!--@varanposupdate="getVaranConnModulePosInfo"-->
-              <!--/>-->
-              <!--<std-io-->
-                <!--v-else-->
-                <!--:ioType="curStdIoType"-->
-                <!--:stdIo="stdIo"-->
-                <!--:loading="!ajaxIOLoadOK"-->
-                <!--:allIO="allIO"-->
-                <!--@stdioupdate="getConfiguredStdIoInfo"-->
-              <!--/>-->
-              <div class="test2"></div>
-            </div>
-          </transition>
+        <!-- 信息录入 & 功能配置 -->
+        <div class="row" v-show="curStep === 1">
+          <div class="col-sm-4 wrapper">
+            <info-form
+              :getInfo="getInfo"
+              @imminfochange="getImmInfo">
+            </info-form>
+          </div>
+          <div class="col-sm-8 wrapper">
+            <func-config
+              :type="type"
+              :funcOutputItems="funcOutputItems"
+              @functionsupdate="getFuncConfig"
+              @exthotrunnerchange="getExtHotrunnerNum"
+              @inthotrunnerchange="getIntHotrunnerNum"
+              @funcoutput1change="getFuncOutput1"
+              @funcoutput2change="getFuncOutput2"
+            />
+          </div>
+        </div>
+        <!-- IO选择区域 & IO硬件配置区 -->
+        <div class="row" v-show="curStep === 2">
+          <div class="col-sm-5 wrapper">
+            <io-list
+              :allIO="allIO"
+              :loading="!ajaxIOLoadOK"
+              :usedIO="usedIO"
+              @newioappend="getNewIoAppend"
+            />
+          </div>
+          <div class="col-sm-7 wrapper hardware-area">
+            <hardware-title
+              :type="type"
+              :mainBoardSlots="mainBoardSlots"
+              :extendBoard1Slots="extendBoard1Slots"
+              :extendBoard2Slots="extendBoard2Slots"
+              @moduleselectupdate="getHardwareTitleInfo"
+            />
+            <hardware-module
+              :moduleName="curModuleName"
+              :ioConfig="curModuleIoConfig"
+              :allIO="allIO"
+              :ioInfoLoaded="ajaxIOLoadOK"
+              :curBoard="curHardwareTitleIdx"
+              :newIoToAppend="newIoToAppend"
+              v-if="curHardwareTitleIdx > 1"
+              @moduleiosupdate="getHardwareModuleIoInfo"
+              @varanposupdate="getVaranConnModulePosInfo"
+            />
+            <std-io
+              v-else
+              :ioType="curStdIoType"
+              :stdIo="stdIo"
+              :originStdIo="originStdIo"
+              :loading="!ajaxIOLoadOK"
+              :allIO="allIO"
+              @stdioupdate="getConfiguredStdIoInfo"
+            />
+          </div>
         </div>
       </div>
       <!-- 左右滑动页面按钮 -->
-      <div id="slidePrev" v-show="curStep === 2" @click="slidePrev">
-        <i class="fa fa-angle-left fa-3x"></i>
-      </div>
-      <div id="slideNext" v-show="curStep === 1" @click="slideNext">
-        <i class="fa fa-angle-right fa-3x"></i>
-      </div>
+      <page-switch direction="left" v-show="curStep === 2" @click.native="slidePrev"/>
+      <page-switch direction="right" v-show="curStep === 1" @click.native="slideNext"/>
       <!-- 页脚信息提交栏 -->
       <footer class="fixed-bottom">
-        <i class="fa fa-angle-left fa-3x" :class="{'enable': curStep !== 1}" aria-hidden="true" @click="slidePrev"></i>
+        <i class="fa fa-angle-left fa-3x to-left" :class="{'enable': curStep !== 1}" aria-hidden="true" @click="slidePrev"></i>
         <div>
           <a href="#checkInfoBeforeSubmit" class="fa-2x enable" @click="popModalIO" data-toggle="modal">IO表</a>
         </div>
@@ -90,8 +77,7 @@
         <div>
           <a href="#" class="fa-2x enable" @click="resetAllInfo" data-toggle="modal">重置</a>
         </div>
-        <i class="fa fa-angle-right fa-3x" :class="{'enable': curStep !== 2}" aria-hidden="true" @click="slideNext"></i>
-        <button class="btn btn-primary" @click="getMainBoardModifiedIo"></button>
+        <i class="fa fa-angle-right fa-3x to-right" :class="{'enable': curStep !== 2}" aria-hidden="true" @click="slideNext"></i>
       </footer>
       <!-- 配置信息确认模态框 -->
       <div class="modal fade" id="checkInfoBeforeSubmit" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
@@ -163,15 +149,13 @@
     </div>
 </template>
 <script>
-
-
   import IoList from './components/IoList'
-  import Module from './components/Module'
   import InfoForm from './components/InfoForm'
   import FuncConfig from './components/FuncConfig'
   import HardwareTitle from './components/HardwareTitle'
   import HardwareModule from './components/HardwareModule'
   import StdIo from './components/StdIo'
+  import PageSwitch from './components/PageSwitch'
   import axios from 'axios'
 
   // 标准中没有“第八段加热”，为了方便配置CAI888，特新增16号AI点：“第八段加热”
@@ -182,12 +166,12 @@
     name: 'IoMaker',
     components:{
       IoList,
-      Module,
       InfoForm,
       FuncConfig,
       HardwareTitle,
       HardwareModule,
       StdIo,
+      PageSwitch,
     },
     data(){
       return{
@@ -202,11 +186,7 @@
         // 机器功能配置信息，包括主底板默认IO修改信息
         funcConfig: {
           3: {name: 'E73', status: false},
-          // 4: {name: '喷嘴改阀门1', status: false},
           5: {name: 'DEE能耗模块', status: false},
-          // 6: {name: '7号改可编程输入1', status: false},
-          // 7: {name: '功能点1改可编程输出1', status: false},
-          // 8: {name: '功能点2改可编程输出2', status: false},
           98: {name: 'PSG热流道', status: false},
           99: {name: '外置热流道', status: false},
           101: {name: '阀门', status: false},
@@ -440,7 +420,8 @@
           clampForce: this.clampForce,
           injection: this.injection,
           type: this.type,
-          ceStandard: this.ceStandard
+          ceStandard: this.ceStandard,
+          mainBoardModifiedIo: this.getMainBoardModifiedIo(),
         };
         let _this = this;
         let url;
@@ -558,16 +539,35 @@
         }
         this.newIoToAppend = '';
       },
-      getBigImmStdIO () {
-        if (this.isBigImm) {
-          axios.get(`/api/io/bigstdmodule?type=${this.type}`).then( res => {
-            this.$set(this.mainBoardSlots, 0, res.data.name);
-            this.$set(this.mainBoardModuleIos, 0, res.data.ios);
-          }).catch( e => {
-            console.log(e);
-          })
-        } else {
-          this.$set(this.mainBoardSlots, 0, '');
+      getBigImmStdIo () {
+        let bigImmModule = 'CIO021';
+        let cio0x1Ios = {
+          'DI3': 83,
+          'DI4': 84,
+          'DI5': 85,
+          'DI6': 97,
+          'DI7': 98,
+          'DI8': 99,
+          'DO1': 97,
+          'DO2': 98,
+          'DO3': 113
+        };
+        if (this.type === 'VE2') {
+          bigImmModule = 'CIO011';
+        }
+        this.$set(this.mainBoardSlots, 0, bigImmModule);
+        this.$set(this.mainBoardModuleIos, 0, cio0x1Ios);
+
+        if (this.type === 'ZEs' || this.type === 'ZE') {
+          this.$set(this.stdIo['DI'], 16, 102);
+          this.$set(this.stdIo['DI'], 17, 95);
+        }
+      },
+      resetNotBigImmStdIo () {
+        this.$set(this.mainBoardSlots, 0, '');
+        if (this.type === 'ZEs' || this.type === 'ZE') {
+          this.$set(this.stdIo['DI'], 16, 0);
+          this.$set(this.stdIo['DI'], 17, 0);
         }
       },
       getConfiguredStdIoInfo (e) {
@@ -584,8 +584,20 @@
             }
           }
         }
-        console.log(mainBoardModifiedIo);
         return mainBoardModifiedIo;
+      },
+      getStdIo () {
+        axios.get("/api/io/stdio", {
+          params: {
+            type: this.type,
+            ceStandard: this.ceStandard
+          }
+        }).then(res => {
+          this.stdIo = res.data.stdIo;
+          this.originStdIo = JSON.parse(JSON.stringify(this.stdIo));
+        }).catch ( e => {
+          console.log(e);
+        });
       }
     },
     watch: {
@@ -667,38 +679,23 @@
         }
       },
       isBigImm () {
-        this.getBigImmStdIO();
+        if (this.isBigImm) {
+          this.getBigImmStdIo();
+        } else {
+          this.resetNotBigImmStdIo();
+        }
       },
-      type: {
-        handler (cv, ov) {
-          if ((cv === 'VE2' && ov !== 'VE2') || (ov === 'VE2' && cv !== 'VE2')){
-            // 需额外考虑ZE4500s直接切换到VE4500这种特殊情况，此时isBigImm未变化，但是大机选配不一样！
-            this.getBigImmStdIO();
-          }
-          axios.get("/api/io/stdio", {
-            params: {
-              type: cv,
-              ceStandard: this.ceStandard
-            }
-          }).then(res => {
-            this.stdIo = res.data.stdIo;
-            this.originStdIo = JSON.parse(JSON.stringify(this.stdIo));
-          }).catch ( e => {
-            console.log(e);
-          });
+      type () {
+        this.getStdIo();
+        if (this.isBigImm) {
+          this.getBigImmStdIo();
         }
       },
       ceStandard () {
-        axios.get("/api/io/stdio", {
-          params: {
-            type: this.type,
-            ceStandard: this.ceStandard
-          }
-        }).then(res => {
-          this.stdIo = res.data.stdIo;
-        }).catch ( e => {
-          console.log(e);
-        });
+        this.getStdIo();
+        if (this.isBigImm) {
+          this.getBigImmStdIo();
+        }
       }
     },
     mounted(){
@@ -741,66 +738,6 @@
   }
 </script>
 <style lang="scss" scoped>
-  .fade-left-enter-active, .fade-left-leave-active{
-    transition: all .5s ease;
-  }
-  .fade-left-enter, .fade-left-leave-to{
-    opacity: 0;
-    margin-left: -40%;
-  }
-  .fade-right-enter-active, .fade-right-leave-active{
-    transition: all .5s ease;
-  }
-  .fade-right-enter, .fade-right-leave-to{
-    opacity: 0;
-    margin-right: -40%;
-  }
-  .vanish-left-enter-active, .vanish-left-leave-active{
-    transition: all .5s ease;
-  }
-  .vanish-left-enter, .vanish-left-leave-to{
-    opacity: 0;
-    margin-left: -60%
-  }
-  .vanish-right-enter-active, .vanish-right-leave-active{
-    transition: .5s ease;
-  }
-  .vanish-right-enter, .vanish-right-leave-to{
-    opacity: 0;
-    margin-right: -60%;
-  }
-  #slidePrev, #slideNext{
-    $height: 25rem;
-    position: absolute;
-    top: 50%;
-    transform: translateY(- ($height / 2));
-    width: 3rem;
-    height: $height;
-    background-color: #ccc;
-    opacity: 0.2;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: all .2s;
-  }
-  #slidePrev{
-    left: -2.5rem;
-    border-radius: 0 20px 20px 0;
-    &:hover{
-      opacity: .5;
-      left: 0;
-      cursor: pointer;
-    }
-  }
-  #slideNext{
-    right: -2.5rem;
-    border-radius: 20px 0 0 20px;
-    &:hover{
-      opacity: .5;
-      right: 0;
-      cursor: pointer;
-    }
-  }
   footer{
     background-color: #eee;
     display: flex;
@@ -810,6 +747,13 @@
     i{
       color: #ccc;
       cursor: pointer;
+      flex: 1;
+      &.to-left {
+        text-align: left;
+      }
+      &.to-right {
+        text-align: right;
+      }
     }
     a{
       margin:{
@@ -849,7 +793,6 @@
   }
   .hardware-area {
     overflow: auto;
-    height: 100%;
     box-sizing: border-box;
     &::-webkit-scrollbar{
       height: 6px;
@@ -860,15 +803,5 @@
       -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
       background: #818080;
     }
-  }
-  .test1 {
-    width: 100%;
-    height: 100%;
-    background-color: yellow;
-  }
-  .test2 {
-    width: 100%;
-    height: 100%;
-    background-color: red;
   }
 </style>

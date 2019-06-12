@@ -17,11 +17,11 @@
         </div>
       </div>
       <div class="form-row">
-        <div class="col-lg-6 mb-3">
+        <div class="col-lg-8 mb-3">
           <label for="validationDefault03">客户</label>
           <input type="text" class="form-control" id="validationDefault03" required autocomplete="off" v-model="customer">
         </div>
-        <div class="col-lg-3 mb-3">
+        <div class="col-lg-4 mb-3">
           <label for="validationDefault04">安全标准</label>
           <input type="text" class="form-control" id="validationDefault04" required autocomplete="off" v-model="safetyStandard">
         </div>

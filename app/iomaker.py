@@ -4,14 +4,15 @@ from app.pathinfo import *
 
 
 class IOMaker:
-    def __init__(self, imm_type, board_1_modules_ios=None, board_2_modules_ios=None, big=False,
+    def __init__(self, imm_type, board_1_modules_ios=None, board_2_modules_ios=None,
                  evaluation_num=None, production_num=None, type_string=None, customer=None,
                  safety_standard=None, technical_clause=None, dual_inj=False, external_hotrunner_num=0,
-                 energy_dee=False, varan_conn_module_pos=0, psg_hotrunner=False):
+                 energy_dee=False, varan_conn_module_pos=0, psg_hotrunner=False, main_board_modified_io=None):
         '''
             imm_type:           'ZEs', 'ZE', 'VE2', 'VE2s'
             board_1_modules_ios: [['CTO163', {'DO3': OutputID, ...}], ['CDM163', {'DI5': InputID, ...}], ...]
-            board_2_modules_ios:    [['CTO163', {'DO3': OutputID, ...}], ['CDM163', {'DI5': InputID, ...}], ...]
+            board_2_modules_ios: [['CTO163', {'DO3': OutputID, ...}], ['CDM163', {'DI5': InputID, ...}], ...]
+            main_board_modified_io: {'DI7': InputID, 'DO31': OutputId, ...}
         '''
         self.path_db = IO_INFO_DB_PATH
         self.t_di = TableManager('digital_input', self.path_db)
@@ -25,7 +26,6 @@ class IOMaker:
         self.imm_type = imm_type
         self.board_1_modules_ios = None
         self.board_2_modules_ios = None
-        self.big = big
         self.evaluation_num = evaluation_num
         self.production_num = production_num
         self.type_string = type_string
@@ -36,6 +36,7 @@ class IOMaker:
         self.dual_inj = dual_inj
         self.energy_dee = energy_dee
         self.psg_hotrunner = psg_hotrunner
+        self.main_board_modified_io = None
 
         if external_hotrunner_num > 0:
             self.external_hot_runner_cai888_configuration = {
@@ -46,7 +47,7 @@ class IOMaker:
                 'TI5': self.t_ti.displayBriefData(5, 'CName', 'EName'),
                 'TI6': self.t_ti.displayBriefData(6, 'CName', 'EName'),
                 'TI7': self.t_ti.displayBriefData(7, 'CName', 'EName'),
-                'TI8': self.t_ti.displayBriefData(8, 'CName', 'EName'),
+                'TI8': self.t_ti.displayBriefData(16, 'CName', 'EName'),
                 'TO1': self.t_to.displayBriefData(1, 'CName', 'EName'),
                 'TO2': self.t_to.displayBriefData(2, 'CName', 'EName'),
                 'TO3': self.t_to.displayBriefData(3, 'CName', 'EName'),
@@ -96,11 +97,30 @@ class IOMaker:
                         module[1][io] = self.t_ti.displayBriefData(io_id, 'CName', 'EName')
                     if str(io).upper().startswith('TO'):
                         module[1][io] = self.t_to.displayBriefData(io_id, 'CName', 'EName')
+        if main_board_modified_io is not None:
+            self.main_board_modified_io = main_board_modified_io.copy()
+            for k, v in self.main_board_modified_io.items():
+                #  格式如{'DI7': 110, 'DI8': 111}
+                io_type = k[:2]
+                if v == 0:
+                    self.main_board_modified_io[k] = ('', '')
+                else:
+                    if io_type == 'DI':
+                        self.main_board_modified_io[k] = self.t_di.displayBriefData(v, 'CName', 'EName')
+                    if io_type == 'DO':
+                        self.main_board_modified_io[k] = self.t_do.displayBriefData(v, 'CName', 'EName')
+                    if io_type == 'AI':
+                        self.main_board_modified_io[k] = self.t_ai.displayBriefData(v, 'CName', 'EName')
+                    if io_type == 'AO':
+                        self.main_board_modified_io[k] = self.t_ao.displayBriefData(v, 'CName', 'EName')
+                    if io_type == 'TI':
+                        self.main_board_modified_io[k] = self.t_ti.displayBriefData(v, 'CName', 'EName')
+                    if io_type == 'TO':
+                        self.main_board_modified_io[k] = self.t_to.displayBriefData(v, 'CName', 'EName')
 
         self.xlsxObj = IOFile(imm_type=self.imm_type,
                               main_board_modules=self.board_1_modules_ios,
                               board_1_modules=self.board_2_modules_ios,
-                              big=self.big,
                               evaluation_num=self.evaluation_num,
                               production_num=self.production_num,
                               type_string=self.type_string,
@@ -111,7 +131,8 @@ class IOMaker:
                               external_hotrunner_num=external_hotrunner_num,
                               energy_dee=self.energy_dee,
                               varan_conn_module_pos=varan_conn_module_pos,
-                              psg_hotrunner=self.psg_hotrunner)
+                              psg_hotrunner=self.psg_hotrunner,
+                              main_board_modified_io=self.main_board_modified_io)
 
     # 修改主底板默认点位，每个点位的修改都用一个方法特殊处理
     def func1ToInjSignal(self):
@@ -199,7 +220,7 @@ class IOMaker:
 
     def createFile(self, path):
         self.xlsxObj.modifyImmInfo()
-
+        self.xlsxObj.modifymainBoardIo()
         self.xlsxObj.copyMainBoardModulesInfo()
         self.xlsxObj.copyMainBoardModules()
         self.xlsxObj.copyBoard1ModulesInfo()

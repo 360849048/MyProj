@@ -108,7 +108,7 @@
         <span class="badge badge-pill badge-warning io-index">TO&nbsp;&nbsp;{{index}}</span>
         <div class="alert alert-primary io-name" role="alert"
              v-if="item"
-             @dblclick="dblclickIO('To', index, item)"
+             @dblclick="dblclickIO('TO', index, item)"
         >
           {{searchIONameByIdx('TO', item)}}
         </div>
@@ -136,7 +136,12 @@
         <i class="fa fa-exclamation text-danger" aria-hidden="true"></i>
         <span>底板三后端功能尚未开发完全，无法写入IO表和硬件配置</span>
       </div>
-
+    </div>
+    <!-- 硬件配置文件不支持CAI888的改动 -->
+    <div v-if="moduleName.toUpperCase() === 'CAI888'">
+      <hr>
+      <i class="fa fa-exclamation text-danger" aria-hidden="true"></i>
+      <span>配置文件(HK)暂不支持CAI888的改动</span>
     </div>
   </div>
 </template>

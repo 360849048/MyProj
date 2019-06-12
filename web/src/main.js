@@ -2,7 +2,7 @@ import Vue from 'vue'
 import App from './App.vue'
 import router from './vueRouterConfig'
 import store from './store'
-import { Loading, Notification, InputNumber, Message, Pagination, Select, Option, Slider } from 'element-ui'
+import { Loading, Notification, InputNumber, Message, Pagination, Select, Option, Slider, Popover } from 'element-ui'
 
 Vue.use(Loading);
 Vue.prototype.$notify = Notification;
@@ -13,6 +13,7 @@ Vue.use(Pagination);
 Vue.use(Select);
 Vue.use(Option);
 Vue.use(Slider);
+Vue.use(Popover);
 
 new Vue({
   el: '#app',

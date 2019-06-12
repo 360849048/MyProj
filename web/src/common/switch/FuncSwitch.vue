@@ -8,6 +8,14 @@
           <i class="fa" :class="[status ? 'fa-check' : 'fa-times']" aria-hidden="true"></i>&nbsp;&nbsp;{{status | toChinese}}
         </button>
         <div class="name">{{name}}</div>
+        <el-popover
+          placement="right"
+          width="200"
+          trigger="hover"
+          v-if="desc !== ''"
+          :content="desc">
+          <i class="fa fa fa-question icon-style" slot="reference"></i>
+        </el-popover>
       </div>
     </div>
   </div>
@@ -16,7 +24,7 @@
 <script>
   export default {
     name: "func-switch",
-    props: ['id', 'name', 'status'],
+    props: ['id', 'name', 'status', 'desc'],
     filters: {
       toChinese(input){
         return input ? '开' : '关';
@@ -46,5 +54,17 @@
   .show-inline {
     display: flex;
     justify-content: flex-start;
+  }
+  .icon-style {
+    user-select: none;
+    cursor: pointer;
+    color: #ccc;
+    opacity: .5;
+    transition-property: opacity,color;
+    transition-duration: .5s;
+  }
+  .icon-style:hover {
+    color: #666;
+    opacity: 1;
   }
 </style>

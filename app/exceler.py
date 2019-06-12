@@ -1,7 +1,9 @@
 import os
+import re
 import openpyxl
 from openpyxl.styles import Font, Alignment, Border, Fill, Protection
 from copy import copy
+from app.pathinfo import *
 
 
 def copyCell(src_cell, dst_cell, style=True):
@@ -123,14 +125,15 @@ def searchCells(worksheet, keywords, strict=False):
 
 
 class IOFile:
-    def __init__(self, imm_type, main_board_modules=None, board_1_modules=None, big=False,
+    def __init__(self, imm_type, main_board_modules=None, board_1_modules=None,
                  evaluation_num=None, production_num=None, type_string=None, customer=None,
                  safety_standard=None, technical_clause=None, dual_inj=False, external_hotrunner_num=0,
-                 energy_dee=False, varan_conn_module_pos=0, psg_hotrunner=False):
+                 energy_dee=False, varan_conn_module_pos=0, psg_hotrunner=False, main_board_modified_io=None):
         ''' imm_type:           'ZEs', 'ZE', 'VE2', 'VE2s'
             main_board_modules: [['CTO163', {'DO3': ['中文名', 'EnglishName'], ...}], ['CDM163', {'DI5': ['中文名', 'EnglishName'], ...}], ...]
             board_1_modules:    [['CIV512', {}], ['CTO163', {'DO3': ['中文名', 'EnglishName'], ...}], ['CDM163', {'DI5': ['中文名', 'EnglishName'], ...}], ...]
             varan_conn_module_pos:  0：如果有Varan连接模块，则配置在KEB之后；   1：如果有Varan连接模块，则配置在KEB之前
+            main_board_modified_io: {'DI7': ('中文名', 'EnglishName'), ...}
         '''
         self.imm_type = imm_type
         self.main_board_modules = None
@@ -138,8 +141,7 @@ class IOFile:
         self.board1_1_modules = None
         self.board1_1_modules_ioconfig = None
         self.varan_conn_module_pos = int(varan_conn_module_pos)
-        self.big = big
-        self.src_path = r'./app/libfiles'
+        self.src_path = STD_LIB_FILE_DIR
         self.std_filename = None
         self.modulelib_filename = os.path.join(self.src_path, '常用硬件表.xlsx')
         self.std_workbook = None
@@ -159,6 +161,7 @@ class IOFile:
         self.energy_dee = energy_dee
         # PSG热流道
         self.psg_hotrunner = psg_hotrunner
+        self.main_board_modified_io = None
 
         if main_board_modules is not None:
             self.main_board_modules = []
@@ -172,22 +175,16 @@ class IOFile:
             for module in board_1_modules:
                 self.board1_1_modules.append(module[0])
                 self.board1_1_modules_ioconfig.append(module[1])
+        if main_board_modified_io is not None:
+            self.main_board_modified_io = main_board_modified_io.copy()
 
         for filename in os.listdir(self.src_path):
-            if self.big:
-                if filename.upper().startswith('大机 - ' + self.imm_type.upper() + '标准'):
-                    if self.std_filename is None:
-                        self.std_filename = os.path.join(self.src_path, filename)
-                    else:
-                        print("Fatal: 匹配到多份标准IO文件：%s  %s" % (self.std_filename, filename))
-                        self.std_filename = None
-            else:
-                if filename.upper().startswith(self.imm_type.upper() + '标准'):
-                    if self.std_filename is None:
-                        self.std_filename = os.path.join(self.src_path, filename)
-                    else:
-                        print("Fatal: 匹配到多份标准IO文件：%s  %s" % (self.std_filename, filename))
-                        self.std_filename = None
+            if filename.upper().startswith(self.imm_type.upper() + '标准'):
+                if self.std_filename is None:
+                    self.std_filename = os.path.join(self.src_path, filename)
+                else:
+                    print("Fatal: 匹配到多份标准IO文件：%s  %s" % (self.std_filename, filename))
+                    self.std_filename = None
 
         if self.std_filename is None:
             print("Fatal: 未找到相应标准IO文件，请检查目录")
@@ -301,10 +298,7 @@ class IOFile:
                 cur_work_row += 1
                 first_cell = hardware_info_worksheet.cell(row=cur_work_row, column=cur_work_column)
         # 向 '硬件配置' 表复制主底板扩展槽模块信息
-        if self.big:
-            last_module = 'CIO021'
-        else:
-            last_module = None
+        last_module = None
         for module in self.main_board_modules:
             if last_module is not None and module.upper() == last_module.upper():
                 module_num = int(
@@ -352,16 +346,11 @@ class IOFile:
             if self._copyAndModifyCellRange(src_start_cell, src_end_cell, dst_start_cell, ioconfiguration=self.main_board_modules_ioconfig[i]) != 0:
                 print("Fatal: 单元格区域复制失败")
                 return -2
-            if self.big:
-                if self.imm_type.upper() != 'VE2':
-                    main_board_hardware_worksheet.cell(row=cur_work_row, column=cur_work_column).value += str(i + 1)
-                else:
-                    main_board_hardware_worksheet.cell(row=cur_work_row, column=cur_work_column).value += str(i + 8)
+            # 写入模块的地址
+            if self.imm_type.upper() != 'VE2':
+                main_board_hardware_worksheet.cell(row=cur_work_row, column=cur_work_column).value += str(i)
             else:
-                if self.imm_type.upper() != 'VE2':
-                    main_board_hardware_worksheet.cell(row=cur_work_row, column=cur_work_column).value += str(i)
-                else:
-                    main_board_hardware_worksheet.cell(row=cur_work_row, column=cur_work_column).value += str(i + 7)
+                main_board_hardware_worksheet.cell(row=cur_work_row, column=cur_work_column).value += str(i + 7)
             cur_work_row += modulelib_worksheets[i].max_row - 1
         return 0
 
@@ -523,6 +512,84 @@ class IOFile:
                 copyCell(ethernet_cell, se051_cell)
                 se051_cell.value = 'SE051'
 
+    def modifymainBoardIo(self):
+        if self.imm_type.upper() == 'VE2':
+            main_board_io_ws = self.std_workbook['主底板扩展槽IO']
+            max_row = main_board_io_ws.max_row
+            cur_module_addr = -1
+
+            try:
+                for row in range(1, max_row + 1):
+                    cell = main_board_io_ws.cell(row=row, column=1)
+                    key = None
+                    if cell.value.startswith('*地址'):
+                        cur_module_addr += 1
+
+                    if cell.value.startswith('I'):
+                        if cur_module_addr < 3:
+                            key = 'DI' + str(int(cell.value[1:]) + cur_module_addr * 16)
+                        if cur_module_addr == 6:
+                            key = 'DI' + str(int(cell.value[1:]) + 48)
+                    if cur_module_addr != 5 and cell.value.startswith('O'):
+                        if 3 <= cur_module_addr <=4:
+                            key = 'DO' + str(int(cell.value[1:]) + (cur_module_addr - 3) * 16)
+                        if cur_module_addr == 6:
+                            key = 'DO' + str(int(cell.value[1:]) + 32)
+                    if cur_module_addr == 6 and cell.value.startswith('AI'):
+                        key = 'AI' + cell.value[2:-1]
+                    if cur_module_addr == 6 and cell.value.startswith('AO') and re.search(r'(\d+)', cell.value):
+                        # 这里使用正则而不是使用简单的字符串裁切，因为表中可能用AO1，也可能是AO1+来描述
+                        key = 'AO' + re.search(r'(\d+)', cell.value).group(0)
+                    if cur_module_addr == 5 and cell.value.startswith('T'):
+                        key = 'TI' + cell.value[1:-1]
+                    if cur_module_addr == 5 and cell.value.startswith('O'):
+                        key = 'TO' + cell.value[1:]
+                    # 当前行是符合需求的待修改行
+                    if key is not None and key in self.main_board_modified_io:
+                        main_board_io_ws.cell(row=row, column=2, value=self.main_board_modified_io[key][0])
+                        main_board_io_ws.cell(row=row, column=3, value=self.main_board_modified_io[key][1])
+                        # 从别的地方复制样式(红色背景)后修改 '更改' 列的内容('√')
+                        modify_check_cell = main_board_io_ws.cell(row=row, column=4)
+                        src_style_cell = searchCells(main_board_io_ws, '更改', strict=True)
+                        copyCell(src_cell=src_style_cell, dst_cell=modify_check_cell, style=True)
+                        modify_check_cell.value = '√'
+            except Exception as e:
+                print(e)
+                print('修改VE2默认IO时候出错，请检查"主底板扩展槽IO"该表内容是否异常')
+        else:
+            main_board_io_ws = self.std_workbook['主底板IO']
+            max_row = main_board_io_ws.max_row
+
+            for row in range(1, max_row + 1):
+                cell = main_board_io_ws.cell(row=row, column=1)
+                key = None
+                if cell.value is not None:
+                    try:
+                        # 判断当前IO行IO类型
+                        if cell.value.startswith('I'):
+                            key = 'DI' + cell.value[1:]
+                        if cell.value.startswith('O') and int(cell.value[1:]) <= 40:
+                            key = 'DO' + cell.value[1:]
+                        if cell.value.startswith('AI'):
+                            key = 'AI' + cell.value[2:-1]
+                        if cell.value.startswith('AO') and re.search(r'(\d+)', cell.value):
+                            key = 'AO' + re.search(r'(\d+)', cell.value).group(0)
+                        if cell.value.startswith('T'):
+                            key = 'TI' + cell.value[1:-1]
+                        if cell.value.startswith('O') and 40 < int(cell.value[1:]) <= 48:
+                            key = 'TO' + str(int(cell.value[1:]) - 40)
+                        # 当前行是符合需求的待修改行
+                        if key is not None and key in self.main_board_modified_io:
+                            main_board_io_ws.cell(row=row, column=2, value=self.main_board_modified_io[key][0])
+                            main_board_io_ws.cell(row=row, column=3, value=self.main_board_modified_io[key][1])
+                            # 从别的地方复制样式(红色背景)后修改 '更改' 列的内容('√')
+                            modify_check_cell = main_board_io_ws.cell(row=row, column=4)
+                            src_style_cell = searchCells(main_board_io_ws, '更改', strict=True)
+                            copyCell(src_cell=src_style_cell, dst_cell=modify_check_cell, style=True)
+                            modify_check_cell.value = '√'
+                    except Exception as e:
+                        print(e)
+                        print('修改CMM103主底板默认IO时候出错，请检查"主底板IO"该表内容是否异常')
 
     def modifyDefaultIO(self, io_type, origin_io_name, new_io_cname, new_io_ename):
         ''' 修改主底板或主底板扩展槽(VE2)上默认的IO
