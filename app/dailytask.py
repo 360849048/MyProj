@@ -9,6 +9,7 @@ from app.softrefresh import handleRefresh
 def updatePathInfoAutomatically():
     '''
         每天固定时间段内启动后台自动数据更新功能
+        * 2019.06.14: （Bug fix）在同一个os.walk循环下无法同时删除文件和文件夹
     '''
     log.record('后台脚本程序启动')
     while True:
@@ -20,6 +21,7 @@ def updatePathInfoAutomatically():
                     for root, dirs, files in os.walk(CACHE_FILE_DIR):
                         for file in files:
                             os.remove(os.path.join(root, file))
+                    for root, dirs, files in os.walk(CACHE_FILE_DIR):
                         for dir in dirs:
                             os.rmdir(os.path.join(root, dir))
             except:

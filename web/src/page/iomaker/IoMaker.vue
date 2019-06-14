@@ -201,6 +201,7 @@
         // 解析immType后得到的数据
         isBigImm: false,
         isDualInj: false,
+        isDualScrew: false,
         clampForce: 0,
         injection: 0,
         type: '',
@@ -595,10 +596,13 @@
         }).then(res => {
           this.stdIo = res.data.stdIo;
           this.originStdIo = JSON.parse(JSON.stringify(this.stdIo));
+          if (this.isBigImm) {
+            this.getBigImmStdIo();
+          }
         }).catch ( e => {
           console.log(e);
         });
-      }
+      },
     },
     watch: {
       immType(){
@@ -608,6 +612,7 @@
          */
         this.isBigImm = false;
         this.isDualInj = false;
+        this.isDualScrew = false;
         this.clampForce = 0;
         this.injection = 0;
         this.type = '';
@@ -636,7 +641,7 @@
         this.clampForce = temp[0];
         // 判断是否是ZEs ZE VE2s VE2等4中机型
         if(substr1.indexOf('ZE') > -1){
-          if(substr1.indexOf('S') > -1 || substr1.includes('Ⅲ') || substr1.includes('III')){
+          if(substr1.indexOf('S') > -1 || substr1.includes('Ⅲ') || substr1.includes('III') || substr1.indexOf('F') > -1){
             this.type = 'ZEs';
           }else{
             this.type = 'ZE';
@@ -666,6 +671,15 @@
             this.isDualInj = true;
           }
         }
+        if (substr1.includes('Ⅲ') || substr1.includes('III')){
+          if (this.injection >= 3350) {
+            this.isDualScrew = true;
+          }
+        } else {
+          if (this.injection >= 5200) {
+            this.isDualScrew = true;
+          }
+        }
       },
       safetyStandard(){
         this.ceStandard = true;
@@ -687,14 +701,25 @@
       },
       type () {
         this.getStdIo();
-        if (this.isBigImm) {
-          this.getBigImmStdIo();
-        }
+        // 不应该在这设置大机选配，因为ajax可能尚未完成，可能导致大机选配点位被覆盖！
+        // if (this.isBigImm) {
+        //   this.getBigImmStdIo();
+        // }
       },
       ceStandard () {
         this.getStdIo();
-        if (this.isBigImm) {
-          this.getBigImmStdIo();
+        // if (this.isBigImm) {
+        //   this.getBigImmStdIo();
+        // }
+      },
+      isDualScrew () {
+        if (this.isDualScrew){
+          this.$message({
+            showClose: true,
+            duration: 10000,
+            message: '当前机器需要配置双丝杆，请确认并手动配置相关DI和AI',
+            type: 'warning'
+          });
         }
       }
     },

@@ -10,7 +10,7 @@
 
 <script>
   export default {
-    name: "swtitch-page",
+    name: "switch-page",
     props: {
       direction: String,
     }
@@ -40,7 +40,6 @@
     i {
       position: absolute;
       top: 50%;
-      left: 25%;
       transform: translateY(-24px);
     }
   }
@@ -50,12 +49,18 @@
     &:hover {
       margin-left: 0;
     }
+    i {
+      left: 25%;
+    }
   }
   .right {
     right: 0;
     margin-right: -40px;
     &:hover {
       margin-right: 0;
+    }
+    i {
+      right: 25%;
     }
   }
 </style>

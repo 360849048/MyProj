@@ -143,7 +143,7 @@ class IOFile:
         self.varan_conn_module_pos = int(varan_conn_module_pos)
         self.src_path = STD_LIB_FILE_DIR
         self.std_filename = None
-        self.modulelib_filename = os.path.join(self.src_path, '常用硬件表.xlsx')
+        self.modulelib_filename = STD_MODULE_LIB_XLSX
         self.std_workbook = None
         self.modulelib_workbook = None
         # 待填入表“机器信息”的信息
@@ -755,8 +755,7 @@ class IOFile:
 if __name__ == '__main__':
     iofile = IOFile(imm_type='ve2s',
                     main_board_modules=[['cdm163', {'DI1': ['点1', 'id 1']}], ['cio011', {'DO2': ['点45', 'id 45'], 'Ai2': ['模腔压力', 'Mold Pressure']}], ['cto163', {'DO1': ['点41', 'ID 41']}]],
-                    board_1_modules=[['civ512', {}], ['cai888', {}]],
-                    big=True)
+                    board_1_modules=[['civ512', {}], ['cai888', {}]])
     iofile.copyMainBoardModulesInfo()
     iofile.copyMainBoardModules()
     iofile.copyBoard1ModulesInfo()

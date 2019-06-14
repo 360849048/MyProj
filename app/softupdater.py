@@ -1,4 +1,5 @@
 import xlrd
+import time
 from app.pathinfo import *
 from app.sqljob import TableManager
 
@@ -9,6 +10,7 @@ class Updater:
             对数据库中的版本记录和xls文件中的版本记录，获取更新信息和更新数据库内容
             :param table_name: 数据库存放某个类型版本的表名
             :param sheet_name: xls文件中记录某个类型版本的sheet名
+            * 2019.06.13: （New feature）设置两次更新检查最短间隔时间，避免高频率地检查
         '''
         self.table_name = table_name
         self.sheet_name = sheet_name
@@ -16,7 +18,8 @@ class Updater:
         self.version_db_path = SOFTWARE_VERSION_INFO_DB_PATH
         self.vers_ready_to_update = None
         self.running_update = False
-        self.expire_ids = []
+        self.CHECK_INTERVAL = 60
+        self.last_update_info_check_time_mark = 0
 
     def getUpdateInfo(self):
         '''
@@ -52,14 +55,17 @@ class Updater:
             self.vers_ready_to_update = None
             return -1
 
+        if time.time() - self.last_update_info_check_time_mark <= self.CHECK_INTERVAL:
+            # 短时间内避免重复检查IO
+            if self.vers_ready_to_update is None:
+                self.vers_ready_to_update = {'new': [], 'expire': []}
+            return self.vers_ready_to_update
         t_soft = TableManager(self.table_name, self.version_db_path)
         ids = t_soft.getAllId()
         softs_existed = []
-        self.expire_ids.clear()
         for id in ids:
             vers_info = t_soft.displayBriefData(id, 'id', 'client', 'version', 'date', 'base', 'record', 'reason', 'remark', 'author')
             softs_existed.append(vers_info[1:])
-            self.expire_ids.append(vers_info[0])
         self.vers_ready_to_update = {'new': [], 'expire': []}
 
         for i in range(1, sheet.nrows):
@@ -70,8 +76,7 @@ class Updater:
             else:
                 ver_idx = softs_existed.index(soft_info)
                 softs_existed.pop(ver_idx)
-                self.expire_ids.pop(ver_idx)
-
+        self.last_update_info_check_time_mark = time.time()
         self.vers_ready_to_update['expire'] = softs_existed
         return self.vers_ready_to_update
 
@@ -101,12 +106,11 @@ class Updater:
                                       reason=new_ver[5],
                                       remark=new_ver[6],
                                       author=new_ver[7]),
-                for expire_id in self.expire_ids:
+                for expire_id in self.vers_ready_to_update['expire']:
                     t_soft.deleteLine(expire_id)
                 t_soft.commitData()
                 t_soft.auto_commit = True
                 self.vers_ready_to_update = None
-                self.expire_ids.clear()
                 return True
             except Exception as e:
                 print(e)

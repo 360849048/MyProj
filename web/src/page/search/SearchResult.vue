@@ -91,7 +91,7 @@
         let _this = this;
         $.ajax({
           type: 'GET',
-          url: '/downloadsrccode',
+          url: '/api/ver/downloadsrccode',
           dataType: 'json',
           data: {'path': path},
           beforeSend: function(){

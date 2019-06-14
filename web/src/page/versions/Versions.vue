@@ -272,7 +272,7 @@
         let _this = this;
         $.ajax({
           type: 'GET',
-          url: '/downloadsrccode',
+          url: '/api/ver/downloadsrccode',
           dataType: 'json',
           data: {'path': path},
           beforeSend: function(){
@@ -353,19 +353,17 @@
     },
     mounted(){
       this.getVers(0, pageItemAmount);
-      axios.get("/api/ver/checkupdate", {
-        params: {
-          softType: this.softType
-        }
-      })
+      axios.get("/api/ver/checkallupdate")
         .then((res) => {
           res = res.data;
           console.log(res);
-          if (res.status === 'success' && (res.info.expire.length > 0 || res.info.new.length > 0)) {
-            this.$notify.info({
-              title: '有新的更新！',
-              message: "请手动点击左上角刷新图标进行更新"
-            });
+          for (let soft_type in res) {
+            if (res[soft_type].status === 'success' && (res[soft_type].info.expire.length > 0 || res[soft_type].info.new.length > 0)) {
+              this.$notify.info({
+                title: soft_type + '有新的更新！',
+                message: "请手动点击左上角刷新图标进行更新"
+              });
+            }
           }
         })
         .catch((err) => {

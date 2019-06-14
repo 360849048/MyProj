@@ -9,6 +9,7 @@ Python调用的路径
 IO_INFO_DB_PATH = './app/libfiles/data.db'
 # 标准文件目录
 STD_LIB_FILE_DIR = './app/libfiles/'
+STD_MODULE_LIB_XLSX = os.path.join(STD_LIB_FILE_DIR, '常用硬件表.xlsx')
 # 标准配置文件目录
 STD_HK_FILE_DIR = os.path.join(STD_LIB_FILE_DIR, '配置文件/硬件配置文件')
 STD_FCF_FILE_DIR = os.path.join(STD_LIB_FILE_DIR, '配置文件/功能配置文件')

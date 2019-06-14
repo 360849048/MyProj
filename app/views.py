@@ -1,6 +1,7 @@
 from flask import request, send_file, jsonify, make_response
 import shutil
 import re
+import time
 from app import app
 from app.sqljob import TableManager
 from app.iomaker import IOMaker
@@ -107,6 +108,7 @@ def createIoFile():
         目前后台只支持主底板和扩展底板一的编辑
         根据网页POST数据格式，进行数据处理。
         必须严格参照网页传输的数据进行编程
+        * 2019.06.13: （Bug fix）当计算得到两份重名文件时，由于浏览器缓存原因，将下载得到两份一样的文件
     '''
     # data是一个dict对象
     data = request.get_json()
@@ -169,8 +171,14 @@ def createIoFile():
     elif data['type'].upper() == 'VE2':
         imm_type = 'VE' + clamp_force + 'II-' + injection
 
-    io_file_path = CACHE_FILE_DIR + evaluation_num + customer + imm_type + '.xlsx'
-    io_url = URL_DIR + evaluation_num + customer + imm_type + '.xlsx'
+    # 增加一个外层时间戳文件夹，用来阻止浏览器缓存文件
+    dir_name = ''.join(str(time.time()).split('.'))
+    wrap_dir = CACHE_FILE_DIR + dir_name + '/'
+    wrap_url = URL_DIR + dir_name + '/'
+    os.mkdir(wrap_dir)
+
+    io_file_path = wrap_dir + evaluation_num + customer + imm_type + '.xlsx'
+    io_url = wrap_url + evaluation_num + customer + imm_type + '.xlsx'
 
     print('creating io.xlsx, pls wait....')
     iomaker = IOMaker(imm_type=data['type'],
@@ -202,6 +210,7 @@ def createConfigFile():
         生成配置文件(.zip)
         同样只支持主底板和扩展底板一的编辑，更多的配置请自行特殊制作支持
         必须严格按照网页传输数据进行编程
+        * 2019.06.13: （Bug fix）当计算得到两份重名文件时，由于浏览器缓存原因，将下载得到两份一样的文件
     '''
     data = request.get_json()
     client_ip = request.remote_addr
@@ -257,14 +266,19 @@ def createConfigFile():
         imm_type = 'VE' + clamp_force + 'IIs-' + injection
     elif data['type'].upper() == 'VE2':
         imm_type = 'VE' + clamp_force + 'II-' + injection
+    # 增加一个外层时间戳文件夹，用来阻止浏览器缓存文件
+    dir_name = ''.join(str(time.time()).split('.'))
+    wrap_dir = CACHE_FILE_DIR + dir_name + '/'
+    wrap_url = URL_DIR + dir_name + '/'
+    os.mkdir(wrap_dir)
     if ce_standard:
-        dst_file_dir = CACHE_FILE_DIR + data['evaluationNum'] + customer + imm_type + '(CE)/'
-        zip_file_path = CACHE_FILE_DIR + data['evaluationNum'] + customer + imm_type + '(CE).zip'
-        zip_file_url = URL_DIR + data['evaluationNum'] + customer + imm_type + '(CE).zip'
+        dst_file_dir = wrap_dir + data['evaluationNum'] + customer + imm_type + '(CE)/'
+        zip_file_path = wrap_dir + data['evaluationNum'] + customer + imm_type + '(CE).zip'
+        zip_file_url = wrap_url + data['evaluationNum'] + customer + imm_type + '(CE).zip'
     else:
-        dst_file_dir = CACHE_FILE_DIR + data['evaluationNum'] + customer + imm_type + '/'
-        zip_file_path = CACHE_FILE_DIR + data['evaluationNum'] + customer + imm_type + '.zip'
-        zip_file_url = URL_DIR + data['evaluationNum'] + customer + imm_type + '.zip'
+        dst_file_dir = wrap_dir + data['evaluationNum'] + customer + imm_type + '/'
+        zip_file_path = wrap_dir + data['evaluationNum'] + customer + imm_type + '.zip'
+        zip_file_url = wrap_url + data['evaluationNum'] + customer + imm_type + '.zip'
     if os.path.isdir(dst_file_dir):
         shutil.rmtree(dst_file_dir)
     os.mkdir(dst_file_dir)
@@ -360,6 +374,9 @@ def getStdIo():
 
     return jsonify({'status': 'success', 'stdIo': hk_info.getStdIoInfo()})
 
+@app.route('/api/io/cfgadvice', methods=['GET'])
+def getIoConfigAdvice():
+    pass
 
 # 避免频繁搜索数据库获取IO长度，这里一次性读取掉所有IO的数目
 # 通过函数中获取，可能可以尽早销毁这些被创建的TableManager
@@ -392,7 +409,7 @@ def getVersion():
         根据请求的版本类型以及版本区间（不是数据库的id号）返回版本数据
         当某个版本类型下的所有版本数据按一定顺序（这里按名字降序排列）后，取
         位于第start_seq和end_seq之间的版本数据
-        :return 格式如 {'itemsNum': 123, 'items': {'client': xxx, 'version': xxx , ...}}
+        :return 格式如 {'itemsNum': 123, 'items': {'0': {'client': xxx, 'version': xxx , ...}, {'1': {...}}, ...}}
 
         * 2019.04.16: （Bug fix）当数据库中某一行数据被删除，再次遍历该数据时返回null，导致前端页面错误
     '''
@@ -434,7 +451,7 @@ def checkUpdate():
     '''
         检查某类版本的更新信息
         如果找不到或无法打开'软件版本登记表.xls'文件，这里返回状态为失败。
-        :return: 成功返回格式如 {'status': success, 'newVers': [{'client': xx, 'version': xx, ...}, {...}, ,,]}
+        :return: 成功返回格式如 {'status': success, 'info': {"new": [{'client': xx, 'version': xx, ...}, {...}, ,,]}
                   失败返回格式如 {'status': failure, 'description': 'xxxx'}
     '''
     global updaters
@@ -542,3 +559,29 @@ def submitError():
     info_to_record = 'IP: ' + request.remote_addr + '标记' + soft_type + '中id号是：' + err_id + '路径存在问题'
     log.record(info_to_record)
     return jsonify({'status': 'success'})
+
+@app.route('/api/ver/checkallupdate', methods=['GET'])
+def checkAllUpdate():
+    '''
+        检查所有版本的更新信息
+        :return: {"V01": {
+                        "status": "success",
+                        "info": {
+                            "new": {"client": "xxx", ...},
+                            "expire": {"client": "xxx", xxx}
+                            }
+                        },
+                    "V02": {...}, ...
+                    }
+    '''
+    global updaters
+    ret_val = {}
+    for soft_type, updater in updaters.items():
+        update_info = updater.getUpdateInfo()
+        if update_info == -1:
+            ret_val[soft_type] = {'status': 'failure', 'description': '无法打开xls文件路径或xls文件内没有正确的sheet，检查后台 "软件版本登记表.xls" 文件路径'}
+        elif update_info == -2:
+            ret_val[soft_type] = {'status': 'failure', 'description': '其他线程正在更新数据，稍后刷新重试'}
+        else:
+            ret_val[soft_type] = {'status': 'success', 'info': update_info}
+    return jsonify(ret_val)

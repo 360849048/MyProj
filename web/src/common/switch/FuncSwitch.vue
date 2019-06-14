@@ -11,7 +11,7 @@
         <el-popover
           placement="right"
           width="200"
-          trigger="hover"
+          trigger="click"
           v-if="desc !== ''"
           :content="desc">
           <i class="fa fa fa-question icon-style" slot="reference"></i>
