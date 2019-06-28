@@ -1,7 +1,7 @@
 <template>
   <div id="nav">
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <a class="navbar-brand" href="###">NEW!</a>
+    <a class="navbar-brand" href="javascript:" @click="popLoginWnd"><i class="fa fa-user" aria-hidden="true"></i></a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
@@ -92,6 +92,31 @@
       </form>
     </div>
     </nav>
+    <!-- 登录框 -->
+    <Fade>
+      <div class="login shade" v-if="showLoginWnd" @click="hideLoginWnd">
+        <div class="login-wnd" ref="loginWnd" @click.stop="">
+          <div class="titlebar" @mousedown="moveLoginWnd">
+            <p class="login-title">登录</p>
+            <i class="fa fa-times fa-2x btn-exit" aria-hidden="true" @click="hideLoginWnd"></i>
+          </div>
+          <div class="work-area">
+            <form class="username" onsubmit="return false;">
+              <label for="username">用户：</label>
+              <input id="username" type="text" v-model="username" @keydown.enter="postAccount">
+            </form>
+            <form class="password" onsubmit="return false;">
+              <label for="password">密码：</label>
+              <input id="password" type="password" v-model="password" @keydown.enter="postAccount">
+            </form>
+            <div class="btns">
+              <button class="btn btn-primary" @click="postAccount">确认</button>
+              <button class="btn btn-secondary" @click="resetUserInfo">重置</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Fade>
   </div>
 </template>
 
@@ -129,48 +154,199 @@
       max-height: 150px;
     }
   }
+  .shade {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(100, 100, 100, .5);
+  }
+  .login {
+    .login-wnd {
+      $wndWidth: 400px;
+      $wndHeight: 250px;
+      $titleHeight: 15%;
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: $wndWidth;
+      height: $wndHeight;
+      transform: translate(-$wndWidth/2, -$wndHeight/2);
+      box-shadow: 0 0 20px #666;
+      background: #fff;
+      border-radius: 5px;
+      .titlebar {
+        height: $titleHeight;
+        border-bottom: 1px solid #999;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        .login-title {
+          margin-bottom: 0;
+          margin-left: 10px;
+          font-weight: bold;
+          font-size: 1.25rem;
+          user-select: none;
+          color: #333;
+        }
+        .btn-exit {
+          width: 50px;
+          text-align: center;
+          color: #666;
+          cursor: pointer;
+          transition: color .5s ease;
+          &:hover {
+            color: #000
+          }
+        }
+      }
+      .work-area {
+        height: 100%-$titleHeight;
+        font-size: 1rem;
+        font-weight: bold;
+        color: #333;
+        padding: 20px;
+        form {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          margin: 15px;
+          label {
+            width: 20%;
+            user-select: none;
+          }
+          input {
+            border: 1px solid #ccc;
+            padding: 3px 5px;
+            border-radius: 3px;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, .075);
+            transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
+            &:focus {
+              border-color: #007bff;
+              outline: 0;
+              box-shadow: inset 0 1px 2px rgba(0, 0, 0, .075), 0 0 4px rgba(102, 175, 233, .6);
+            }
+          }
+        }
+        .btns {
+          display: flex;
+          margin: 30px;
+          justify-content: space-evenly;
+        }
+      }
+    }
+  }
 </style>
 
 <script>
-export default {
-  data(){
-    return {
-      curRoute: 1,
-      textSearch: '',
-      clientWidth: 0,
-      timer: null,
-    }
-  },
-  methods: {
-    search(){
-      this.$router.push({
-        path: 'search',
-        query:{
-          text: this.textSearch
-        }
-      });
-      this.curRoute = 9;
-    }
-  },
-  mounted () {
-    this.clientWidth = document.body.clientWidth;
+  import md5 from '@/libs/md5'
+  import axios from 'axios'
+  import Fade from '@/common/animation/Fade'
 
-    let _this = this;
-    window.onresize = () => {
-      if (_this.timer) {
-        clearTimeout(_this.timer);
+  // 因为babel的处理，直接在Import处解构赋值会失败
+  let {MD5} = md5;
+
+  export default {
+    components: {
+      Fade
+    },
+    data(){
+      return {
+        curRoute: 1,
+        textSearch: '',
+        clientWidth: 0,
+        timer: null,
+        showLoginWnd: false,
+        username: '',
+        password: '',
       }
-      _this.timer = setTimeout(()=>{
-        _this.clientWidth = document.body.clientWidth;
-      }, 50);
+    },
+    methods: {
+      search(){
+        this.$router.push({
+          path: 'search',
+          query:{
+            text: this.textSearch
+          }
+        });
+        this.curRoute = 9;
+      },
+      popLoginWnd () {
+        this.showLoginWnd = true;
+      },
+      hideLoginWnd () {
+        this.showLoginWnd = false;
+      },
+      resetUserInfo () {
+        this.username = '';
+        this.password = '';
+      },
+      moveLoginWnd (e) {
+        let loginWnd = this.$refs.loginWnd;
+        let clientX = loginWnd.offsetLeft;
+        let clientY = loginWnd.offsetTop;
+        let originMouseX = e.x;
+        let originMouseY = e.y;
+        let eventMov = function (e) {
+          let curMouseX = e.x;
+          let curMouseY = e.y;
+          loginWnd.style.left = curMouseX - originMouseX + clientX + 'px';
+          loginWnd.style.top = curMouseY - originMouseY + clientY + 'px';
+        };
+        let rmEvnetMov = function () {
+          try {
+            document.removeEventListener('mousemove', eventMov);
+            document.removeEventListener('mouseup', rmEvnetMov);
+          } catch (e) {
+            console.log(e);
+          }
+        };
+        document.addEventListener('mousemove', eventMov);
+        document.addEventListener('mouseup', rmEvnetMov);
+      },
+      postAccount () {
+        axios.post('/api/login', {
+          username: this.username,
+          pwd: MD5(this.password)
+        }).then(res => {
+          res = res.data;
+          if (res.status === 'success') {
+            this.hideLoginWnd();
+            this.$message({
+              message: '登录成功',
+              type: 'success'
+            });
+          } else {
+            this.$message({
+              message: '密码或账号错误',
+              type: 'error'
+            });
+          }
+        }).catch(err => {console.log(err)})
+      }
+    },
+    mounted () {
+      this.clientWidth = document.body.clientWidth;
+
+      let _this = this;
+      window.onresize = () => {
+        if (_this.timer) {
+          clearTimeout(_this.timer);
+        }
+        _this.timer = setTimeout(()=>{
+          _this.clientWidth = document.body.clientWidth;
+        }, 50);
+      };
     }
   }
-}
 </script>
 <style>
   #nav {
     position: relative;
     z-index: 999;
+  }
+  #nav nav {
     opacity: .97;
   }
 </style>

@@ -228,6 +228,7 @@ class IOMaker:
         self.xlsxObj.copyExternalHotrunnerInfo()
         self.xlsxObj.copyExternalHotrunnerModule(self.external_hot_runner_cai888_configuration)
         self.xlsxObj.copyEnergyModuleInfo()
+        self.xlsxObj.copySE051ModuleInfo()
         self.xlsxObj.saveAs(path)
 
 

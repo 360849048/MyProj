@@ -18,6 +18,7 @@ class Updater:
         self.version_db_path = SOFTWARE_VERSION_INFO_DB_PATH
         self.vers_ready_to_update = None
         self.running_update = False
+        self.expire_ids = []
         self.CHECK_INTERVAL = 60
         self.last_update_info_check_time_mark = 0
 
@@ -63,9 +64,11 @@ class Updater:
         t_soft = TableManager(self.table_name, self.version_db_path)
         ids = t_soft.getAllId()
         softs_existed = []
+        self.expire_ids.clear()
         for id in ids:
             vers_info = t_soft.displayBriefData(id, 'id', 'client', 'version', 'date', 'base', 'record', 'reason', 'remark', 'author')
             softs_existed.append(vers_info[1:])
+            self.expire_ids.append(vers_info[0])
         self.vers_ready_to_update = {'new': [], 'expire': []}
 
         for i in range(1, sheet.nrows):
@@ -76,6 +79,7 @@ class Updater:
             else:
                 ver_idx = softs_existed.index(soft_info)
                 softs_existed.pop(ver_idx)
+                self.expire_ids.pop(ver_idx)
         self.last_update_info_check_time_mark = time.time()
         self.vers_ready_to_update['expire'] = softs_existed
         return self.vers_ready_to_update
@@ -106,11 +110,12 @@ class Updater:
                                       reason=new_ver[5],
                                       remark=new_ver[6],
                                       author=new_ver[7]),
-                for expire_id in self.vers_ready_to_update['expire']:
+                for expire_id in self.expire_ids:
                     t_soft.deleteLine(expire_id)
                 t_soft.commitData()
                 t_soft.auto_commit = True
                 self.vers_ready_to_update = None
+                self.expire_ids.clear()
                 return True
             except Exception as e:
                 print(e)

@@ -22,7 +22,7 @@
         <div class="disp-area" v-loading="loading">
           <div class="column column-1">
             <ul>
-              <li v-for="(input, index) in ios" v-if="index < Math.ceil((curPageStartItem + curPageEndItem)/2)">
+              <li v-for="(input, index) in ios" v-if="index <= Math.floor((curPageStartItem + curPageEndItem)/2)">
                 <div class="alert" role="alert"
                      :class="[checkUsed(index) ? 'alert-secondary' : 'alert-primary']"
                      :data-index="index" :data-name="input"
@@ -35,7 +35,7 @@
           </div>
           <div class="column column-2">
             <ul>
-              <li v-for="(input, index) in ios" v-if="index >= Math.ceil((curPageStartItem + curPageEndItem)/2)">
+              <li v-for="(input, index) in ios" v-if="index > Math.floor((curPageStartItem + curPageEndItem)/2)">
                 <div class="alert alert-primary" role="alert"
                      :class="[checkUsed(index) ? 'alert-secondary' : 'alert-primary']"
                      :data-index="index" :data-name="input"

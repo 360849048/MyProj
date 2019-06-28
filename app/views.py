@@ -22,6 +22,18 @@ def pageNotFound(e):
     return send_file(ENTRY_HTML_PATH)
 
 
+@app.route('/api/login', methods=['POST'])
+def getLoginInfo():
+    data = request.get_json()
+    client_ip = request.remote_addr
+
+    if data['username'] == 'admin' and data['pwd'] == "202cb962ac59075b964b07152d234b70":
+        response = make_response(jsonify({'status': 'success', 'level': 5}))
+        response.set_cookie('date', '20190627')
+    else:
+        response = make_response(jsonify({'status': 'failure', 'level': 0}))
+    return response
+
 # ##################################### IO #################################
 @app.route('/api/io/iolist', methods=['GET'])
 def getIo():
@@ -537,15 +549,18 @@ def searchVersion():
     return jsonify(ret_data)
 
 
-@app.route('/foo', methods=['GET', 'POST'])
+@app.route('/api/foo', methods=['GET', 'POST'])
 def cookieTest():
-    print(request.data)
-    print(request.get_data())
-    print(request.form)
+    print('request.data: ', request.data)
+    print('request.get_data(): ', request.get_data())
+    print('request.form: ', request.form)
     print(request.form.get('username'))
-    response = make_response('ok')
+    print(request.form.get('not_existed'))
+    print(type(jsonify([1, 2, 3])))
+    response = make_response(jsonify([1, 2, 3, 4]))
     response.set_cookie('date', '20180807')
-    print(request.cookies.get('username'))
+    print('request.cookies: ', request.cookies)
+    print('request.cookies.get("username")', request.cookies.get('username'))
     return response
 
 @app.route('/api/ver/submiterror', methods=['GET'])

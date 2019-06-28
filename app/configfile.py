@@ -83,6 +83,7 @@ class HkFileMaker:
             io_config_info = {'DI':{41: 41, 73: 81}, 'DO': {}, 'AI': {}, ... }    key是IO的序号(io_seq)，value是IO的位置(io_pos)
             module_config_info = {'1': [], '2': [], '3': [1, 3, 0, 0], '4': [5, 3, 0]}     key是board的序号，value是底板上的模块序号数，这里不显示Varan模块
             varan_config_info = [3, 5]   Varan总线上依次的模块名： 0:未配置  1:CIV512  2:CIV521  3:CMM10X  4:DEE021  5:F6
+            * 2019.06.24: （Bug fix）配置了CAI888模块后，加热相关点位会被清零
         '''
         if self.board_1_modules_ios is not None:
             # 解析主底板上的各模块以及模块上的IO配置信息
@@ -414,6 +415,8 @@ class HkFileMaker:
         # 不要去尝试配置模块上的TI和TO点位，容易出错！
         self.io_config_info['TI'] = {}
         self.io_config_info['TO'] = {}
+        self.io_reset_info['TI'] = set()
+        self.io_reset_info['TO'] = set()
 
         if self.main_board_modified_io is not None:
             # 解析主底板上的IO配置信息

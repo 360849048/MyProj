@@ -430,7 +430,11 @@ class IOFile:
         return 0
 
     def modifyImmInfo(self):
-        ''' 填写机器信息以及修改注射keb2信息和DEE信息和Varan连接模块信息 '''
+        '''
+            填写机器信息以及修改注射keb2信息和DEE信息和Varan连接模块信息
+            * 2019.06.24: （New feature）外置热流道使用了CCP521，需要额外选配一块SE051
+        '''
+
         # 修改表'机器信息'内容
         imm_info_worksheet = self.std_workbook['机器信息']
         def _modify(title, value):
@@ -500,7 +504,10 @@ class IOFile:
             hardware_sort = self.std_workbook['硬件排布']
             ethernet_cell = searchCells(hardware_sort, 'Ethernet')
             if ethernet_cell is not None:
-                ccp521_cell = hardware_sort.cell(row=ethernet_cell.row, column=ethernet_cell.col_idx + 4)
+                se051_cell = hardware_sort.cell(row=ethernet_cell.row, column=ethernet_cell.col_idx + 4)
+                copyCell(ethernet_cell, se051_cell)
+                se051_cell.value = 'SE051'
+                ccp521_cell = hardware_sort.cell(row=ethernet_cell.row, column=ethernet_cell.col_idx + 5)
                 copyCell(ethernet_cell, ccp521_cell)
                 ccp521_cell.value = 'CCP521'
         # 使用PSG热流道，在Ethernet后面增加SE051
@@ -738,6 +745,42 @@ class IOFile:
         src_end_cell = searchCells(module_content_worksheet, 'DEE021')
         if src_end_cell is None:
             print("Fatal: 在 %s->%s 中匹配关键字'DEE021'失败 " % (self.modulelib_filename, module_content_worksheet.title))
+            return -2
+        src_start_cell = module_content_worksheet.cell(row=src_end_cell.row, column=1)
+        dst_start_cell = hardware_info_worksheet.cell(row=cur_work_row, column=cur_work_column)
+        if self._copyAndModifyCellRange(src_start_cell, src_end_cell, dst_start_cell, style=False) != 0:
+            print("Fatal: 单元格区域复制失败")
+            return -3
+        hardware_info_worksheet.cell(row=cur_work_row, column=cur_work_column + 3, value='+1')
+
+    def copySE051ModuleInfo(self):
+        ''' 往 硬件配置 中复制SE051模块信息(与复制DEE模块一样的做法) '''
+        if not self.psg_hotrunner and self.external_hotrunner_num == 0:
+            return 0
+        module_content_worksheet = self.modulelib_workbook['硬件检索']
+        hardware_info_worksheet = self.std_workbook['硬件配置']
+        # 定位“特殊功能模块”单元格
+        result = searchCells(hardware_info_worksheet, '特殊功能模块')
+        if result is None:
+            print("Fatal: 在%s中匹配关键字: '特殊功能模块' 失败" % self.std_filename)
+            return -1
+        first_cell = hardware_info_worksheet.cell(row=result.row + 1, column=result.col_idx)
+        # 获取开始工作的单元格行位置
+        cur_work_column = first_cell.col_idx
+        if first_cell.value is None:
+            cur_work_row = first_cell.row
+        else:
+            cur_work_row = first_cell.row
+            cur_work_row += 1
+            first_cell = hardware_info_worksheet.cell(row=cur_work_row, column=cur_work_column)
+            while first_cell.value is not None:
+                cur_work_row += 1
+                first_cell = hardware_info_worksheet.cell(row=cur_work_row, column=cur_work_column)
+        # 向 '硬件配置' 表复制SE051模块信息
+        hardware_info_worksheet.insert_rows(cur_work_row)
+        src_end_cell = searchCells(module_content_worksheet, 'SE051')
+        if src_end_cell is None:
+            print("Fatal: 在 %s->%s 中匹配关键字'DEE051'失败 " % (self.modulelib_filename, module_content_worksheet.title))
             return -2
         src_start_cell = module_content_worksheet.cell(row=src_end_cell.row, column=1)
         dst_start_cell = hardware_info_worksheet.cell(row=cur_work_row, column=cur_work_column)

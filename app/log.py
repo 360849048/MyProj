@@ -16,7 +16,7 @@ class Log:
         return year + '.' + month + '.' + day + ' ' + hour + ':' + minute + ':' + second
 
     def record(self, str_info):
-        fp = open(self.path, 'a')
+        fp = open(self.path, 'a', encoding='utf-8')
         now = self._getDate()
         fp.write('* ')
         fp.write(now)

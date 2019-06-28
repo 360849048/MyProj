@@ -6,7 +6,7 @@
     <button class="btn btn-secondary" @click="createCookies">创建cookie</button>
     <button class="btn btn-secondary" @click="sendAJAX">发送AJAX请求</button>
     <div class="row"></div>
-      <form class="col-3" action="/foo" method="post">
+      <form class="col-3" action="/api/foo" method="post" target="id_iframe">
         <div class="form-group">
           <label for="exampleInputEmail1">Account</label>
           <input type="text" class="form-control" id="exampleInputEmail1" placeholder="Enter username" name="username" autocomplete="off">
@@ -23,7 +23,10 @@
         <button type="submit" class="btn btn-primary">Submit</button>
       </form>
     {{testData}}
+    <iframe id="id_iframe" name="id_iframe" style="display: none"></iframe>
+    <button>halo?</button>
   </div>
+
 </template>
 
 <script>
@@ -45,7 +48,7 @@
         $.ajax({
           data: {msg: this.msg},
           type: 'GET',
-          url: 'foo',
+          url: '/api/foo',
           // dataType: 'json',
           success: function(data){
             alert(data);
