@@ -1,7 +1,8 @@
-from flask import request, send_file, jsonify, make_response
+from flask import request, send_file, jsonify, make_response, session
 import shutil
 import re
 import time
+from uuid import uuid4
 from app import app
 from app.sqljob import TableManager
 from app.iomaker import IOMaker
@@ -14,13 +15,21 @@ from app.softrefresh import markToRefresh
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
-    return send_file(ENTRY_HTML_PATH)
+    resp = make_response(send_file(ENTRY_HTML_PATH))
+    resp.headers['Cache-Control'] = "no-cache"
+    return resp
+    # return send_file(ENTRY_HTML_PATH)
 
 # 没有下面404处理，会导致vue-router在history模式下一刷新就404错误
 @app.errorhandler(404)
 def pageNotFound(e):
-    return send_file(ENTRY_HTML_PATH)
+    resp = make_response(send_file(ENTRY_HTML_PATH))
+    resp.headers['Cache-Control'] = "max-age=0"
+    return resp
+    # return send_file(ENTRY_HTML_PATH)
 
+# 记录用户信息，格式为{uuid1: username1, uuid2: username2}
+user_info = {}
 
 @app.route('/api/login', methods=['POST'])
 def getLoginInfo():
@@ -29,9 +38,26 @@ def getLoginInfo():
 
     if data['username'] == 'admin' and data['pwd'] == "202cb962ac59075b964b07152d234b70":
         response = make_response(jsonify({'status': 'success', 'level': 5}))
-        response.set_cookie('date', '20190627')
+        uuid = str(uuid4())
+        user_info[uuid] = data['username']
+        # 设置cookie
+        response.set_cookie('uuid', uuid, httponly=False)
+        # 设置session
+        session['username'] = data['username']
+        session['access_level'] = 5
+        # 设置session过期时间，默认一个月有效
+        session.permanent = True
+
     else:
         response = make_response(jsonify({'status': 'failure', 'level': 0}))
+        # 设置session
+        session['user_ip'] = 0
+        # 读取seesion
+        user_level = session.get('user_ip')
+        print(user_level)
+        # 删除session
+        # session.pop('user_ip')
+
     return response
 
 # ##################################### IO #################################
@@ -512,6 +538,8 @@ def downloadSrcCode():
 
 @app.route('/api/ver/searchversions', methods=['GET'])
 def searchVersion():
+    user_level = session.get('us_lv')
+    print(user_level)
     search_str = request.args.get('text')
     ret_data = {'itemsNum': 0, 'items': {}}
     if search_str == '':
@@ -548,6 +576,51 @@ def searchVersion():
     ret_data['items'] = dict(zip(seq_list, ver_list))
     return jsonify(ret_data)
 
+@app.route('/api/ver/referversions', methods=['GET'])
+def referVersion():
+    search_str = request.args.get('ver')
+    ret_data = {'itemsNum': 0, 'items': {}}
+    ver_list = []
+    t_vers = {
+        'V01': TableManager('t_V01', SOFTWARE_VERSION_INFO_DB_PATH),
+        'V02': TableManager('t_V02', SOFTWARE_VERSION_INFO_DB_PATH),
+        'V03V04': TableManager('t_V03V04', SOFTWARE_VERSION_INFO_DB_PATH),
+        'V05': TableManager('t_V05', SOFTWARE_VERSION_INFO_DB_PATH),
+        'T05': TableManager('t_T05', SOFTWARE_VERSION_INFO_DB_PATH)
+    }
+    next_search_vers = [search_str]
+    while True:
+        # 向之前的版本遍历，只需搜索"版本"
+        if not next_search_vers:
+            break
+        cur_search_vers = next_search_vers.copy()
+        next_search_vers = []
+        for cur_search_ver in cur_search_vers:
+            for soft_type in t_vers:
+                ids = t_vers[soft_type].searchDataByKey(strict=True, version=cur_search_ver)
+                for soft_id in ids:
+                    temp = t_vers[soft_type].displayDetailedData(soft_id)
+                    ver_list.append(temp)
+                    next_search_vers.append(temp['base'])
+    next_search_vers = [search_str]
+    while True:
+        # 向之后的版本遍历，只需搜索"原版本"
+        if not next_search_vers:
+            break
+        cur_search_vers = next_search_vers.copy()
+        next_search_vers = []
+        for soft_type in t_vers:
+            for cur_search_ver in cur_search_vers:
+                ids = t_vers[soft_type].searchDataByKey(strict=True, base=cur_search_ver)
+                for soft_id in ids:
+                    temp = t_vers[soft_type].displayDetailedData(soft_id)
+                    ver_list.append(temp)
+                    next_search_vers.append(temp['version'])
+    ver_list = sorted(ver_list, key=lambda x: x['version'], reverse=True)
+    ret_data['itemsNum'] = len(ver_list)
+    seq_list = list(i for i in range(1, ret_data['itemsNum'] + 1))
+    ret_data['items'] = dict(zip(seq_list, ver_list))
+    return jsonify(ret_data)
 
 @app.route('/api/foo', methods=['GET', 'POST'])
 def cookieTest():
@@ -558,9 +631,15 @@ def cookieTest():
     print(request.form.get('not_existed'))
     print(type(jsonify([1, 2, 3])))
     response = make_response(jsonify([1, 2, 3, 4]))
-    response.set_cookie('date', '20180807')
     print('request.cookies: ', request.cookies)
-    print('request.cookies.get("username")', request.cookies.get('username'))
+    uuid = request.cookies.get('uuid')
+    username = user_info.get(uuid)
+    print('request.cookies.get("uuid"), username: ', uuid, username)
+    print(user_info)
+    print('session:', session.get('username'), session.get('access_level'))
+    client_ip = request.remote_addr
+    if session.get('user_ip') == client_ip:
+        print('ip验证成功')
     return response
 
 @app.route('/api/ver/submiterror', methods=['GET'])

@@ -94,8 +94,8 @@
     </nav>
     <!-- 登录框 -->
     <Fade>
-      <div class="login shade" v-if="showLoginWnd" @click="hideLoginWnd">
-        <div class="login-wnd" ref="loginWnd" @click.stop="">
+      <div class="login shade" v-if="showLoginWnd" @click.self="hideLoginWnd">
+        <div class="login-wnd" ref="loginWnd">
           <div class="titlebar" @mousedown="moveLoginWnd">
             <p class="login-title">登录</p>
             <i class="fa fa-times fa-2x btn-exit" aria-hidden="true" @click="hideLoginWnd"></i>
@@ -176,6 +176,11 @@
       box-shadow: 0 0 20px #666;
       background: #fff;
       border-radius: 5px;
+      @media screen and(max-width: $wndWidth){
+        left: 0;
+        width: 100%;
+        transform: translate(0, -$wndHeight/2);
+      }
       .titlebar {
         height: $titleHeight;
         border-bottom: 1px solid #999;
@@ -197,7 +202,7 @@
           cursor: pointer;
           transition: color .5s ease;
           &:hover {
-            color: #000
+            color: #000;
           }
         }
       }
@@ -217,6 +222,9 @@
             user-select: none;
           }
           input {
+            @media screen and(max-width: $wndWidth){
+              max-width: 80%;
+            }
             border: 1px solid #ccc;
             padding: 3px 5px;
             border-radius: 3px;
@@ -232,7 +240,10 @@
         .btns {
           display: flex;
           margin: 30px;
-          justify-content: space-evenly;
+          justify-content: space-around;
+          @media screen and(max-width: $wndWidth){
+            margin-top: -10px;
+          }
         }
       }
     }

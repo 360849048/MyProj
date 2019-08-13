@@ -45,7 +45,7 @@
           <tbody>
           <tr v-for="msg in softVers" :key="msg.id">
             <td scope="col"><div class="in-one-line">{{msg.client}}</div></td>
-            <td scope="col"><div class="in-one-line">{{msg.version}}</div></td>
+            <td scope="col"><div class="in-one-line" :class="{'text-danger': hasPath(msg), 'font-weight-bold': hasPath(msg)}">{{msg.version}}</div></td>
             <td scope="col"><div class="in-one-line">{{msg.date}}</div></td>
             <td scope="col"><div class="in-one-line">{{msg.base}}</div></td>
             <td scope="col"><div class="in-one-line">{{msg.record}}</div></td>
@@ -53,25 +53,33 @@
             <td scope="col"><div class="in-one-line">{{msg.remark}}</div></td>
             <td scope="col"><div class="in-one-line">{{msg.author}}</div></td>
             <td scope="col">
-              <div class="dropright" v-if="msg.path !== '' && msg.path !== null">
-                <i class="fa fa-bolt text-danger pointer" aria-hidden="true" aria-haspopup="true" aria-expanded="false"
+              <div class="dropright">
+                <i class="fa fa-bolt pointer" :class="{'text-danger': hasPath(msg)}" aria-hidden="true" aria-haspopup="true" aria-expanded="false"
                    data-toggle="dropdown">
                 </i>
                 <div class="dropdown-menu">
-                  <a href="##" class="dropdown-item" v-for="item in msg.path.split(';')"
-                    @click="downloadSrcCode(item)">
-                    {{item}}&nbsp;
-                    <i class="fa fa-download" aria-hidden="true"></i>
-                  </a>
-                  <div class="dropdown-divider"></div>
-                  <a class="dropdown-item" href="###" v-if="msg.torefresh != 1" @click="submitError(softType, msg.id)">
-                    路径信息有误，向后台反馈
-                    <i class="fa fa-hand-paper-o"></i>
-                  </a>
-                  <a class="dropdown-item" v-else>
-                    该路径已被举报，注意文件可靠性
-                    <i class="fa fa-exclamation"></i>
-                  </a>
+                  <template v-if="hasPath(msg)">
+                    <a href="javascript:" class="dropdown-item" v-for="item in msg.path.split(';')"
+                      @click="downloadSrcCode(item)">
+                      <i class="fa fa-download" aria-hidden="true"></i>
+                      {{item}}&nbsp;
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="javascript:" v-if="msg.torefresh != 1" @click="submitError(softType, msg.id)">
+                      <i class="fa fa-flag"></i>
+                      路径信息有误，向后台反馈
+                    </a>
+                    <a class="dropdown-item" href="javascript:" v-else>
+                      <i class="fa fa-exclamation"></i>
+                      该路径已被举报，注意文件可靠性
+                    </a>
+                    <div class="dropdown-divider"></div>
+                  </template>
+                  <template>
+                    <a class="dropdown-item" href="javascript:" @click="searchReference(msg.version)">
+                      显示该版本相关其他版本
+                    </a>
+                  </template>
                 </div>
               </div>
             </td>
@@ -337,7 +345,7 @@
         axios.get(`/submiterror?type=${type}&id=${id}`)
           .then(() => {
             this.$message({
-              message: '信息提交成功！请等待后台处理',
+              message: '信息提交成功！该版本路径信息会在今天晚上重新刷新',
               type: 'success'
             })
         })
@@ -349,6 +357,17 @@
               type: 'error'
             });
           });
+      },
+      hasPath (msg) {
+        return msg.path !== '' && msg.path !== null;
+      },
+      searchReference (version) {
+        this.$router.push({
+          path: 'search',
+          query: {
+            ver: version
+          }
+        })
       }
     },
     mounted(){
@@ -356,7 +375,6 @@
       axios.get("/api/ver/checkallupdate")
         .then((res) => {
           res = res.data;
-          console.log(res);
           for (let soft_type in res) {
             if (res[soft_type].status === 'success' && (res[soft_type].info.expire.length > 0 || res[soft_type].info.new.length > 0)) {
               this.$notify.info({
@@ -396,21 +414,18 @@
   .in-one-line{
     max-height: 1.5rem;
     overflow: hidden;
-    /*text-overflow: ellipsis;*/
-    /*white-space: nowrap;*/
-    /*max-width: 1000px;*/
-    transition: .5s max-height;
+    transition: max-height .5s;
   }
   @media screen and (max-width: 1000px){
     .in-one-line{
       max-height: 3rem;
-      transition: .5s max-height;
+      transition: max-height .5s;
     }
   }
   tr:hover .in-one-line{
     white-space: normal;
-    max-height: 40rem;
-    transition: .5s max-height;
+    max-height: 80rem;
+    transition: max-height .5s;
   }
   footer{
     background-color: #fff;

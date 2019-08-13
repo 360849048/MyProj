@@ -24,7 +24,7 @@
       </form>
     {{testData}}
     <iframe id="id_iframe" name="id_iframe" style="display: none"></iframe>
-    <button>halo?</button>
+    <button @click="testCROS">halo?</button>
   </div>
 
 </template>
@@ -36,7 +36,7 @@
   export default{
     data(){
       return{
-        msg: 'Hi, welcome!'
+        ajaxMsg: 'Hi, welcome!'
       }
     },
     methods:{
@@ -46,7 +46,7 @@
       },
       sendAJAX(){
         $.ajax({
-          data: {msg: this.msg},
+          data: {msg: this.ajaxMsg},
           type: 'GET',
           url: '/api/foo',
           // dataType: 'json',
@@ -57,6 +57,21 @@
             alert('失败');
           }
         });
+      },
+      testCROS () {
+        $.ajax({
+          url: 'https://sp0.baidu.com/5a1Fazu8AA54nxGko9WTAnF6hhy/su',
+          data:{wd: "hello world"},
+          jsonp: 'cb',
+          dataType: 'jsonp',
+          type: 'GET',
+          success: function(result){
+            console.log(result)
+          },
+          error: function(xhr){
+            console.log('Failed');
+          }
+        })
       }
     },
     computed: {

@@ -300,8 +300,8 @@ class TableManager:
         temp_cols.insert(0, "id")
         return dict(zip(temp_cols, line))
 
-    def searchDataByKey(self, **column):
-        # 模糊匹配，返回id，例如参数为title="bug"，结果返回(1, 2, 3,...)
+    def searchDataByKey(self, strict=False, **column):
+        # strict=False时，模糊匹配，返回id，例如参数为title="bug"，结果返回(1, 2, 3,...)
         ids = []
         key = []
         var = []
@@ -312,11 +312,17 @@ class TableManager:
         for k, v in column.items():
             key.append(str(k))
             var.append(str(v))
-            mix.append('%'+str(v)+'%')
+            if not strict:
+                mix.append('%'+str(v)+'%')
+            else:
+                mix.append(v)
         # 把key中的每项依次间隔插入到mix中，比如[1,3,5]插入到[2,4,6]后得到[1,2,3,4,5,6]
         for n in range(len(key)):
             mix.insert(n*2, key[n])
-        sql = "SELECT id FROM %s WHERE " % self.table + "%s LIKE %r" % tuple(mix[:2]) + " AND %s LIKE %r" * (len(key) - 1) % tuple(mix[2:])
+        if not strict:
+            sql = "SELECT id FROM %s WHERE " % self.table + "%s LIKE %r" % tuple(mix[:2]) + " AND %s LIKE %r" * (len(key) - 1) % tuple(mix[2:])
+        else:
+            sql = "SELECT id FROM %s WHERE " % self.table + "%s LIKE %r" % tuple(mix[:2]) + " AND %s LIKE %r" * (len(key) - 1) % tuple(mix[2:])
         self.c.execute(sql)
         result = self.c.fetchall()
         for item in result:
@@ -340,8 +346,6 @@ if __name__ == '__main__':
     import re
     import time
 
-
-    # 多表模糊匹配查询速度测试
     time_mark = time.time()
     t_vers = {
         'V01': TableManager('t_V01', './libfiles/soft.db'),
@@ -350,26 +354,13 @@ if __name__ == '__main__':
         'V05': TableManager('t_V05', './libfiles/soft.db'),
         'T05': TableManager('t_T05', './libfiles/soft.db')
     }
+    # sql = "SELECT * FROM t_V05 WHERE version LIKE 'v05_39_51'"
+    # t_vers['V05'].c.execute(sql)
+    # print(t_vers['V05'].c.fetchall())
 
-    string = '华 麦 邵 阀门'
-    ret_data = {'itemsNum': 0, 'items': {}}
-    keywords = re.split(r'\s+', string)
-    key = 0
-    for soft_type in t_vers:
-        ids_for_each_keys = []
+    ids = t_vers['V05'].searchDataByKey(strict=True, version='v05_39_50')
+    print(ids)
+    ids = t_vers['V05'].searchDataByKey(version='v05_39_50')
+    print(ids)
 
-        for keyword in keywords:
-            ids_for_each_keys.append(t_vers[soft_type].searchDataInTable(keyword, 'path'))
-        ids = ids_for_each_keys[0]
-        for i in range(1, len(ids_for_each_keys)):
-            ids = tuple(id for id in ids if id in ids_for_each_keys[i])
-        ret_data['itemsNum'] += len(ids)
-        for soft_id in ids:
-            ret_data['items'][key] = t_vers[soft_type].displayDetailedData(soft_id)
-            key += 1
-    print(ret_data)
-    print('一共耗时: ', time.time() - time_mark)
 
-    for i in range(5):
-        ids = t_vers['V05'].searchDataByKey(client='印度',date='2018.08.30',reason='合同',author='应志峰',record='1.吹气功能特殊',version='V05_39_51', base='V05_39_50')
-        print(ids)
