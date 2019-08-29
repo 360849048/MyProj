@@ -18,7 +18,11 @@ NOR_SAFETY_RELAY_FILE_DIR = os.path.join(STD_LIB_FILE_DIR, '配置文件/安全�
 E73_SAFETY_RELAY_FILE_DIR = os.path.join(STD_LIB_FILE_DIR, '配置文件/安全继电器文件/E73')
 # 生成的目标文件缓存目录
 CACHE_FILE_DIR = './app/static/cache/'
-
+# 日志数据路径
+LOG_DB_PATH = './app/libfiles/log.db'
+# 用户信息数据数据库信息
+USER_INFO_DB_PATH = './app/libfiles/user.db'
+ACCOUNT_TABLE_NAME = 't_user'
 
 '''
 Flask框架调用的路径

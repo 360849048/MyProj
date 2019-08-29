@@ -12,7 +12,8 @@ Vue.use(VueRouter);
 const Iomaker = () => import('../page/iomaker/IoMaker.vue');
 const Versions = () => import('../page/versions/Versions.vue');
 
-export default new VueRouter({
+
+const router = new VueRouter({
   // 三种模式介绍
   // Hash: 使用URL的hash值来作为路由。支持所有浏览器，url中会带有#。 (默认)
   // History: 以来HTML5 History API 和服务器配置。参考官网中HTML5 History模式。但是刷新后会返回404，这个需要后台支持
@@ -27,4 +28,6 @@ export default new VueRouter({
     {path: '/bezier', component: Bezier},
     {path: '*', redirect: '/home'}
   ]
-})
+});
+
+export default router

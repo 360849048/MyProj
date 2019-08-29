@@ -1,5 +1,8 @@
 export default {
-  count(ctx, num) {
-    ctx.commit('count', num);
+  login (ctx, userInfo) {
+    ctx.commit('login', userInfo);
+  },
+  logout (ctx) {
+    ctx.commit('logout');
   }
 }

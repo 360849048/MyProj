@@ -10,25 +10,22 @@
                     @changeStandard="getStandard">
           </imm-type>
         </div>
-
       </div>
 
-      <div class="row">
-        <button class="btn btn-primary" type="submit" @click="useJquery">切换模块</button>
-        <button class="btn btn-primary" type="submit" @click="foo">修改点位</button>
-        <button class="btn btn-primary" type="submit" @click="bar">撤销</button>
-      </div>
+      <label for="random_codes">5级随机码</label>
+      <input id="random_codes" type="text" v-model="randomCodes"  @keydown.enter="getPwd5">
+      <button class="btn btn-primary" @click="getPwd5">获取5级密码</button>
+
   </div>
   </div>
 </template>
 <script>
+  import axios from 'axios'
   import ImmType from './components/ImmType'
-  import ImmConfig from './components/ImmConfig'
 
   export default{
     components:{
       ImmType,
-      ImmConfig
     },
     data(){
       return{
@@ -39,7 +36,8 @@
           standard: ''
         },
         ios: {di1: '可编程io输入1', do1: '可编程io输出1'},
-        module: 'cdm163'
+        module: 'cdm163',
+        randomCodes: '',
       }
     },
     methods: {
@@ -55,28 +53,18 @@
       getStandard(standard){
         this.immParams.standard = standard;
       },
-      foo(){
-        this.ios = {do1: '阀门1开', do2: '阀门2开'};
-      },
-      bar(){
-        console.log('hi');
-      },
-      useJquery(){
-        // console.log($.ajax({
-        //   url: "/foo",
-        //   type: 'POST',
-        //   data: this.immParams,
-        //   dataType: 'json',
-        //   success: function(data){
-        //     console.log(data);
-        //   },
-        //   error: function(){
-        //     console.log('Error!!!');
-        //   }
-        // }));
-        this.module = 'cto163';
-        this.ios = {};
-        // this.ios.do2 = 'valve 3 open';
+      getPwd5 () {
+        if (this.randomCodes.search(/\d{10}$/) !== 0) {
+          alert("5级随机码长度必须是10，且都是0-9的数字");
+          return;
+        }
+        axios.get(`/api/getpwd5?randomcodes=${this.randomCodes}`).then(res => {
+          res = res.data;
+          console.log(res);
+          alert('5级密码为: ' + res);
+        }).catch(e => {
+          console.log(e);
+        })
       }
     }
   }

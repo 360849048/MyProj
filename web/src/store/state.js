@@ -1,3 +1,5 @@
 export default {
-  testData: 1,
+  isLogin: false,
+  username: undefined,
+  superAuth: false,
 }

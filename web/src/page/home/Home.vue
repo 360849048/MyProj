@@ -1,7 +1,6 @@
 <template>
   <div id="home">
     <h1>This is home page</h1>
-    <span>{{msg}}</span>
     <i class="el-icon-edit"></i>
     <button class="btn btn-secondary" @click="createCookies">创建cookie</button>
     <button class="btn btn-secondary" @click="sendAJAX">发送AJAX请求</button>
@@ -46,7 +45,7 @@
       },
       sendAJAX(){
         $.ajax({
-          data: {msg: this.ajaxMsg},
+          data: {"msg": this.ajaxMsg},
           type: 'GET',
           url: '/api/foo',
           // dataType: 'json',

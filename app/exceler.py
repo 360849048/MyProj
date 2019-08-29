@@ -4,6 +4,7 @@ import openpyxl
 from openpyxl.styles import Font, Alignment, Border, Fill, Protection
 from copy import copy
 from app.pathinfo import *
+from app.log import log
 
 
 def copyCell(src_cell, dst_cell, style=True):
@@ -191,15 +192,17 @@ class IOFile:
         else:
             try:
                 self.std_workbook = openpyxl.load_workbook(self.std_filename)
-            except:
+            except Exception as e:
                 self.std_workbook = None
                 print("Fatal: 试图打开标准IO文件，但它不是正确的xlsx文件")
+                log.record(e)
 
         try:
             self.modulelib_workbook = openpyxl.load_workbook(self.modulelib_filename)
-        except:
+        except Exception as e:
             self.modulelib_filename = None
             print("Fatal: 试图打开常用硬件表，但这不是正确的xlsx文件")
+            log.record(e)
 
     def _copyAndModifyCell(self, src_cell, dst_cell, ioconfiguration=None, style=True):
         '''复制并修改单元格内容，只能修改是 '/空' 或 '/Empty' 单元格
@@ -563,6 +566,7 @@ class IOFile:
             except Exception as e:
                 print(e)
                 print('修改VE2默认IO时候出错，请检查"主底板扩展槽IO"该表内容是否异常')
+                log.record(e)
         else:
             main_board_io_ws = self.std_workbook['主底板IO']
             max_row = main_board_io_ws.max_row
@@ -597,6 +601,7 @@ class IOFile:
                     except Exception as e:
                         print(e)
                         print('修改CMM103主底板默认IO时候出错，请检查"主底板IO"该表内容是否异常')
+                        log.record(e)
 
     def modifyDefaultIO(self, io_type, origin_io_name, new_io_cname, new_io_ename):
         ''' 修改主底板或主底板扩展槽(VE2)上默认的IO

@@ -2,15 +2,21 @@ from flask import request, send_file, jsonify, make_response, session
 import shutil
 import re
 import time
-from uuid import uuid4
+import hmac
 from app import app
 from app.sqljob import TableManager
 from app.iomaker import IOMaker
 from app.configfile import HkFileMaker, FcfFileMaker, SysFileMaker, SafetyFileMaker, createZip
 from app.pathinfo import *
 from app.softupdater import Updater
-from app.log import log
 from app.softrefresh import markToRefresh
+from app.log2 import log
+from app.pwd5 import createPwd5
+import app.user as user
+
+
+SECRET_KEY_ADMIN = os.urandom(24)
+SECRET_KEY_NORMAL = os.urandom(24)
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -32,33 +38,82 @@ def pageNotFound(e):
 user_info = {}
 
 @app.route('/api/login', methods=['POST'])
-def getLoginInfo():
+def login():
     data = request.get_json()
     client_ip = request.remote_addr
+    account = data["account"]
+    pwd = data["pwd"]
 
-    if data['username'] == 'admin' and data['pwd'] == "202cb962ac59075b964b07152d234b70":
-        response = make_response(jsonify({'status': 'success', 'level': 5}))
-        uuid = str(uuid4())
-        user_info[uuid] = data['username']
+    verfiy_status = user.verifyAccount(account, pwd)
+
+    if verfiy_status["status"]:
+        response = make_response(jsonify({'status': 'success', 'username': verfiy_status['username'], 'sp': verfiy_status['admin']}))
         # 设置cookie
-        response.set_cookie('uuid', uuid, httponly=False)
-        # 设置session
-        session['username'] = data['username']
-        session['access_level'] = 5
-        # 设置session过期时间，默认一个月有效
-        session.permanent = True
+        response.set_cookie('account', account, httponly=True)
+        if verfiy_status['admin']:
+            response.set_cookie('sp', '1', httponly=True)
+            h = hmac.new(SECRET_KEY_ADMIN, account.encode(), digestmod='MD5')
+            response.set_cookie('ssid', h.hexdigest(), httponly=True)
+        else:
+            response.set_cookie('sp', '0', httponly=True)
+            h = hmac.new(SECRET_KEY_NORMAL, account.encode(), digestmod='MD5')
+            response.set_cookie('ssid', h.hexdigest(), httponly=True)
+        # # 设置session
+        # session['username'] = data['username']
+        # session['access_level'] = 5
+        # # 设置session过期时间，默认一个月有效
+        # session.permanent = True
 
     else:
-        response = make_response(jsonify({'status': 'failure', 'level': 0}))
-        # 设置session
-        session['user_ip'] = 0
-        # 读取seesion
-        user_level = session.get('user_ip')
-        print(user_level)
+        response = make_response(jsonify({'status': 'failure', 'username': '', 'sp': False}))
+        response.delete_cookie('account')
+        response.delete_cookie('sp')
+        response.delete_cookie('ssid')
+        # # 设置session
+        # session['user_ip'] = 0
+        # # 读取seesion
+        # user_level = session.get('user_ip')
+        # print(user_level)
         # 删除session
         # session.pop('user_ip')
 
     return response
+
+@app.route('/api/logout', methods=['GET'])
+def logout():
+    print(request.cookies)
+    response = make_response()
+    response.delete_cookie('account')
+    response.delete_cookie('sp')
+    response.delete_cookie('ssid')
+    return response
+
+@app.route('/api/verifystatus', methods=['GET'])
+def verifyStatus():
+    ret_data = {'status': False, 'username': '', 'sp': False, 'account': ''}
+    account = request.cookies.get('account')
+    sp = request.cookies.get('sp')
+    ssid = request.cookies.get('ssid')
+    if account is None or sp is None or ssid is None:
+        return jsonify(ret_data)
+
+    if sp == '1':
+        h = hmac.new(SECRET_KEY_ADMIN, account.encode(), digestmod='MD5')
+        print(h.hexdigest())
+        if h.hexdigest() == ssid:
+            ret_data['status'] = True
+            ret_data['username'] = user.verifyAccount(account, '')['username']
+            ret_data['sp'] = True
+            ret_data['account'] = account
+    else:
+        h = hmac.new(SECRET_KEY_NORMAL, account.encode(), digestmod='MD5')
+        print(h.hexdigest())
+        if h.hexdigest() == ssid:
+            ret_data['status'] = True
+            ret_data['username'] = user.verifyAccount(account, '')['username']
+            ret_data['sp'] = False
+            ret_data['account'] = account
+    return jsonify(ret_data)
 
 # ##################################### IO #################################
 @app.route('/api/io/iolist', methods=['GET'])
@@ -153,7 +208,7 @@ def createIoFile():
     client_ip = request.remote_addr
     record_info = 'IP: ' + client_ip + '创建IO表：\n'
     record_info += request.data.decode()
-    log.record(record_info)
+    log.record(ip=client_ip, event="创建IO表", description=request.data.decode(), username="")
 
     # 将post得到的数据整理成规范格式的数据
     board_1_modules_ios = []
@@ -254,7 +309,7 @@ def createConfigFile():
     client_ip = request.remote_addr
     record_info = 'IP: ' + client_ip + '创建配置文件：\n'
     record_info += request.data.decode()
-    log.record(record_info)
+    log.record(ip=client_ip, event='创建配置文件', description=request.data.decode())
 
     # 将post得到的数据整理成规范格式的数据
     board_1_modules_ios = []
@@ -508,7 +563,7 @@ def startUpdate():
     client_ip = request.remote_addr
     record_info = 'IP: ' + client_ip + '更新软件版本'
     record_info += str(updaters[soft_type].vers_ready_to_update)
-    log.record(record_info)
+    log.record(ip=client_ip, event="更新软件版本", description=str(updaters[soft_type].vers_ready_to_update), username="")
 
     if updaters[soft_type].startUpdate() is False:
         return jsonify({'status': 'failure', 'description': '更新信息已过期或后台繁忙，请重试'})
@@ -531,7 +586,8 @@ def downloadSrcCode():
     try:
         # 如果src_path和dst_path指向同一个文件，会导致复制失败
         shutil.copy(src_path, dst_path)
-    except:
+    except Exception as e:
+        log.record(e)
         return jsonify({'status': 'failure', 'description': '后台源程序文件复制失败，请重试'})
     src_code_url = os.path.join(URL_DIR, file_name)
     return jsonify({'status': 'success', 'url': src_code_url})
@@ -539,8 +595,9 @@ def downloadSrcCode():
 @app.route('/api/ver/searchversions', methods=['GET'])
 def searchVersion():
     user_level = session.get('us_lv')
-    print(user_level)
     search_str = request.args.get('text')
+    client_ip = request.remote_addr
+    log.record(ip=client_ip, event="搜索", description=search_str, username="")
     ret_data = {'itemsNum': 0, 'items': {}}
     if search_str == '':
         return jsonify(ret_data)
@@ -650,8 +707,8 @@ def submitError():
     table_name = 't_' + soft_type
     markToRefresh(table_name, int(err_id))
     # 记录日志
-    info_to_record = 'IP: ' + request.remote_addr + '标记' + soft_type + '中id号是：' + err_id + '路径存在问题'
-    log.record(info_to_record)
+    client_ip = request.remote_addr
+    log.record(ip=client_ip, event="标记路径问题", description=soft_type + ":" + err_id, username="")
     return jsonify({'status': 'success'})
 
 @app.route('/api/ver/checkallupdate', methods=['GET'])
@@ -679,3 +736,10 @@ def checkAllUpdate():
         else:
             ret_val[soft_type] = {'status': 'success', 'info': update_info}
     return jsonify(ret_val)
+
+
+# ##################################### Others #################################
+@app.route('/api/getpwd5', methods=['GET'])
+def getPwd5():
+    random_codes = request.args.get('randomcodes')
+    return jsonify(createPwd5(random_codes))

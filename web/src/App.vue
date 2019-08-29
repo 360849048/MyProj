@@ -9,6 +9,7 @@
 
 <script>
 import NavView from "./Nav"
+import axios from 'axios'
 
 export default {
   name: 'app',

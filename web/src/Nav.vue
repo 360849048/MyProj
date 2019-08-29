@@ -1,7 +1,10 @@
 <template>
   <div id="nav">
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <a class="navbar-brand" href="javascript:" @click="popLoginWnd"><i class="fa fa-user" aria-hidden="true"></i></a>
+    <a class="navbar-brand user-area" href="javascript:">
+      <i v-if="!isLogin" class="fa fa-user" aria-hidden="true" @click="popLoginWnd"></i>
+      <span v-else @click="popUserInfoWnd">{{username}}</span>
+    </a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
@@ -94,7 +97,7 @@
     </nav>
     <!-- 登录框 -->
     <Fade>
-      <div class="login shade" v-if="showLoginWnd" @click.self="hideLoginWnd">
+      <div class="wnd shade" v-if="showLoginWnd" @click.self="hideLoginWnd">
         <div class="login-wnd" ref="loginWnd">
           <div class="titlebar" @mousedown="moveLoginWnd">
             <p class="login-title">登录</p>
@@ -103,18 +106,30 @@
           <div class="work-area">
             <form class="username" onsubmit="return false;">
               <label for="username">用户：</label>
-              <input id="username" type="text" v-model="username" @keydown.enter="postAccount">
+              <input id="username" type="text" v-model="account" @keydown.enter="userLogin">
             </form>
             <form class="password" onsubmit="return false;">
               <label for="password">密码：</label>
-              <input id="password" type="password" v-model="password" @keydown.enter="postAccount">
+              <input id="password" type="password" v-model="password" @keydown.enter="userLogin">
             </form>
             <div class="btns">
-              <button class="btn btn-primary" @click="postAccount">确认</button>
+              <button class="btn btn-primary" @click="userLogin">确认</button>
               <button class="btn btn-secondary" @click="resetUserInfo">重置</button>
             </div>
           </div>
         </div>
+      </div>
+    </Fade>
+    <Fade>
+      <div class="wnd shade" v-if="showUserInfoWnd" @click.self="hideUserInfoWnd">
+        <section class="user-info-wnd">
+          <h2>用户信息</h2>
+          <article>
+            <p><span>账号：</span><span>{{account}}</span></p>
+            <p v-if="superAuth">管理员权限</p>
+          </article>
+          <button @click="userLogout">注销</button>
+        </section>
       </div>
     </Fade>
   </div>
@@ -162,7 +177,7 @@
     bottom: 0;
     background-color: rgba(100, 100, 100, .5);
   }
-  .login {
+  .wnd {
     .login-wnd {
       $wndWidth: 400px;
       $wndHeight: 250px;
@@ -247,20 +262,43 @@
         }
       }
     }
+    .user-info-wnd {
+      $wndWidth: 400px;
+      $wndHeight: 250px;
+      $titleHeight: 15%;
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: $wndWidth;
+      height: $wndHeight;
+      transform: translate(-$wndWidth/2, -$wndHeight/2);
+      box-shadow: 0 0 20px #666;
+      background: #fff;
+      border-radius: 5px;
+      @media screen and(max-width: $wndWidth){
+        left: 0;
+        width: 100%;
+        transform: translate(0, -$wndHeight/2);
+      }
+    }
   }
 </style>
 
 <script>
-  import md5 from '@/libs/md5'
+  // import md5 from '@/libs/md5'
   import axios from 'axios'
   import Fade from '@/common/animation/Fade'
+  import { mapState, mapActions } from 'vuex'
 
   // 因为babel的处理，直接在Import处解构赋值会失败
-  let {MD5} = md5;
+  // let {MD5} = md5;
 
   export default {
     components: {
       Fade
+    },
+    computed: {
+      ...mapState(['isLogin', 'username', 'superAuth'])
     },
     data(){
       return {
@@ -269,11 +307,13 @@
         clientWidth: 0,
         timer: null,
         showLoginWnd: false,
-        username: '',
+        account: '',
         password: '',
+        showUserInfoWnd: false,
       }
     },
     methods: {
+      ...mapActions(['login', 'logout']),
       search(){
         this.$router.push({
           path: 'search',
@@ -290,7 +330,7 @@
         this.showLoginWnd = false;
       },
       resetUserInfo () {
-        this.username = '';
+        this.account = '';
         this.password = '';
       },
       moveLoginWnd (e) {
@@ -305,25 +345,27 @@
           loginWnd.style.left = curMouseX - originMouseX + clientX + 'px';
           loginWnd.style.top = curMouseY - originMouseY + clientY + 'px';
         };
-        let rmEvnetMov = function () {
+        let rmEventMov = function () {
           try {
             document.removeEventListener('mousemove', eventMov);
-            document.removeEventListener('mouseup', rmEvnetMov);
+            document.removeEventListener('mouseup', rmEventMov);
           } catch (e) {
             console.log(e);
           }
         };
         document.addEventListener('mousemove', eventMov);
-        document.addEventListener('mouseup', rmEvnetMov);
+        document.addEventListener('mouseup', rmEventMov);
       },
-      postAccount () {
+      userLogin () {
         axios.post('/api/login', {
-          username: this.username,
-          pwd: MD5(this.password)
+          account: this.account,
+          pwd: this.password,
         }).then(res => {
           res = res.data;
           if (res.status === 'success') {
             this.hideLoginWnd();
+            let userInfo = {'username': res.username, 'superAuth': res.sp};
+            this.login(userInfo);
             this.$message({
               message: '登录成功',
               type: 'success'
@@ -335,6 +377,20 @@
             });
           }
         }).catch(err => {console.log(err)})
+      },
+      popUserInfoWnd () {
+        this.showUserInfoWnd = true;
+      },
+      hideUserInfoWnd () {
+        this.showUserInfoWnd = false;
+      },
+      userLogout () {
+        axios.get('/api/logout').then(res => {
+          this.logout();
+          this.hideUserInfoWnd()
+        }).catch(e => {
+          console.log(e);
+        })
       }
     },
     mounted () {
@@ -349,6 +405,26 @@
           _this.clientWidth = document.body.clientWidth;
         }, 50);
       };
+
+      // try {
+      //   let username = sessionStorage.getItem("username");
+      //   let superAuth = sessionStorage.getItem("superAuth") === "1";
+      //   if (username !== null) {
+      //     this.login({username, superAuth});
+      //   }
+      // } catch(e) {
+      //   axios.get('/api/logout');
+      //   this.logout();
+      // }
+      axios.get('/api/verifystatus').then(res => {
+        res = res.data;
+        if (res['status']) {
+          this.account = res['account'];
+          this.login({'username': res['username'], 'superAuth': res['sp']});
+        }
+      }).catch(e => {
+        console.log(e);
+      })
     }
   }
 </script>
@@ -359,5 +435,13 @@
   }
   #nav nav {
     opacity: .97;
+  }
+  .user-area {
+    min-width: 2rem;
+  }
+  .user-area * {
+    display: inline-block;
+    width: 100%;
+    text-align: center;
   }
 </style>
