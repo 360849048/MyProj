@@ -1,22 +1,14 @@
 from flask import request, send_file, jsonify, make_response, session
-import shutil
-import re
-import time
 import hmac
 from app import app
-from app.sqljob import TableManager
-from app.iomaker import IOMaker
-from app.configfile import HkFileMaker, FcfFileMaker, SysFileMaker, SafetyFileMaker, createZip
 from app.pathinfo import *
-from app.softupdater import Updater
-from app.softrefresh import markToRefresh
 from app.log2 import log
 from app.pwd5 import createPwd5
 import app.user as user
-
-
-SECRET_KEY_ADMIN = os.urandom(24)
-SECRET_KEY_NORMAL = os.urandom(24)
+from app import ioviews
+from app import vertionviews
+from app import SECRET_KEY_NORMAL
+from app import SECRET_KEY_ADMIN
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -33,9 +25,6 @@ def pageNotFound(e):
     resp.headers['Cache-Control'] = "max-age=0"
     return resp
     # return send_file(ENTRY_HTML_PATH)
-
-# 记录用户信息，格式为{uuid1: username1, uuid2: username2}
-user_info = {}
 
 @app.route('/api/login', methods=['POST'])
 def login():
@@ -63,6 +52,7 @@ def login():
         # session['access_level'] = 5
         # # 设置session过期时间，默认一个月有效
         # session.permanent = True
+        log.record(ip=client_ip, event="登录", description="", username=account)
 
     else:
         response = make_response(jsonify({'status': 'failure', 'username': '', 'sp': False}))
@@ -81,7 +71,6 @@ def login():
 
 @app.route('/api/logout', methods=['GET'])
 def logout():
-    print(request.cookies)
     response = make_response()
     response.delete_cookie('account')
     response.delete_cookie('sp')
@@ -94,589 +83,68 @@ def verifyStatus():
     account = request.cookies.get('account')
     sp = request.cookies.get('sp')
     ssid = request.cookies.get('ssid')
-    if account is None or sp is None or ssid is None:
-        return jsonify(ret_data)
 
-    if sp == '1':
-        h = hmac.new(SECRET_KEY_ADMIN, account.encode(), digestmod='MD5')
-        print(h.hexdigest())
-        if h.hexdigest() == ssid:
-            ret_data['status'] = True
-            ret_data['username'] = user.verifyAccount(account, '')['username']
+    if user.verifyCookies(account, sp, ssid):
+        ret_data['status'] = True
+        if sp == '1':
             ret_data['sp'] = True
-            ret_data['account'] = account
-    else:
-        h = hmac.new(SECRET_KEY_NORMAL, account.encode(), digestmod='MD5')
-        print(h.hexdigest())
-        if h.hexdigest() == ssid:
-            ret_data['status'] = True
-            ret_data['username'] = user.verifyAccount(account, '')['username']
-            ret_data['sp'] = False
-            ret_data['account'] = account
-    return jsonify(ret_data)
-
-# ##################################### IO #################################
-@app.route('/api/io/iolist', methods=['GET'])
-def getIo():
-    io_type = request.args.get('type')
-    start_id = int(request.args.get('start'))
-    end_id = int(request.args.get('end'))
-    # io_type可以是'DI', 'DO', 'AI', 'AO', 'TI', 'TO'
-    if io_type == 'DI':
-        t_io = TableManager('digital_input', IO_INFO_DB_PATH)
-    elif io_type == 'DO':
-        t_io = TableManager('digital_output', IO_INFO_DB_PATH)
-    elif io_type == 'AI':
-        t_io = TableManager('analog_input', IO_INFO_DB_PATH)
-    elif io_type == 'AO':
-        t_io = TableManager('analog_output', IO_INFO_DB_PATH)
-    elif io_type == 'TI':
-        t_io = TableManager('temperature_input', IO_INFO_DB_PATH)
-    else:
-        t_io = TableManager('temperature_output', IO_INFO_DB_PATH)
-    ret_data = {}
-    ret_data['amount'] = IOS_AMOUNT[io_type]
-    ret_data['ios'] = {}
-    if start_id > end_id or start_id > ret_data['amount']:
-        return jsonify(ret_data)
-    if end_id > ret_data['amount']:
-        end_id = ret_data['amount']
-    for id in range(start_id, end_id + 1):
-        ret_data['ios'][str(id)] = t_io.displayBriefData(id, 'CName')[0]
+        ret_data['account'] = account
+        ret_data['username'] = user.verifyAccount(account, '')['username']
 
     return jsonify(ret_data)
 
-@app.route('/api/io/bigstdmodule', methods=['GET'])
-def getBigIo():
-    # 获取大机选配CIO021或CIO011的IO点配置信息
-    # 数据返回格式为{'name': 'CIO021(或CIO011)', ios: {'di3': '83--开门', ..., 'do2': '113--润滑马达2'}}
-    cio021_io = {
-        'DI3': 83,
-        'DI4': 84,
-        'DI5': 85,
-        'DI6': 97,
-        'DI7': 98,
-        'DI8': 99,
-        'DO1': 97,
-        'DO2': 98,
-        'DO3': 113
-    }
-    if request.args.get('type').upper() == 'VE2':
-        ret_data = {'name': 'CIO011', 'ios': {}}
-    else:
-        ret_data = {'name': 'CIO021', 'ios': {}}
-    # t_di = TableManager('digital_input', IO_INFO_DB_PATH)
-    # t_do = TableManager('digital_output', IO_INFO_DB_PATH)
-    for k, v in cio021_io.items():
-        if k.startswith('DI'):
-            ret_data['ios'][k] = str(v)  # + '--' + t_di.displayBriefData(v, 'CName')[0]
-        if k.startswith('DO'):
-            ret_data['ios'][k] = str(v)  # + '--' + t_do.displayBriefData(v, 'CName')[0]
-    return jsonify(ret_data)
-
-@app.route('/api/io/pilzlist', methods=['GET'])
-def getPilzList():
-    ret_data = {'normal': [], 'e73': []}
-    for file_name in os.listdir(NOR_SAFETY_RELAY_FILE_DIR):
-        ret_data['normal'].append(file_name)
-    for file_name in os.listdir(E73_SAFETY_RELAY_FILE_DIR):
-        ret_data['e73'].append(file_name)
-
-    ret_data['normal'].append('其他')
-    ret_data['e73'].append('其他')
-    return jsonify(ret_data)
-
-@app.route('/api/io/funcoutlist', methods=['GET'])
-def getOutputItems():
-    t_func_list = TableManager('FuncOutput_List', IO_INFO_DB_PATH)
-    ret_data = []
-    for each_id in t_func_list.getAllId():
-        ret_data.append(t_func_list.displayBriefData(each_id, 'CName')[0])
-    return jsonify(ret_data)
-
-@app.route('/api/io/createxlxs', methods=['POST'])
-def createIoFile():
-    '''
-        生成IO表文件(.xlsx)
-        目前后台只支持主底板和扩展底板一的编辑
-        根据网页POST数据格式，进行数据处理。
-        必须严格参照网页传输的数据进行编程
-        * 2019.06.13: （Bug fix）当计算得到两份重名文件时，由于浏览器缓存原因，将下载得到两份一样的文件
-    '''
-    # data是一个dict对象
+@app.route('/api/modifypwd', methods=['POST'])
+def modifyPwd():
+    account = request.cookies.get('account')
     data = request.get_json()
-    client_ip = request.remote_addr
-    record_info = 'IP: ' + client_ip + '创建IO表：\n'
-    record_info += request.data.decode()
-    log.record(ip=client_ip, event="创建IO表", description=request.data.decode(), username="")
-
-    # 将post得到的数据整理成规范格式的数据
-    board_1_modules_ios = []
-    board_1 = data['boardModules1']
-    board_1_ios = data['boardModulesIOs1']
-    for idx in range(len(board_1)):
-        if board_1[idx] != '':
-            board_1_modules_ios.append([board_1[idx], board_1_ios[idx]])
-
-    board_2_modules_ios = []
-    board_2 = data['boardModules2']
-    board_2_ios = data['boardModulesIOs2']
-    for idx in range(len(board_2)):
-        if board_2[idx] != '':
-            board_2_modules_ios.append([board_2[idx], board_2_ios[idx]])
-
-    evaluation_num = data['evaluationNum']
-    production_num = data['productionNum']
-    type_string = data['immType']
-    customer = data['customer']
-    safety_standard = data['safetyStandard']
-    technical_clause = data['technicalClause']
-    dual_inj = data['isDualInj']
-    clamp_force = data['clampForce']
-    injection = data['injection']
-    # 这个是改造后规范显示的immType字符串，json中的immType值不适合取文件名
-    imm_type = ''
-    # 默认的主底板IO是否修改
-    func_output1 = data['funcOutput1']
-    func_output2 = data['funcOutput2']
-    e73_safety = data['funcConfig']['3']['status']
-    main_board_modified_io = data['mainBoardModifiedIo']
-    # 能耗模块DEE是否启用
-    energy_dee = data['funcConfig']['5']['status']
-    # 功能点为是否更改为可编程输出
-    # Varan连接模块如果启用，安装在KEB之后(0)之前(1)
-    varan_conn_module_pos = data['varanConnModulePos']
-    # 外置热流道是否激活，及组数
-    # 注意网页端提交的功能序号可能随功能增加而改变，注意 data['funcConfig']['?']['status]中的序号('?')需要随之更新
-    activate_external_hotrunner = data['funcConfig']['99']['status']
-    if activate_external_hotrunner:
-        external_hotrunner_num = int(data['extHotrunnerNum'])
-    else:
-        external_hotrunner_num = 0
-    psg_hotrunner = data['funcConfig']['98']['status']
-
-    if data['type'].upper() == 'ZES':
-        imm_type = 'ZE' + clamp_force + 's-' + injection
-    elif data['type'].upper() == 'ZE':
-        imm_type = 'ZE' + clamp_force + '-' + injection
-    elif data['type'].upper() == 'VE2S':
-        imm_type = 'VE' + clamp_force + 'IIs-' + injection
-    elif data['type'].upper() == 'VE2':
-        imm_type = 'VE' + clamp_force + 'II-' + injection
-
-    # 增加一个外层时间戳文件夹，用来阻止浏览器缓存文件
-    dir_name = ''.join(str(time.time()).split('.'))
-    wrap_dir = CACHE_FILE_DIR + dir_name + '/'
-    wrap_url = URL_DIR + dir_name + '/'
-    os.mkdir(wrap_dir)
-
-    io_file_path = wrap_dir + evaluation_num + customer + imm_type + '.xlsx'
-    io_url = wrap_url + evaluation_num + customer + imm_type + '.xlsx'
-
-    print('creating io.xlsx, pls wait....')
-    iomaker = IOMaker(imm_type=data['type'],
-                      board_1_modules_ios=board_1_modules_ios,
-                      board_2_modules_ios=board_2_modules_ios,
-                      evaluation_num=evaluation_num,
-                      production_num=production_num,
-                      type_string=type_string,
-                      customer=customer,
-                      safety_standard=safety_standard,
-                      technical_clause=technical_clause,
-                      dual_inj=dual_inj,
-                      external_hotrunner_num=external_hotrunner_num,
-                      energy_dee=energy_dee,
-                      varan_conn_module_pos=varan_conn_module_pos,
-                      psg_hotrunner=psg_hotrunner,
-                      main_board_modified_io=main_board_modified_io)
-    if func_output1 != 0:
-        iomaker.func1Config(func_output1)
-    if func_output2 != 0:
-        iomaker.func2Config(func_output2)
-    iomaker.createFile(io_file_path)
-
-    return jsonify({'status': 'success', 'url': io_url})
-
-@app.route('/api/io/createconfigfile', methods=['POST'])
-def createConfigFile():
-    '''
-        生成配置文件(.zip)
-        同样只支持主底板和扩展底板一的编辑，更多的配置请自行特殊制作支持
-        必须严格按照网页传输数据进行编程
-        * 2019.06.13: （Bug fix）当计算得到两份重名文件时，由于浏览器缓存原因，将下载得到两份一样的文件
-    '''
-    data = request.get_json()
-    client_ip = request.remote_addr
-    record_info = 'IP: ' + client_ip + '创建配置文件：\n'
-    record_info += request.data.decode()
-    log.record(ip=client_ip, event='创建配置文件', description=request.data.decode())
-
-    # 将post得到的数据整理成规范格式的数据
-    board_1_modules_ios = []
-    board_1 = data['boardModules1']
-    board_1_ios = data['boardModulesIOs1']
-    for idx in range(len(board_1)):
-        if board_1[idx] != '':
-            board_1_modules_ios.append([board_1[idx], board_1_ios[idx]])
-
-    board_2_modules_ios = []
-    board_2 = data['boardModules2']
-    board_2_ios = data['boardModulesIOs2']
-    for idx in range(len(board_2)):
-        if board_2[idx] != '':
-            board_2_modules_ios.append([board_2[idx], board_2_ios[idx]])
-
-    customer = data['customer']
-
-    # 硬件配置文件
-    ce_standard = data['ceStandard']
-    varan_conn_module_pos = data['varanConnModulePos']
-    e73_safety = data['funcConfig']['3']['status']
-    energy_dee = data['funcConfig']['5']['status']
-    # 默认主底板修改的IO
-    main_board_modified_io = data['mainBoardModifiedIo']
-
-    # 安全继电器文件
-    nor_pilz = data['pilzNor']
-    e73_pilz = data['pilzE73']
-    if not ce_standard or nor_pilz == '其他':
-        nor_pilz = None
-    if not e73_safety or e73_pilz == '其他':
-        e73_pilz = None
-
-    clamp_force = data['clampForce']
-    injection = data['injection']
-
-    # 下面开始生成文件路径，创建目录
-    imm_type = ''
-    zip_file_path = ''
-    zip_file_url = ''
-    if data['type'].upper() == 'ZES':
-        imm_type = 'ZE' + clamp_force + 's-' + injection
-    elif data['type'].upper() == 'ZE':
-        imm_type = 'ZE' + clamp_force + '-' + injection
-    elif data['type'].upper() == 'VE2S':
-        imm_type = 'VE' + clamp_force + 'IIs-' + injection
-    elif data['type'].upper() == 'VE2':
-        imm_type = 'VE' + clamp_force + 'II-' + injection
-    # 增加一个外层时间戳文件夹，用来阻止浏览器缓存文件
-    dir_name = ''.join(str(time.time()).split('.'))
-    wrap_dir = CACHE_FILE_DIR + dir_name + '/'
-    wrap_url = URL_DIR + dir_name + '/'
-    os.mkdir(wrap_dir)
-    if ce_standard:
-        dst_file_dir = wrap_dir + data['evaluationNum'] + customer + imm_type + '(CE)/'
-        zip_file_path = wrap_dir + data['evaluationNum'] + customer + imm_type + '(CE).zip'
-        zip_file_url = wrap_url + data['evaluationNum'] + customer + imm_type + '(CE).zip'
-    else:
-        dst_file_dir = wrap_dir + data['evaluationNum'] + customer + imm_type + '/'
-        zip_file_path = wrap_dir + data['evaluationNum'] + customer + imm_type + '.zip'
-        zip_file_url = wrap_url + data['evaluationNum'] + customer + imm_type + '.zip'
-    if os.path.isdir(dst_file_dir):
-        shutil.rmtree(dst_file_dir)
-    os.mkdir(dst_file_dir)
-
-    # 功能配置选项，注意key值和configfile.py中FcfFileMaker中属性名字对应
-    functions = {}
-    # functions['injSig'] = data['funcConfig']['1']['status']
-    # functions['chargeSig'] = data['funcConfig']['2']['status']
-    func_output1 = data['funcOutput1']
-    func_output2 = data['funcOutput2']
-    functions['dee'] = data['funcConfig']['5']['status']
-    functions['internalHotrunnerNum'] = data['intHotrunnerNum']
-    functions['valve'] = data['funcConfig']['101']['status']
-    functions['air'] = data['funcConfig']['102']['status']
-    functions['core'] = data['funcConfig']['103']['status']
-    functions['progio'] = data['funcConfig']['104']['status']
-
-    fcfmaker = FcfFileMaker(imm_type=data['type'],
-                            functions=functions,
-                            ce_standard=ce_standard,
-                            dst_file_dir=dst_file_dir,
-                            func_output1=func_output1,
-                            func_output2=func_output2)
-    if fcfmaker.createFile() != 0:
-        return jsonify({'status': 'failure', 'description': '功能配置文件生成失败'})
-    sysmaker = SysFileMaker(ce_standard=ce_standard,
-                            clamp_force=clamp_force,
-                            dst_file_dir=dst_file_dir)
-    if sysmaker.createFile() != 0:
-        return jsonify({'status': 'failure', 'description': '系统文件生成失败'})
-    hkmaker = HkFileMaker(imm_type=data['type'],
-                          board_1_modules_ios=board_1_modules_ios,
-                          board_2_modules_ios=board_2_modules_ios,
-                          dst_file_dir=dst_file_dir,
-                          ce_standard=ce_standard,
-                          varan_module_pos=varan_conn_module_pos,
-                          energy_dee=energy_dee,
-                          main_board_modified_io=main_board_modified_io)
-
-    ret_status = hkmaker.createFile()
-    if ret_status < 0:
-        if ret_status == -1:
-            error_description = '标准程序不支持的模块配置'
-        elif ret_status == -2:
-            error_description = '后台在复制硬件配置文件时候发生了严重错误！请检查后台程序'
+    originPwd = data['originPwd']
+    newPwd = data['newPwd']
+    verfiy_status = user.verifyAccount(account, originPwd)
+    ret_data = {'status': False, 'description': ''}
+    if verfiy_status['status']:
+        ret_data['status'] = user.modifyPwd(account, newPwd)
+        if not ret_data['status']:
+            ret_data['description'] = '后台处理失败，详细错误请见系统日志'
         else:
-            error_description = '检查到重复配置的IO点'
-        return jsonify({'status': 'failure', 'description': '硬件配置文件生成失败：' + error_description})
-    if ce_standard or e73_safety:
-        mpnozmaker = SafetyFileMaker(nor_pilz=nor_pilz,
-                                     e73_pilz=e73_pilz,
-                                     dst_file_dir=dst_file_dir
-                                     )
-        if mpnozmaker.createFile() != 0:
-            return jsonify({'status': 'failure', 'description': '安全继电器（或E73）文件生成失败'})
-    createZip(dst_file_dir, zip_file_path)
-
-    return jsonify({'status': 'success', 'url': zip_file_url})
-
-@app.route('/api/io/allio', methods=['GET'])
-def getAllIo():
-    ret_data = {'DI': [], 'DO': [], 'AI': [], 'AO': [], 'TI': [], 'TO': []}
-    t_di = TableManager('digital_input', IO_INFO_DB_PATH)
-    t_do = TableManager('digital_output', IO_INFO_DB_PATH)
-    t_ai = TableManager('analog_input', IO_INFO_DB_PATH)
-    t_ao = TableManager('analog_output', IO_INFO_DB_PATH)
-    t_ti = TableManager('temperature_input', IO_INFO_DB_PATH)
-    t_to = TableManager('temperature_output', IO_INFO_DB_PATH)
-    for i in range(1, IOS_AMOUNT['DI']+1):
-        ret_data['DI'].append(t_di.displayBriefData(i, 'CName')[0])
-    for i in range(1, IOS_AMOUNT['DO'] + 1):
-        ret_data['DO'].append(t_do.displayBriefData(i, 'CName')[0])
-    for i in range(1, IOS_AMOUNT['AI']+1):
-        ret_data['AI'].append(t_ai.displayBriefData(i, 'CName')[0])
-    for i in range(1, IOS_AMOUNT['AO']+1):
-        ret_data['AO'].append(t_ao.displayBriefData(i, 'CName')[0])
-    for i in range(1, IOS_AMOUNT['TI']+1):
-        ret_data['TI'].append(t_ti.displayBriefData(i, 'CName')[0])
-    for i in range(1, IOS_AMOUNT['TO']+1):
-        ret_data['TO'].append(t_to.displayBriefData(i, 'CName')[0])
-    return jsonify(ret_data)
-
-@app.route('/api/io/stdio', methods = ['GET'])
-def getStdIo():
-    imm_type = request.args.get('type')
-    ce_standard = request.args.get('ceStandard')
-    if ce_standard is None or ce_standard == 'false':
-        # GET方式传递的Boolean有问题！得到的是false而不是False
-        ce_standard = False
+            ret_data['description'] = '密码修改成功'
+            client_ip = request.remote_addr
+            log.record(ip=client_ip, event="修改密码", description="", username=account)
     else:
-        ce_standard = True
-    hk_info = HkFileMaker(imm_type=imm_type, ce_standard=ce_standard)
-
-    return jsonify({'status': 'success', 'stdIo': hk_info.getStdIoInfo()})
-
-@app.route('/api/io/cfgadvice', methods=['GET'])
-def getIoConfigAdvice():
-    pass
-
-# 避免频繁搜索数据库获取IO长度，这里一次性读取掉所有IO的数目
-# 通过函数中获取，可能可以尽早销毁这些被创建的TableManager
-def _getIoAmount():
-    t_ios = {
-        'DI': TableManager('digital_input', IO_INFO_DB_PATH),
-        'DO': TableManager('digital_output', IO_INFO_DB_PATH),
-        'AI': TableManager('analog_input', IO_INFO_DB_PATH),
-        'AO': TableManager('analog_output', IO_INFO_DB_PATH),
-        'TI': TableManager('temperature_input', IO_INFO_DB_PATH),
-        'TO': TableManager('temperature_output', IO_INFO_DB_PATH)
-    }
-    return {
-        'DI': len(t_ios['DI'].getAllId()),
-        'DO': len(t_ios['DO'].getAllId()),
-        'AI': len(t_ios['AI'].getAllId()),
-        'AO': len(t_ios['AO'].getAllId()),
-        'TI': len(t_ios['TI'].getAllId()),
-        'TO': len(t_ios['TO'].getAllId())
-    }
-
-
-IOS_AMOUNT = _getIoAmount()
-
-
-# ##################################### Version #################################
-@app.route('/api/ver/query', methods=['GET'])
-def getVersion():
-    '''
-        根据请求的版本类型以及版本区间（不是数据库的id号）返回版本数据
-        当某个版本类型下的所有版本数据按一定顺序（这里按名字降序排列）后，取
-        位于第start_seq和end_seq之间的版本数据
-        :return 格式如 {'itemsNum': 123, 'items': {'0': {'client': xxx, 'version': xxx , ...}, {'1': {...}}, ...}}
-
-        * 2019.04.16: （Bug fix）当数据库中某一行数据被删除，再次遍历该数据时返回null，导致前端页面错误
-    '''
-    soft_type = request.args.get('softType')
-    if soft_type not in ['V01', 'V02', 'V03V04', 'V05', 'T05']:
-        return jsonify({'itemsNum': 0, 'items': {}})
-    start_seq = int(request.args.get('start'))
-    end_seq = int(request.args.get('end'))
-    table_name = 't_' + soft_type
-    t_soft = TableManager(table_name, SOFTWARE_VERSION_INFO_DB_PATH)
-    all_ids = t_soft.getAllId('version', desc=True)
-    ret_data = {'itemsNum': len(all_ids), 'items': {}}
-    key = 0
-    query_soft_num = end_seq - start_seq + 1
-    for soft_id in all_ids[start_seq:]:
-        if key >= query_soft_num:
-            break
-        temp_data = t_soft.displayDetailedData(soft_id)
-        if not temp_data:
-            continue
-        ret_data['items'][key] = temp_data
-        key += 1
-
+        ret_data['description'] = '旧密码输入有误'
     return jsonify(ret_data)
 
-
-# 需要遍历数据库和xls表，并且对比两者的差别，非常费时
-# 检测更新需要遍历数据库和xls表，为了避免确认更新时，重复检测更新
-# 将下面变量设为全局变量
-updaters = {
-    'V01': Updater('t_V01', 'V01'),
-    'V02': Updater('t_V02', 'V02'),
-    'V03V04': Updater('t_V03V04', 'V03&V04'),
-    'V05': Updater('t_V05', 'V05'),
-    'T05': Updater('t_T05', 'T05'),
-}
-@app.route('/api/ver/checkupdate', methods=['GET'])
-def checkUpdate():
-    '''
-        检查某类版本的更新信息
-        如果找不到或无法打开'软件版本登记表.xls'文件，这里返回状态为失败。
-        :return: 成功返回格式如 {'status': success, 'info': {"new": [{'client': xx, 'version': xx, ...}, {...}, ,,]}
-                  失败返回格式如 {'status': failure, 'description': 'xxxx'}
-    '''
-    global updaters
-    soft_type = request.args.get('softType')
-    vers_ready_to_update = updaters[soft_type].getUpdateInfo()
-    if vers_ready_to_update == -1:
-        return jsonify({'status': 'failure', 'description': '无法打开xls文件路径或xls文件内没有正确的sheet，检查后台 "软件版本登记表.xls" 文件路径'})
-    elif vers_ready_to_update == 0:
-        return jsonify({'status': 'failure', 'description': '其他线程正在更新数据，稍后刷新重试'})
-    return jsonify({'status': 'success', 'info': vers_ready_to_update})
-
-@app.route('/api/ver/startupdate', methods=['GET'])
-def startUpdate():
-    global updaters
-    soft_type = request.args.get('softType')
-    client_ip = request.remote_addr
-    record_info = 'IP: ' + client_ip + '更新软件版本'
-    record_info += str(updaters[soft_type].vers_ready_to_update)
-    log.record(ip=client_ip, event="更新软件版本", description=str(updaters[soft_type].vers_ready_to_update), username="")
-
-    if updaters[soft_type].startUpdate() is False:
-        return jsonify({'status': 'failure', 'description': '更新信息已过期或后台繁忙，请重试'})
-    return jsonify({'status': 'success'})
-
-@app.route('/api/ver/downloadsrccode', methods=['GET'])
-def downloadSrcCode():
-    '''
-        为网页端准备下载文件（根据提供的路径复制文件到cache/），然后返回url提供下载
-    '''
-    src_path = request.args.get('path')
-    if not os.path.isfile(src_path):
-        return jsonify({'status': 'failure', 'description': '数据库路径无效在本服务器上无效，'})
-    file_name = os.path.basename(src_path)
-    dst_path = os.path.join(CACHE_FILE_DIR, file_name)
-    if os.path.isfile(dst_path):
-        # 如果该文件原来已经被复制到cache目录下，则直接返回该文件路径
-        src_code_url = os.path.join(URL_DIR, file_name)
-        return jsonify({'status': 'success', 'url': src_code_url})
-    try:
-        # 如果src_path和dst_path指向同一个文件，会导致复制失败
-        shutil.copy(src_path, dst_path)
-    except Exception as e:
-        log.record(e)
-        return jsonify({'status': 'failure', 'description': '后台源程序文件复制失败，请重试'})
-    src_code_url = os.path.join(URL_DIR, file_name)
-    return jsonify({'status': 'success', 'url': src_code_url})
-
-@app.route('/api/ver/searchversions', methods=['GET'])
-def searchVersion():
-    user_level = session.get('us_lv')
-    search_str = request.args.get('text')
-    client_ip = request.remote_addr
-    log.record(ip=client_ip, event="搜索", description=search_str, username="")
-    ret_data = {'itemsNum': 0, 'items': {}}
-    if search_str == '':
+@app.route('/api/modifyusername', methods=['GET'])
+def modifyUsername():
+    ret_data = {'status': False, 'description': ''}
+    # 需要首先校验用户，防止cookie伪造
+    account = request.cookies.get('account')
+    sp = request.cookies.get('sp')
+    ssid = request.cookies.get('ssid')
+    if not user.verifyCookies(account, sp, ssid):
+        ret_data['description'] = "请刷新页面或者重新登录后再重试！"
         return jsonify(ret_data)
-    t_vers = {
-        'V01': TableManager('t_V01', SOFTWARE_VERSION_INFO_DB_PATH),
-        'V02': TableManager('t_V02', SOFTWARE_VERSION_INFO_DB_PATH),
-        'V03V04': TableManager('t_V03V04', SOFTWARE_VERSION_INFO_DB_PATH),
-        'V05': TableManager('t_V05', SOFTWARE_VERSION_INFO_DB_PATH),
-        'T05': TableManager('t_T05', SOFTWARE_VERSION_INFO_DB_PATH)
-    }
-    keywords = re.split(r'\s+', search_str)
-    key = 0
-    ver_list = []
-    for soft_type in t_vers:
-        ids_for_each_keyword = []
 
-        for keyword in keywords:
-            # 在表中搜索1个关键字
-            ids_for_each_keyword.append(t_vers[soft_type].searchDataInTable(keyword, 'path'))
-        # 取多个关键字获得到重合id部分，即筛选出符合多个条件的数据
-        ids = ids_for_each_keyword[0]
-        for i in range(1, len(ids_for_each_keyword)):
-            ids = tuple(soft_id for soft_id in ids if soft_id in ids_for_each_keyword[i])
-        ret_data['itemsNum'] += len(ids)
-        # for soft_id in ids:
-            # ret_data['items'][key] = t_vers[soft_type].displayDetailedData(soft_id)
-            # key += 1
-        for soft_id in ids:
-            ver_list.append(t_vers[soft_type].displayDetailedData(soft_id))
-    # 将搜索得到的版本号进行降序排序
-    ver_list = sorted(ver_list, key=lambda x: x['version'], reverse=True)
-    seq_list = list(i for i in range(1, ret_data['itemsNum'] + 1))
-    ret_data['items'] = dict(zip(seq_list, ver_list))
+    new_username = request.args.get('newUsername')
+    ret_data['status'] = user.modifyUsername(account, new_username)
+    if ret_data['status']:
+        ret_data['description'] = '用户名修改成功！'
+        client_ip = request.remote_addr
+        log.record(ip=client_ip, event="修改用户名", description="新用户名：" + new_username, username=account)
+    else:
+        ret_data['description'] = '用户名修改失败，详情请见系统日志'
     return jsonify(ret_data)
 
-@app.route('/api/ver/referversions', methods=['GET'])
-def referVersion():
-    search_str = request.args.get('ver')
-    ret_data = {'itemsNum': 0, 'items': {}}
-    ver_list = []
-    t_vers = {
-        'V01': TableManager('t_V01', SOFTWARE_VERSION_INFO_DB_PATH),
-        'V02': TableManager('t_V02', SOFTWARE_VERSION_INFO_DB_PATH),
-        'V03V04': TableManager('t_V03V04', SOFTWARE_VERSION_INFO_DB_PATH),
-        'V05': TableManager('t_V05', SOFTWARE_VERSION_INFO_DB_PATH),
-        'T05': TableManager('t_T05', SOFTWARE_VERSION_INFO_DB_PATH)
-    }
-    next_search_vers = [search_str]
-    while True:
-        # 向之前的版本遍历，只需搜索"版本"
-        if not next_search_vers:
-            break
-        cur_search_vers = next_search_vers.copy()
-        next_search_vers = []
-        for cur_search_ver in cur_search_vers:
-            for soft_type in t_vers:
-                ids = t_vers[soft_type].searchDataByKey(strict=True, version=cur_search_ver)
-                for soft_id in ids:
-                    temp = t_vers[soft_type].displayDetailedData(soft_id)
-                    ver_list.append(temp)
-                    next_search_vers.append(temp['base'])
-    next_search_vers = [search_str]
-    while True:
-        # 向之后的版本遍历，只需搜索"原版本"
-        if not next_search_vers:
-            break
-        cur_search_vers = next_search_vers.copy()
-        next_search_vers = []
-        for soft_type in t_vers:
-            for cur_search_ver in cur_search_vers:
-                ids = t_vers[soft_type].searchDataByKey(strict=True, base=cur_search_ver)
-                for soft_id in ids:
-                    temp = t_vers[soft_type].displayDetailedData(soft_id)
-                    ver_list.append(temp)
-                    next_search_vers.append(temp['version'])
-    ver_list = sorted(ver_list, key=lambda x: x['version'], reverse=True)
-    ret_data['itemsNum'] = len(ver_list)
-    seq_list = list(i for i in range(1, ret_data['itemsNum'] + 1))
-    ret_data['items'] = dict(zip(seq_list, ver_list))
+@app.route('/api/log/userall', methods=['GET'])
+def getUserLog():
+    ret_data = {'status': False, 'list': ''}
+    account = request.cookies.get('account')
+    sp = request.cookies.get('sp')
+    ssid = request.cookies.get('ssid')
+    if user.verifyCookies(account, sp, ssid) and sp == '1':
+        ret_data['status'] = True
+        list_all = log.readAll()
+        print(list_all)
+        ret_data['list'] = list_all
     return jsonify(ret_data)
 
 @app.route('/api/foo', methods=['GET', 'POST'])
@@ -689,54 +157,11 @@ def cookieTest():
     print(type(jsonify([1, 2, 3])))
     response = make_response(jsonify([1, 2, 3, 4]))
     print('request.cookies: ', request.cookies)
-    uuid = request.cookies.get('uuid')
-    username = user_info.get(uuid)
-    print('request.cookies.get("uuid"), username: ', uuid, username)
-    print(user_info)
     print('session:', session.get('username'), session.get('access_level'))
     client_ip = request.remote_addr
     if session.get('user_ip') == client_ip:
         print('ip验证成功')
     return response
-
-@app.route('/api/ver/submiterror', methods=['GET'])
-def submitError():
-    soft_type = request.args.get('type')
-    err_id = request.args.get('id')
-    # 将用户提交的错误错误路径版本进行标记（torefresh字段写1）
-    table_name = 't_' + soft_type
-    markToRefresh(table_name, int(err_id))
-    # 记录日志
-    client_ip = request.remote_addr
-    log.record(ip=client_ip, event="标记路径问题", description=soft_type + ":" + err_id, username="")
-    return jsonify({'status': 'success'})
-
-@app.route('/api/ver/checkallupdate', methods=['GET'])
-def checkAllUpdate():
-    '''
-        检查所有版本的更新信息
-        :return: {"V01": {
-                        "status": "success",
-                        "info": {
-                            "new": {"client": "xxx", ...},
-                            "expire": {"client": "xxx", xxx}
-                            }
-                        },
-                    "V02": {...}, ...
-                    }
-    '''
-    global updaters
-    ret_val = {}
-    for soft_type, updater in updaters.items():
-        update_info = updater.getUpdateInfo()
-        if update_info == -1:
-            ret_val[soft_type] = {'status': 'failure', 'description': '无法打开xls文件路径或xls文件内没有正确的sheet，检查后台 "软件版本登记表.xls" 文件路径'}
-        elif update_info == -2:
-            ret_val[soft_type] = {'status': 'failure', 'description': '其他线程正在更新数据，稍后刷新重试'}
-        else:
-            ret_val[soft_type] = {'status': 'success', 'info': update_info}
-    return jsonify(ret_val)
-
 
 # ##################################### Others #################################
 @app.route('/api/getpwd5', methods=['GET'])

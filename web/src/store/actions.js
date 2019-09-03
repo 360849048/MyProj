@@ -4,5 +4,8 @@ export default {
   },
   logout (ctx) {
     ctx.commit('logout');
+  },
+  modifyUsername(ctx, newUsername) {
+    ctx.commit('modifyUsername', newUsername);
   }
 }

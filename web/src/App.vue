@@ -8,7 +8,7 @@
 </template>
 
 <script>
-import NavView from "./Nav"
+import NavView from "./nav/Nav"
 import axios from 'axios'
 
 export default {

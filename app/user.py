@@ -3,6 +3,8 @@ import hmac
 import sqlite3
 from app.pathinfo import *
 from app.log import log
+from app import SECRET_KEY_NORMAL
+from app import SECRET_KEY_ADMIN
 
 
 '''
@@ -119,3 +121,15 @@ def modifyUsername(account, new_username):
 
     conn.close()
     return ret
+
+
+def verifyCookies(account, admin, ssid):
+    if account is None or admin is None or ssid is None:
+        return False
+
+    if admin == '1':
+        h = hmac.new(SECRET_KEY_ADMIN, account.encode(), digestmod='MD5')
+        return h.hexdigest() == ssid
+    else:
+        h = hmac.new(SECRET_KEY_NORMAL, account.encode(), digestmod='MD5')
+        return h.hexdigest() == ssid

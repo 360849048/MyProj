@@ -1,9 +1,11 @@
 export default {
   login (state, userInfo) {
     state.isLogin = true;
+    state.account = userInfo.account;
     state.username = userInfo.username;
     state.superAuth = userInfo.superAuth;
     // try {
+    // // 使用sesstionStorage在客户端存储登录信息，但是关闭浏览器就失效
     //   sessionStorage.setItem("username", userInfo.username);
     //   if(userInfo.superAuth){
     //     sessionStorage.setItem('superAuth', '1');
@@ -24,5 +26,8 @@ export default {
     // } catch(e) {
     //   console.log(e, "当前浏览器sessionStorage被禁用！")
     // }
+  },
+  modifyUsername (state, newUsername) {
+    state.username = newUsername;
   }
 }

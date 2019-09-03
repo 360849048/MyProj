@@ -4,6 +4,7 @@ import Home from '../page/home/Home'
 import Srctransfer from '../page/select/SrcTransfer'
 import SearchResult from '../page/search/SearchResult'
 import Bezier from '../page/bezier/Bezier'
+import Log from '../page/Log/Log'
 
 
 Vue.use(VueRouter);
@@ -26,6 +27,7 @@ const router = new VueRouter({
     {path: '/makeio', component: Iomaker},
     {path: '/search', component: SearchResult},
     {path: '/bezier', component: Bezier},
+    {path: '/log', component: Log},
     {path: '*', redirect: '/home'}
   ]
 });

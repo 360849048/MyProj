@@ -54,6 +54,13 @@ class Log:
                 print(e)
                 log_err.record(str(e))
 
+    def readAll(self):
+        conn = sqlite3.connect(self.path)
+        c = conn.cursor()
+        sql = "SELECT * FROM t_log"
+        c.execute(sql)
+        return c.fetchall()
+
 
 log = Log(LOG_DB_PATH)
 
