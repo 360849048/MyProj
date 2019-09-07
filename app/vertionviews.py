@@ -230,3 +230,40 @@ def checkAllUpdate():
         else:
             ret_val[soft_type] = {'status': 'success', 'info': update_info}
     return jsonify(ret_val)
+
+@app.route('/api/ver/releasenote', methods=['GET'])
+def getReleaseNote():
+    ret_data = {'status': True, 'releaseNote': {}}
+    t_std_ver = TableManager('t_vers', STD_SOFTWARE_RELEASE_NOTE_DB_PATH)
+    ids = t_std_ver.getAllId(orderby="version", desc=True)
+    ver_count = 0
+    for each_id in ids:
+        ver_count += 1
+        ver_info = t_std_ver.displayBriefData(each_id, "version", "origin", "release_note")
+        ret_data['releaseNote'][ver_count] = {}
+        ret_data['releaseNote'][ver_count]['version'] = ver_info[0]
+        ret_data['releaseNote'][ver_count]['origin'] = ver_info[1]
+        ret_data['releaseNote'][ver_count]['releaseNote'] = ver_info[2].split(';;;')
+    # 前端测试多项目显示
+    # for each_id in ids:
+    #     ver_count += 1
+    #     ver_info = t_std_ver.displayBriefData(each_id, "version", "origin", "release_note")
+    #     ret_data['releaseNote'][ver_count] = {}
+    #     ret_data['releaseNote'][ver_count]['version'] = ver_info[0]
+    #     ret_data['releaseNote'][ver_count]['origin'] = ver_info[1]
+    #     ret_data['releaseNote'][ver_count]['releaseNote'] = ver_info[2].split(';;;')
+    # for each_id in ids:
+    #     ver_count += 1
+    #     ver_info = t_std_ver.displayBriefData(each_id, "version", "origin", "release_note")
+    #     ret_data['releaseNote'][ver_count] = {}
+    #     ret_data['releaseNote'][ver_count]['version'] = ver_info[0]
+    #     ret_data['releaseNote'][ver_count]['origin'] = ver_info[1]
+    #     ret_data['releaseNote'][ver_count]['releaseNote'] = ver_info[2].split(';;;')
+    # for each_id in ids:
+    #     ver_count += 1
+    #     ver_info = t_std_ver.displayBriefData(each_id, "version", "origin", "release_note")
+    #     ret_data['releaseNote'][ver_count] = {}
+    #     ret_data['releaseNote'][ver_count]['version'] = ver_info[0]
+    #     ret_data['releaseNote'][ver_count]['origin'] = ver_info[1]
+    #     ret_data['releaseNote'][ver_count]['releaseNote'] = ver_info[2].split(';;;')
+    return jsonify(ret_data)

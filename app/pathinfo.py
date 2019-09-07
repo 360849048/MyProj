@@ -36,6 +36,9 @@ URL_DIR = './static/cache/'
 # 存放软件版本的数据库路径
 SOFTWARE_VERSION_INFO_DB_PATH = './app/libfiles/soft.db'
 
+# 存放标准程序Release Note的数据库路径
+STD_SOFTWARE_RELEASE_NOTE_DB_PATH = './app/libfiles/release_note.db'
+
 # 存放软件版本的xls文件路径（！注意服务器上该文件的路径）
 SOFTWARE_VERSION_INFO_XLS_PATH = 'Y:/软件版本登记/软件版本登记表.xls'
 if not os.path.isfile(SOFTWARE_VERSION_INFO_XLS_PATH):

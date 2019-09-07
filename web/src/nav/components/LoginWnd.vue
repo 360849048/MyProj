@@ -85,6 +85,7 @@
               message: '登录成功',
               type: 'success'
             });
+            this.resetUserInfo();
           } else {
             this.$message({
               message: '密码或账号错误',

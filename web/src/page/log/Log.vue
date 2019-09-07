@@ -60,6 +60,7 @@
   * {
     margin: 0;
     padding: 0;
+    word-wrap: break-word;
   }
   .green-style {
     $mainBgc: #1fa67a;

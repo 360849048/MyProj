@@ -90,15 +90,18 @@
         </li>
       </ul>
       <form class="form-inline my-2 my-lg-0">
-      <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search"
-             v-model="textSearch"
-             @keydown.enter.prevent="search">
-      <button
-        class="btn btn-outline-success my-2 my-sm-0"
-        type="button"
-        @click="search"
-        :data-toggle="clientWidth<=992 ? 'collapse' : ''"
-        data-target="#navbarSupportedContent">Search</button>
+        <section class="search-wrap">
+          <label for="search-input" class="search-icon"><i class="fa fa-search" aria-hidden="true"></i></label>
+          <input class="form-control mr-sm-2" id="search-input" type="search" aria-label="Search"
+                 v-model="textSearch"
+                 @keydown.enter.prevent="search">
+        </section>
+        <button
+          class="btn btn-outline-success my-2 my-sm-0"
+          type="button"
+          @click="search"
+          :data-toggle="clientWidth<=992 ? 'collapse' : ''"
+          data-target="#navbarSupportedContent">Search</button>
       </form>
     </div>
     </nav>
@@ -175,8 +178,22 @@
         background-color: #eee;
       }
     }
+    .search-icon * {
+      color: #666 !important;
+    }
     .active *{
       color: #fff !important;
+    }
+  }
+  .search-wrap {
+    position: relative;
+    .search-icon {
+      position: absolute;
+      left: 10px;
+      top: 10px;
+    }
+    #search-input {
+      padding-left: 40px;
     }
   }
 </style>
