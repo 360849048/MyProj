@@ -6,7 +6,9 @@ from app.sqljob import TableManager
 from app.softupdater import Updater
 from app.pathinfo import *
 from app.log2 import log
+from app.log import log as sys_log
 from app.softrefresh import markToRefresh
+import app.user as user
 
 
 # ##################################### Version #################################
@@ -100,7 +102,7 @@ def downloadSrcCode():
         # 如果src_path和dst_path指向同一个文件，会导致复制失败
         shutil.copy(src_path, dst_path)
     except Exception as e:
-        log.record(e)
+        sys_log.record(str(e))
         return jsonify({'status': 'failure', 'description': '后台源程序文件复制失败，请重试'})
     src_code_url = os.path.join(URL_DIR, file_name)
     return jsonify({'status': 'success', 'url': src_code_url})
@@ -238,32 +240,82 @@ def getReleaseNote():
     ids = t_std_ver.getAllId(orderby="version", desc=True)
     ver_count = 0
     for each_id in ids:
+        # 使用ver_count保证json数据按版本号降序排列
         ver_count += 1
         ver_info = t_std_ver.displayBriefData(each_id, "version", "origin", "release_note")
         ret_data['releaseNote'][ver_count] = {}
+        ret_data['releaseNote'][ver_count]['id'] = each_id
         ret_data['releaseNote'][ver_count]['version'] = ver_info[0]
         ret_data['releaseNote'][ver_count]['origin'] = ver_info[1]
         ret_data['releaseNote'][ver_count]['releaseNote'] = ver_info[2].split(';;;')
-    # 前端测试多项目显示
-    # for each_id in ids:
-    #     ver_count += 1
-    #     ver_info = t_std_ver.displayBriefData(each_id, "version", "origin", "release_note")
-    #     ret_data['releaseNote'][ver_count] = {}
-    #     ret_data['releaseNote'][ver_count]['version'] = ver_info[0]
-    #     ret_data['releaseNote'][ver_count]['origin'] = ver_info[1]
-    #     ret_data['releaseNote'][ver_count]['releaseNote'] = ver_info[2].split(';;;')
-    # for each_id in ids:
-    #     ver_count += 1
-    #     ver_info = t_std_ver.displayBriefData(each_id, "version", "origin", "release_note")
-    #     ret_data['releaseNote'][ver_count] = {}
-    #     ret_data['releaseNote'][ver_count]['version'] = ver_info[0]
-    #     ret_data['releaseNote'][ver_count]['origin'] = ver_info[1]
-    #     ret_data['releaseNote'][ver_count]['releaseNote'] = ver_info[2].split(';;;')
-    # for each_id in ids:
-    #     ver_count += 1
-    #     ver_info = t_std_ver.displayBriefData(each_id, "version", "origin", "release_note")
-    #     ret_data['releaseNote'][ver_count] = {}
-    #     ret_data['releaseNote'][ver_count]['version'] = ver_info[0]
-    #     ret_data['releaseNote'][ver_count]['origin'] = ver_info[1]
-    #     ret_data['releaseNote'][ver_count]['releaseNote'] = ver_info[2].split(';;;')
+    return jsonify(ret_data)
+
+@app.route('/api/version/modifyreleasenote', methods=['POST'])
+def modifyReleaseNote():
+    ver_info = request.get_json()
+    client_ip = request.remote_addr
+    account = request.cookies.get('account')
+    sp = request.cookies.get('sp')
+    ssid = request.cookies.get('ssid')
+    ret_data = {"status": False, "description": ""}
+    if user.verifyCookies(account, sp, ssid) and sp == '1':
+        try:
+            release_note_arr = list(map(lambda x: x.replace(';;;', ':::'), ver_info['releaseNote']))
+            t_std_ver = TableManager('t_vers', STD_SOFTWARE_RELEASE_NOTE_DB_PATH)
+            ver_info_in_db = t_std_ver.displayDetailedData(ver_info['id'])
+            t_std_ver.modifyLine(ver_info['id'], version=ver_info['version'], origin=ver_info['origin'], release_note=';;;'.join(release_note_arr))
+            ret_data["status"] = True
+            log.record(ip=client_ip, event="更新ReleaseNote", description="原数据"+str(ver_info_in_db), username=account)
+        except Exception as e:
+            print(e)
+            ret_data["description"] = "服务器遇到问题，请见系统日志"
+            sys_log.record(str(e))
+    else:
+        ret_data["description"] = "你没有权限修改，或者重新登录后尝试再次提交"
+    return jsonify(ret_data)
+
+@app.route('/api/version/newnote', methods=['POST'])
+def getNewReleaseNote():
+    ver_info = request.get_json()
+    client_ip = request.remote_addr
+    account = request.cookies.get('account')
+    sp = request.cookies.get('sp')
+    ssid = request.cookies.get('ssid')
+    ret_data = {"status": False, "description": ""}
+    if user.verifyCookies(account, sp, ssid) and sp == '1':
+        try:
+            t_std_ver = TableManager('t_vers', STD_SOFTWARE_RELEASE_NOTE_DB_PATH)
+            release_note_arr = list(map(lambda x: x.replace(';;;', ':::'), ver_info['releaseNote']))
+            t_std_ver.appendLine(version=ver_info['version'], origin=ver_info['origin'], release_note=';;;'.join(release_note_arr))
+            ret_data["status"] = True
+            log.record(ip=client_ip, event="增加ReleaseNote", description="新数据"+str(ver_info), username=account)
+        except Exception as e:
+            sys_log.record(str(e))
+            ret_data["description"] = "服务器遇到问题，请见系统日志"
+            return jsonify(ret_data)
+    else:
+        ret_data["description"] = "你没有权限修改，或者重新登录后尝试再次提交"
+    return jsonify(ret_data)
+
+@app.route('/api/version/delnote', methods=['POST'])
+def delReleaseNote():
+    ver_info = request.get_json()
+    client_ip = request.remote_addr
+    account = request.cookies.get('account')
+    sp = request.cookies.get('sp')
+    ssid = request.cookies.get('ssid')
+    ret_data = {"status": False, "description": ""}
+    if user.verifyCookies(account, sp, ssid) and sp == '1':
+        try:
+            t_std_ver = TableManager('t_vers', STD_SOFTWARE_RELEASE_NOTE_DB_PATH)
+            ver_info_in_db = t_std_ver.displayDetailedData(ver_info['id'])
+            t_std_ver.deleteLine(ver_info['id'])
+            ret_data["status"] = True
+            log.record(ip=client_ip, event="删除ReleaseNote", description="原数据"+str(ver_info_in_db), username=account)
+        except Exception as e:
+            sys_log.record(str(e))
+            ret_data["description"] = "服务器遇到问题，请见系统日志"
+            return jsonify(ret_data)
+    else:
+        ret_data["description"] = "你没有权限修改，或者重新登录后尝试再次提交"
     return jsonify(ret_data)

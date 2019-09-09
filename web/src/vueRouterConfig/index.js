@@ -1,6 +1,5 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-import Home from '../page/home/Home'
 import Srctransfer from '../page/select/SrcTransfer'
 import SearchResult from '../page/search/SearchResult'
 import Bezier from '../page/bezier/Bezier'
@@ -12,7 +11,7 @@ Vue.use(VueRouter);
 // 改用vue-router懒加载，缩短首次主页加载时间
 const Iomaker = () => import('../page/iomaker/IoMaker.vue');
 const Versions = () => import('../page/versions/Versions.vue');
-
+const Home = () => import('../page/home/Home.vue');
 
 const router = new VueRouter({
   // 三种模式介绍

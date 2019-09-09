@@ -12,7 +12,7 @@
             <span class="font-weight-bold">用户名：</span>
             <span v-if="!isEditUsername">
               {{username}}&nbsp;&nbsp;
-              <i class="fa fa-pencil-square-o pointer" title="修改用户名" aria-hidden="true" @click="isEditUsername=true"></i>
+              <i class="fa fa-pencil pointer" title="修改用户名" aria-hidden="true" @click="isEditUsername=true"></i>
             </span>
             <span class="username-line" v-else>
               <input type="text" class="username-input" v-model="newUsername" :placeholder="username">
