@@ -2,7 +2,7 @@
   <div id="home"  v-loading="loading">
     <header><h1 class="ml-2">标准程序更新记录</h1></header>
     <!-- 侧边导航栏 -->
-    <nav class="side-nav">
+    <nav v-if="!loading" class="side-nav">
       <ul>
         <li
           class="side-nav-item"
@@ -125,11 +125,12 @@
         }
         this.innerTimer = window.setTimeout(() => {
           // article元素内容的向下偏移补偿
-          const offset = 250;
+          const offset = 400;
           let actScrollPos = document.documentElement.scrollTop;
           let scrollHeight = document.documentElement.scrollHeight;
           let clientHeight = document.documentElement.clientHeight;
           let verItemTop;
+          let verItemHeight;
 
           if (actScrollPos + clientHeight >= scrollHeight) {
           // 滚动到底部
@@ -138,9 +139,10 @@
           }
 
           for (let verId in this.verInfo) {
-            verItemTop = this.$refs[verId][0].offsetTop;
+            verItemTop = this.$refs[verId][0].parentNode.offsetTop;
+            verItemHeight = this.$refs[verId][0].parentNode.offsetHeight;
 
-            if (verItemTop + offset >= actScrollPos) {
+            if (actScrollPos + offset >= verItemTop && actScrollPos + offset <= verItemTop + verItemHeight) {
               this.$refs.sliderBar.style.top = (verId - 1) * 1.75 + 'rem';
               break;
             }
@@ -278,6 +280,9 @@
           });
           return;
         }
+        if (!confirm("确定删除这条记录")) {
+          return;
+        }
         axios.post("/api/version/delnote", {
           id: this.verInfo[verId]['id']
         }).then(res => {
@@ -359,7 +364,7 @@
       position: relative;
       .title {
         display: flex;
-        /*white-space: nowrap;*/
+        white-space: nowrap;
         &.main-title {
           text-indent: .25rem;
           // height: 33px;

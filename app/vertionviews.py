@@ -1,6 +1,9 @@
 from flask import request, send_file, jsonify, make_response, session
 import shutil
 import re
+import time
+from uuid import uuid4
+import threading
 from app import app
 from app.sqljob import TableManager
 from app.softupdater import Updater
@@ -9,6 +12,7 @@ from app.log2 import log
 from app.log import log as sys_log
 from app.softrefresh import markToRefresh
 import app.user as user
+from app.softpathmap import searchPathByStr, searchPathByRegex
 
 
 # ##################################### Version #################################
@@ -109,7 +113,6 @@ def downloadSrcCode():
 
 @app.route('/api/ver/searchversions', methods=['GET'])
 def searchVersion():
-    user_level = session.get('us_lv')
     search_str = request.args.get('text')
     client_ip = request.remote_addr
     log.record(ip=client_ip, event="搜索", description=search_str, username="")
@@ -318,4 +321,74 @@ def delReleaseNote():
             return jsonify(ret_data)
     else:
         ret_data["description"] = "你没有权限修改，或者重新登录后尝试再次提交"
+    return jsonify(ret_data)
+
+# 用来存储搜索过程中的数据
+search_result = {}
+@app.route('/api/ver/startdisksearch', methods=['POST'])
+def startDiskSearch():
+    search_info = request.get_json()
+    searching_key = search_info['key']
+    searching_mode = search_info['mode']
+    client_ip = request.remote_addr
+    log.record(ip=client_ip, event="磁盘搜索", description=searching_key, username="")
+    disk_search_id = str(uuid4())
+    # search_result中每个元素的的结构格式如下
+    search_slot = {'terminate': False, 'progress': [], 'num': 0}
+    search_result[disk_search_id] = {"key": searching_key,
+                                     "slot": search_slot,
+                                     "status": False,
+                                     "starting_time": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())),
+                                     "mode": searching_mode}
+    def _startSearch(mode):
+        if str(mode) == "0":
+            # 普通搜索模式
+            searchPathByStr(searching_key, search_slot)
+        else:
+            # 正则搜索
+            searchPathByRegex(searching_key, search_slot)
+        search_result[disk_search_id]['status'] = True
+    thread_search = threading.Thread(target=_startSearch, args=(searching_mode, ))
+    thread_search.start()
+    ret_data = {'status': True, 'id': disk_search_id}
+    return jsonify(ret_data)
+
+@app.route('/api/ver/getdisksearchprogress', methods=['GET'])
+def getDiskSearchProgress():
+    client_ip = request.remote_addr
+    disk_search_id = request.args.get('id')
+    ret_data = {"status": False, "progress": [], 'num': 0}
+    if disk_search_id not in search_result:
+        return jsonify(ret_data)
+    ret_data["status"] = search_result[disk_search_id]["status"]
+    ret_data["progress"] = search_result[disk_search_id]["slot"]["progress"]
+    ret_data["num"] = search_result[disk_search_id]["slot"]["num"]
+    if search_result[disk_search_id]["status"]:
+        if len(search_result[disk_search_id]["slot"]["progress"]) > 20:
+            # 如果搜索结果太多，全部记录到数据库，下次全部读取会导致浏览器内存耗尽
+            log.record(ip=client_ip, event="全盘搜索", description="结果太多，无法存入数据库", username="")
+        else:
+            log.record(ip=client_ip, event="全盘搜索", description=str(search_result[disk_search_id]), username="")
+        # 虽然pop掉了，但是信息还是保存在了ret_data中，
+        # 猜测在pop时，如果存在多个引用，只是删掉了引用；如果只有1个引用，就清内存了
+        search_result.pop(disk_search_id)
+    return jsonify(ret_data)
+
+@app.route("/api/ver/getdisksearchthreads", methods=['GET'])
+def getDiskSearchThreads():
+    return jsonify(search_result)
+
+@app.route("/api/ver/stopdisksearchthread", methods=['GET'])
+def stopDiskSearchThread():
+    client_ip = request.remote_addr
+    disk_search_id = request.args.get('id')
+    ret_data = {"status": False, "description": ""}
+    if disk_search_id not in search_result:
+        ret_data["description"] = "搜索id已失效"
+        return jsonify(ret_data)
+    search_result[disk_search_id]["slot"]["terminate"] = True
+    search_result[disk_search_id]["status"] = True
+    ret_data["status"] = True
+    ret_data["description"] = disk_search_id + " 已经停止"
+    log.record(ip=client_ip, event="结束搜索", description=disk_search_id, username="")
     return jsonify(ret_data)

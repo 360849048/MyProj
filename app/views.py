@@ -143,7 +143,6 @@ def getUserLog():
     if user.verifyCookies(account, sp, ssid) and sp == '1':
         ret_data['status'] = True
         list_all = log.readAll()
-        print(list_all)
         ret_data['list'] = list_all
     return jsonify(ret_data)
 

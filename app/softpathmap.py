@@ -208,7 +208,6 @@ def mapEmptyPathVersionsPath():
     print(ver_path_map)
     return ver_path_map
 
-
 def writeAllPathInfo(ver_path_map):
     '''
         把新的版本--路径信息写入到数据库，会覆盖原先数据库中的path信息
@@ -243,3 +242,83 @@ def writeAllPathInfo(ver_path_map):
     print('path信息写入数据库成功')
     return
 
+def searchPathByStr(str_search, slot, target_ext=(".RAR", ".7Z", ".ZIP", ".*"), dir=SOFTWARE_SRC_CODE_DIR):
+    '''
+    :param str_search: 包含若干以空格分隔的关键字字符串
+    :param slot: 必须传入一个dict对象，因为搜索很慢，为了能够在函数执行过程中将最新的搜索结果返回，这里通过dict传递
+    :param target_ext: 搜索目标格式
+    :param dir: 搜索的目录
+    :return: "xx/xx/xx.rar;xx/xx/xx.zip"
+    '''
+    result = ""
+    if not os.path.isdir(dir):
+        print("Fatal: invalid dir")
+        return result
+    if type(slot) is not dict or 'terminate' not in slot or 'progress' not in slot or 'num' not in slot:
+        print("Fatal: invalid slot")
+        return
+    slot['num'] = 0
+    keys = tuple(key.upper() for key in str_search.split(' '))
+    for root, dirs, files in os.walk(dir):
+        for file in files:
+            # 遍历目录下所有的文件
+            slot['num'] += 1
+            if slot["terminate"]:
+                # 这个用来控制结束这个线程，防止资源占用过多
+                return result
+            try:
+                # 某些文件名瞎JB命名，Python无法解析，可能导致程序以外终止！
+                ext = os.path.splitext(file)[1].upper()
+                if ".*" not in target_ext and ext not in target_ext:
+                    continue
+                valid_file = True
+                filename_upper = file.upper()
+                for key in keys:
+                    if key not in filename_upper:
+                        valid_file = False
+                        break
+                if valid_file:
+                    this_ver_path = os.path.join(root, file)
+                    if result == '':
+                        result = this_ver_path
+                    else:
+                        result += ';' + this_ver_path
+                    slot['progress'].append(this_ver_path)
+            except:
+                continue
+    return result
+
+def searchPathByRegex(regex, slot, dir=SOFTWARE_SRC_CODE_DIR):
+    '''
+    输入正则字符串匹配文件路径
+    :param regex: 正则字符串
+    :param slot: 必须传入一个dict对象，因为搜索很慢，为了能够在函数执行过程中将最新的搜索结果返回，这里通过dict传递
+    :param dir: 搜索的目录
+    :return: "xx/xx/xx.xx;xx/xx/xx.xx"
+    '''
+    result = ""
+    if not os.path.isdir(dir):
+        print("Fatal: invalid dir")
+        return result
+    if type(slot) is not dict or 'terminate' not in slot or 'progress' not in slot or 'num' not in slot:
+        print("Fatal: invalid slot")
+        return
+    slot['num'] = 0
+    for root, dirs, files in os.walk(dir):
+        for file in files:
+            # 遍历目录下所有的文件
+            slot['num'] += 1
+            try:
+                if slot["terminate"]:
+                    return result
+                # 某些文件名瞎JB命名，Python无法解析，可能导致程序以外终止！
+                if re.search(regex, file, re.I):
+                    this_ver_path = os.path.join(root, file)
+                    if result == '':
+                        result = this_ver_path
+                    else:
+                        result += ';' + this_ver_path
+                    slot['progress'].append(this_ver_path)
+            except:
+                continue
+    return result
