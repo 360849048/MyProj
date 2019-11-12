@@ -1,17 +1,6 @@
 import sqlite3
 import os
-
-# #
-# 本模块用来对路径为 "path_db" 数据库进行简单操作，一般步骤如下
-# 1. 实例化DbManger，查看该数据库包含的所有表。可对数据库进行：
-#       查看已有表，表的列； 新建表，重命名表，备份表，删除列。
-# 2. 实例化TableManger，可对表进行：
-#       查看列，查看行和id，显示并返回行，行的查找； 插入新行，删除行，修改行。
-#  注意：所有表内部数据以隐藏的列 "id" 进行传递，id列会自动生成。
-# #
-
-__Author__ = "J"
-
+from app.concreteconnpool import getCoonPool
 
 
 class DbManager:
@@ -174,24 +163,30 @@ class DbManager:
         self.c.execute(sql)
         return self.c.fetchall()
 
+
 class TableManager:
-    def __init__(self, table_name, path_db, columns4init=('如果不是创建新表，不需要填写该参数',), create_table=False):
+    def __init__(self, table_name, path_db, try_use_pool=True):
         # 修改表内容后自动保存
         self.auto_commit = True
         self.table = table_name
-        self.columns = columns4init
-
-        self.conn = sqlite3.connect(path_db)
+        self.conn_pool = None
+        self.conn = None
+        if try_use_pool:
+            self.conn_pool = getCoonPool(path_db)
+            if self.conn_pool is not None:
+                self.conn = self.conn_pool.get()
+        if self.conn is None:
+            self.conn = sqlite3.connect(path_db)
         self.c = self.conn.cursor()
-        if create_table:
-            sql = ("CREATE TABLE IF NOT EXISTS %s(id integer PRIMARY KEY AUTOINCREMENT" + ",%s text" * len(self.columns) + ")") % ((self.table,) + self.columns)
-            self.c.execute(sql)
         self.columns = self._getColumns()
 
     def __del__(self):
         try:
             self.c.close()
-            self.conn.close()
+            if self.conn_pool is not None:
+                self.conn_pool.giveBack(self.conn)
+            else:
+                self.conn.close()
         except:
             print("Fatal Error: The database: %s can't be closed!!!" % self.table)
 
@@ -343,24 +338,6 @@ class TableManager:
 
 
 if __name__ == '__main__':
-    import re
-    import time
-
-    time_mark = time.time()
-    t_vers = {
-        'V01': TableManager('t_V01', './libfiles/soft.db'),
-        'V02': TableManager('t_V02', './libfiles/soft.db'),
-        'V03V04': TableManager('t_V03V04', './libfiles/soft.db'),
-        'V05': TableManager('t_V05', './libfiles/soft.db'),
-        'T05': TableManager('t_T05', './libfiles/soft.db')
-    }
-    # sql = "SELECT * FROM t_V05 WHERE version LIKE 'v05_39_51'"
-    # t_vers['V05'].c.execute(sql)
-    # print(t_vers['V05'].c.fetchall())
-
-    ids = t_vers['V05'].searchDataByKey(strict=True, version='v05_39_50')
-    print(ids)
-    ids = t_vers['V05'].searchDataByKey(version='v05_39_50')
-    print(ids)
+    pass
 
 

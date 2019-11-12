@@ -1,7 +1,7 @@
 <template>
     <div id="searchResult">
-      <!-- 软件版本显示区域 -->
       <div style="clear: both;">
+        <!-- 进行全盘检索时显示的内容 -->
         <section v-if="showDiskSearchPage">
           <hr>
           <section>
@@ -30,7 +30,7 @@
           <h5><i class="fa fa-warning text-warning"></i>
             注意：在磁盘中搜索文件会消耗很多时间及服务器资源，搜索的实时结果将在下面显示
           </h5>
-          <h6 v-if="diskSearchStatus === 2">搜索完成</h6>
+          <h6 v-if="diskSearchStatus === 2">搜索完成，共遍历文件 {{diskSearchFileNum}}，得到结果 {{diskSearchResult.length}}</h6>
           <div v-else-if="diskSearchStatus === 1">
             <h6>正在搜索，已遍历文件 {{diskSearchFileNum}}</h6>
             <button class="btn btn-danger" @click="terminateDiskSearch">终止搜索</button>
@@ -39,6 +39,7 @@
             <li v-for="(item, index) in diskSearchResult" :key="index">{{item}}</li>
           </ul>
         </section>
+        <!-- 显示在数据库中搜索得到的版本内容以及版本之间的关联信息 -->
         <section class="col-12" v-else-if="Object.keys(softVers).length !== 0 | loading">
           <table class="table table-hover" v-loading="loading">
             <thead>
@@ -95,6 +96,7 @@
             </tbody>
           </table>
         </section>
+        <!-- 版本数据库中没有找到任何信息时，显示下面页面 -->
         <section v-else>
           <hr>
           <h4 class="text-center"><i class="fa fa-warning text-warning"></i>
@@ -244,14 +246,19 @@
     },
     watch: {
       '$route'(to, from) {
-        this.showDiskSearchPage = false;
         window.clearInterval(this.progressFetchTimer);
         if (this.isSerachMode) {
           this.ajaxMsg = this.$route.query.text;
-          this.searchVers(this);
+          this.showDiskSearchPage = false;
+          if (this.ajaxMsg !== '') {
+            this.searchVers(this);
+          }
         } else {
           this.ajaxMsg = this.$route.query.ver;
-          this.referVers();
+          this.showDiskSearchPage = false;
+          if (this.ajaxMsg !== '') {
+            this.referVers();
+          }
         }
       }
     },
@@ -262,10 +269,14 @@
       // 初次进入该组件时候，并不会触发$route的更改，所以需要在这里处理
       if (this.isSerachMode) {
         this.ajaxMsg = this.$route.query.text;
-        this.searchVers(this);
+        if (this.ajaxMsg !== '') {
+          this.searchVers(this);
+        }
       } else {
         this.ajaxMsg = this.$route.query.ver;
-        this.referVers();
+        if (this.ajaxMsg !== '') {
+          this.referVers();
+        }
       }
       // 检查当前后台是否在进行全盘搜索
       axios.get("/api/ver/getdisksearchthreads").then(res => {
