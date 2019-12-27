@@ -238,7 +238,7 @@
       gotoPage(e){
         this.curPage = parseInt(e);
         let firstSeq = (this.curPage - 1) * pageItemAmount;
-        let lastSeq = this.curPage * pageItemAmount;
+        let lastSeq = this.curPage * pageItemAmount - 1;
         this.getVers(firstSeq, lastSeq);
       },
       checkUpdateInfo(){
