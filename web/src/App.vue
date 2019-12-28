@@ -13,15 +13,18 @@ import NavView from "./nav/Nav"
 import axios from 'axios'
 
 
-const SNOW_NUM = 15;
-const MAX_SPEED = 50;
-const MIN_SPEED = 5;
+const SNOW_NUM = 20;
+const MAX_SPEED = 100;
+const MIN_SPEED = 10;
 
 export default {
   name: 'app',
   data () {
     return {
     }
+  },
+  methods: {
+
   },
   components: {
     NavView
@@ -62,13 +65,23 @@ export default {
         }
         // 随着高度改变透明度
         domSnow.style.opacity = 1 - curTop / document.body.offsetHeight;
-          window.setTimeout(moveSnow, 500);
+        domSnow.timer = window.setTimeout(moveSnow, 2000);
       }
       moveSnow();
     }
     for (let i=0; i<SNOW_NUM; i++) {
       createSnow();
     }
+    document.body.addEventListener("click", function (e) {
+      if (e.target.classList.contains("snowbox")) {
+        e.target.style.filter = "blur(10px)";
+        e.target.style.transform = "scale(5)";
+        // 为了防止后续透明度又被重新刷新，需要删除定时器
+        window.clearTimeout(e.target.timer);
+        e.target.style.opacity = 0;
+        window.setTimeout(() => {this.removeChild(e.target); createSnow()}, 500);
+      }
+    })
   }
 }
 </script>
@@ -80,6 +93,6 @@ export default {
   .snowbox {
     position: fixed;
     color: #eee;
-    transition: linear .5s;
+    transition: top linear 2s, left linear 2s, transform ease .5s, filter ease .5s, opacity ease .5s;
   }
 </style>

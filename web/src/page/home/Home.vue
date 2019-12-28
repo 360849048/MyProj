@@ -446,7 +446,6 @@
     left: 10px;
     top: 120px;
     bottom: 100px;
-    z-index: 10;
     overflow-y: scroll;
     padding-right: 1rem;
     background-color: $bgc;
