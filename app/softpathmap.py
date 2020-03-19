@@ -33,14 +33,20 @@ def _createVersDict():
                  'V02': {},
                  'V03V04': {},
                  'V05': {},
-                 'T05': {}
+                 'T05': {},
+                 'CCP': {},
+                 'H05': {},
+                 'M05': {}
                  }
     t_vers = {
         'V01': TableManager('t_V01', SOFTWARE_VERSION_INFO_DB_PATH),
         'V02': TableManager('t_V02', SOFTWARE_VERSION_INFO_DB_PATH),
         'V03V04': TableManager('t_V03V04', SOFTWARE_VERSION_INFO_DB_PATH),
         'V05': TableManager('t_V05', SOFTWARE_VERSION_INFO_DB_PATH),
-        'T05': TableManager('t_T05', SOFTWARE_VERSION_INFO_DB_PATH)
+        'T05': TableManager('t_T05', SOFTWARE_VERSION_INFO_DB_PATH),
+        'CCP': TableManager('t_CCP', SOFTWARE_VERSION_INFO_DB_PATH),
+        'H05': TableManager('t_H05', SOFTWARE_VERSION_INFO_DB_PATH),
+        'M05': TableManager('t_M05', SOFTWARE_VERSION_INFO_DB_PATH)
     }
     for key in vers_dict:
         for id in t_vers[key].getAllId():
@@ -62,14 +68,20 @@ def _createEmptyPathVersDict():
                     'V02': {},
                     'V03V04': {},
                     'V05': {},
-                    'T05': {}
+                    'T05': {},
+                    'CCP': {},
+                    'H05': {},
+                    'M05': {}
                     }
     t_vers = {
         'V01': TableManager('t_V01', SOFTWARE_VERSION_INFO_DB_PATH),
         'V02': TableManager('t_V02', SOFTWARE_VERSION_INFO_DB_PATH),
         'V03V04': TableManager('t_V03V04', SOFTWARE_VERSION_INFO_DB_PATH),
         'V05': TableManager('t_V05', SOFTWARE_VERSION_INFO_DB_PATH),
-        'T05': TableManager('t_T05', SOFTWARE_VERSION_INFO_DB_PATH)
+        'T05': TableManager('t_T05', SOFTWARE_VERSION_INFO_DB_PATH),
+        'CCP': TableManager('t_CCP', SOFTWARE_VERSION_INFO_DB_PATH),
+        'H05': TableManager('t_H05', SOFTWARE_VERSION_INFO_DB_PATH),
+        'M05': TableManager('t_M05', SOFTWARE_VERSION_INFO_DB_PATH)
     }
     for key in ver_path_map:
         for id in t_vers[key].getAllId():
@@ -89,17 +101,23 @@ def getAllVerPathInfo():
         }
     '''
     ver_path_map = {'V01': {},
-                 'V02': {},
-                 'V03V04': {},
-                 'V05': {},
-                 'T05': {}
+                    'V02': {},
+                    'V03V04': {},
+                    'V05': {},
+                    'T05': {},
+                    'CCP': {},
+                    'H05': {},
+                    'M05': {}
                  }
     t_vers = {
         'V01': TableManager('t_V01', SOFTWARE_VERSION_INFO_DB_PATH),
         'V02': TableManager('t_V02', SOFTWARE_VERSION_INFO_DB_PATH),
         'V03V04': TableManager('t_V03V04', SOFTWARE_VERSION_INFO_DB_PATH),
         'V05': TableManager('t_V05', SOFTWARE_VERSION_INFO_DB_PATH),
-        'T05': TableManager('t_T05', SOFTWARE_VERSION_INFO_DB_PATH)
+        'T05': TableManager('t_T05', SOFTWARE_VERSION_INFO_DB_PATH),
+        'CCP': TableManager('t_CCP', SOFTWARE_VERSION_INFO_DB_PATH),
+        'H05': TableManager('t_H05', SOFTWARE_VERSION_INFO_DB_PATH),
+        'M05': TableManager('t_M05', SOFTWARE_VERSION_INFO_DB_PATH)
     }
     for key in ver_path_map:
         for id in t_vers[key].getAllId():
@@ -228,7 +246,10 @@ def writeAllPathInfo(ver_path_map):
         'V02': TableManager('t_V02', SOFTWARE_VERSION_INFO_DB_PATH),
         'V03V04': TableManager('t_V03V04', SOFTWARE_VERSION_INFO_DB_PATH),
         'V05': TableManager('t_V05', SOFTWARE_VERSION_INFO_DB_PATH),
-        'T05': TableManager('t_T05', SOFTWARE_VERSION_INFO_DB_PATH)
+        'T05': TableManager('t_T05', SOFTWARE_VERSION_INFO_DB_PATH),
+        'CCP': TableManager('t_CCP', SOFTWARE_VERSION_INFO_DB_PATH),
+        'H05': TableManager('t_H05', SOFTWARE_VERSION_INFO_DB_PATH),
+        'M05': TableManager('t_M05', SOFTWARE_VERSION_INFO_DB_PATH)
     }
     print('开始向数据库写入path信息')
     for ver_type in ver_path_map:

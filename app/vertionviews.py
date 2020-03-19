@@ -27,7 +27,7 @@ def getVersion():
         * 2019.04.16: （Bug fix）当数据库中某一行数据被删除，再次遍历该数据时返回null，导致前端页面错误
     '''
     soft_type = request.args.get('softType')
-    if soft_type not in ['V01', 'V02', 'V03V04', 'V05', 'T05']:
+    if soft_type not in ['V01', 'V02', 'V03V04', 'V05', 'T05', 'CCP', 'H05', 'M05']:
         return jsonify({'itemsNum': 0, 'items': {}})
     start_seq = int(request.args.get('start'))
     end_seq = int(request.args.get('end'))
@@ -57,6 +57,9 @@ updaters = {
     'V03V04': Updater('t_V03V04', 'V03&V04'),
     'V05': Updater('t_V05', 'V05'),
     'T05': Updater('t_T05', 'T05'),
+    'CCP': Updater('t_CCP', 'CCP'),
+    'H05': Updater('t_H05', 'JE-H05'),
+    'M05': Updater('t_M05', 'M05-双色')
 }
 @app.route('/api/ver/checkupdate', methods=['GET'])
 def checkUpdate():
@@ -95,7 +98,7 @@ def downloadSrcCode():
     '''
     src_path = request.args.get('path')
     if not os.path.isfile(src_path):
-        return jsonify({'status': 'failure', 'description': '数据库路径无效在本服务器上无效，'})
+        return jsonify({'status': 'failure', 'description': '数据库路径无效在本服务器上无效'})
     file_name = os.path.basename(src_path)
     dst_path = os.path.join(CACHE_FILE_DIR, file_name)
     if os.path.isfile(dst_path):
@@ -124,7 +127,10 @@ def searchVersion():
         'V02': TableManager('t_V02', SOFTWARE_VERSION_INFO_DB_PATH),
         'V03V04': TableManager('t_V03V04', SOFTWARE_VERSION_INFO_DB_PATH),
         'V05': TableManager('t_V05', SOFTWARE_VERSION_INFO_DB_PATH),
-        'T05': TableManager('t_T05', SOFTWARE_VERSION_INFO_DB_PATH)
+        'T05': TableManager('t_T05', SOFTWARE_VERSION_INFO_DB_PATH),
+        'CCP': TableManager('t_CCP', SOFTWARE_VERSION_INFO_DB_PATH),
+        'H05': TableManager('t_H05', SOFTWARE_VERSION_INFO_DB_PATH),
+        'M05': TableManager('t_M05', SOFTWARE_VERSION_INFO_DB_PATH)
     }
     keywords = re.split(r'\s+', search_str)
     key = 0
@@ -161,7 +167,10 @@ def referVersion():
         'V02': TableManager('t_V02', SOFTWARE_VERSION_INFO_DB_PATH),
         'V03V04': TableManager('t_V03V04', SOFTWARE_VERSION_INFO_DB_PATH),
         'V05': TableManager('t_V05', SOFTWARE_VERSION_INFO_DB_PATH),
-        'T05': TableManager('t_T05', SOFTWARE_VERSION_INFO_DB_PATH)
+        'T05': TableManager('t_T05', SOFTWARE_VERSION_INFO_DB_PATH),
+        'CCP': TableManager('t_CCP', SOFTWARE_VERSION_INFO_DB_PATH),
+        'H05': TableManager('t_H05', SOFTWARE_VERSION_INFO_DB_PATH),
+        'M05': TableManager('t_M05', SOFTWARE_VERSION_INFO_DB_PATH)
     }
     next_search_vers = [search_str]
     while True:
@@ -175,8 +184,14 @@ def referVersion():
                 ids = t_vers[soft_type].searchDataByKey(strict=True, version=cur_search_ver)
                 for soft_id in ids:
                     temp = t_vers[soft_type].displayDetailedData(soft_id)
+                    ''' 2020.03.13: （Bug fix）当refer得到的版本和原版本一样时，程序崩溃'''
+                    if temp in ver_list:
+                        # 防止得到重复的结果
+                        continue
                     ver_list.append(temp)
-                    next_search_vers.append(temp['base'])
+                    if temp['base'].upper() != temp['version'].upper():
+                        # 得到的版本数据中“版本”和“原版本”不可为同一个，否则会造成死循环！
+                        next_search_vers.append(temp['base'])
     next_search_vers = [search_str]
     while True:
         # 向之后的版本遍历，只需搜索"原版本"
@@ -189,8 +204,12 @@ def referVersion():
                 ids = t_vers[soft_type].searchDataByKey(strict=True, base=cur_search_ver)
                 for soft_id in ids:
                     temp = t_vers[soft_type].displayDetailedData(soft_id)
+                    if temp in ver_list:
+                        continue
                     ver_list.append(temp)
-                    next_search_vers.append(temp['version'])
+                    if temp['version'].upper() != temp['base'].upper():
+                        # 得到的版本数据中“版本”和“原版本”不可为同一个，否则会造成死循环！
+                        next_search_vers.append(temp['version'])
     ver_list = sorted(ver_list, key=lambda x: x['version'], reverse=True)
     ret_data['itemsNum'] = len(ver_list)
     seq_list = list(i for i in range(1, ret_data['itemsNum'] + 1))

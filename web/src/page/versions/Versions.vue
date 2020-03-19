@@ -23,6 +23,15 @@
         <li class="nav-item">
           <a class="nav-link" :class="{'active': softType === 'T05'}" href="##" @click="softType='T05'">T05</a>
         </li>
+        <li class="nav-item">
+          <a class="nav-link" :class="{'active': softType === 'CCP'}" href="##" @click="softType='CCP'">CCP</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" :class="{'active': softType === 'H05'}" href="##" @click="softType='H05'">JE-H05</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" :class="{'active': softType === 'M05'}" href="##" @click="softType='M05'">M05-双色</a>
+        </li>
       </ul>
     </div>
     <!-- 软件版本显示区域 -->

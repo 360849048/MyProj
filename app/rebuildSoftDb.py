@@ -12,10 +12,19 @@ def rebuidSoftDb():
     db.dropTable('t_V03V04')
     db.dropTable('t_V05')
     db.dropTable('t_T05')
+    db.dropTable('t_CCP')
+    db.dropTable('t_H05')
+    db.dropTable('t_M05')
     # 新建各个表
     db.createNewTable('t_V01', ('client', 'version', 'date', 'base', 'record', 'reason', 'remark', 'author', 'path', 'torefresh'))
     db.createNewTable('t_V02', ('client', 'version', 'date', 'base', 'record', 'reason', 'remark', 'author', 'path', 'torefresh'))
     db.createNewTable('t_V03V04', ('client', 'version', 'date', 'base', 'record', 'reason', 'remark', 'author', 'path', 'torefresh'))
     db.createNewTable('t_V05', ('client', 'version', 'date', 'base', 'record', 'reason', 'remark', 'author', 'path', 'torefresh'))
     db.createNewTable('t_T05', ('client', 'version', 'date', 'base', 'record', 'reason', 'remark', 'author', 'path', 'torefresh'))
+    db.createNewTable('t_CCP', (
+    'client', 'version', 'date', 'base', 'record', 'reason', 'remark', 'author', 'path', 'torefresh'))
+    db.createNewTable('t_H05', (
+    'client', 'version', 'date', 'base', 'record', 'reason', 'remark', 'author', 'path', 'torefresh'))
+    db.createNewTable('t_M05', (
+    'client', 'version', 'date', 'base', 'record', 'reason', 'remark', 'author', 'path', 'torefresh'))
     print('ok')

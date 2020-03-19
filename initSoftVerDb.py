@@ -33,6 +33,9 @@ if rebuild_db == 'y':
         'V03V04': Updater('t_V03V04', 'V03&V04'),
         'V05': Updater('t_V05', 'V05'),
         'T05': Updater('t_T05', 'T05'),
+        'CCP': Updater('t_CCP', 'CCP'),
+        'H05': Updater('t_H05', 'JE-H05'),
+        'M05': Updater('t_M05', 'M05-双色')
     }
     for ver_type, updater in updaters.items():
         print('获取', ver_type, '待更新数据...')
