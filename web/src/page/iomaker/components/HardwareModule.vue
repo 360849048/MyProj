@@ -137,11 +137,12 @@
         <span>底板三后端功能尚未开发完全，无法写入IO表和硬件配置</span>
       </div>
     </div>
-    <!-- 硬件配置文件不支持CAI888的改动 -->
+    <!-- 硬件配置文件不支持CAI888的改动，CAI888为空时时后台将默认配置温度和加热点位 -->
     <div v-if="moduleName.toUpperCase() === 'CAI888'">
       <hr>
       <i class="fa fa-exclamation text-danger" aria-hidden="true"></i>
-      <span>配置文件(HK)暂不支持CAI888的改动</span>
+      <span>配置文件(HK)暂不支持CAI888的改动</span><br>
+      <span>CAI888未配置任何点位时，系统将把所有点配置为测温加热</span>
     </div>
   </div>
 </template>

@@ -158,9 +158,6 @@
   import PageSwitch from './components/PageSwitch'
   import axios from 'axios'
 
-  // 标准中没有“第八段加热”，为了方便配置CAI888，特新增16号AI点：“第八段加热”
-  const CAI888_IO_CONFIG = {'TI1': 1, 'TI2': 2, 'TI3': 3, 'TI4': 4, 'TI5': 5, 'TI6': 6, 'TI7': 7, 'TI8': 16,
-  'TO1': 1, 'TO2': 2, 'TO3': 3, 'TO4': 4, 'TO5': 5, 'TO6': 6, 'TO7': 7, 'TO8': 8};
 
   export default {
     name: 'IoMaker',
@@ -489,11 +486,7 @@
             for (let i=0; i<this.mainBoardSlots.length; i++) {
               if (this.mainBoardSlots[i] !== e.slots[i]) {
                 this.$set(this.mainBoardSlots, i, e.slots[i]);
-                if (e.slots[i] === 'CAI888') {
-                  this.$set(this.mainBoardModuleIos, i, CAI888_IO_CONFIG);
-                } else {
-                  this.$set(this.mainBoardModuleIos, i, {});
-                }
+                this.$set(this.mainBoardModuleIos, i, {});
               }
             }
             break;
@@ -501,11 +494,7 @@
             for (let i=0; i<this.extendBoard1Slots.length; i++) {
               if (this.extendBoard1Slots[i] !== e.slots[i]) {
                 this.$set(this.extendBoard1Slots, i, e.slots[i]);
-                if (e.slots[i] === 'CAI888') {
-                  this.$set(this.extendBoard1ModulesIos, i, CAI888_IO_CONFIG);
-                } else {
-                  this.$set(this.extendBoard1ModulesIos, i, {});
-                }
+                this.$set(this.extendBoard1ModulesIos, i, {});
               }
             }
             break;
@@ -513,11 +502,7 @@
             for (let i=0; i<this.extendBoard2Slots.length; i++) {
               if (this.extendBoard2Slots[i] !== e.slots[i]) {
                 this.$set(this.extendBoard2Slots, i, e.slots[i]);
-                if (e.slots[i] === 'CAI888') {
-                  this.$set(this.extendBoard2ModulesIos, i, CAI888_IO_CONFIG);
-                } else {
-                  this.$set(this.extendBoard2ModulesIos, i, {});
-                }
+                this.$set(this.extendBoard2ModulesIos, i, {});
               }
             }
             break;

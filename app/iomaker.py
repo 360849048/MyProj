@@ -40,22 +40,22 @@ class IOMaker:
 
         if external_hotrunner_num > 0:
             self.external_hot_runner_cai888_configuration = {
-                'TI1': self.t_ti.displayBriefData(1, 'CName', 'EName'),
-                'TI2': self.t_ti.displayBriefData(2, 'CName', 'EName'),
-                'TI3': self.t_ti.displayBriefData(3, 'CName', 'EName'),
-                'TI4': self.t_ti.displayBriefData(4, 'CName', 'EName'),
-                'TI5': self.t_ti.displayBriefData(5, 'CName', 'EName'),
-                'TI6': self.t_ti.displayBriefData(6, 'CName', 'EName'),
-                'TI7': self.t_ti.displayBriefData(7, 'CName', 'EName'),
-                'TI8': self.t_ti.displayBriefData(16, 'CName', 'EName'),
-                'TO1': self.t_to.displayBriefData(1, 'CName', 'EName'),
-                'TO2': self.t_to.displayBriefData(2, 'CName', 'EName'),
-                'TO3': self.t_to.displayBriefData(3, 'CName', 'EName'),
-                'TO4': self.t_to.displayBriefData(4, 'CName', 'EName'),
-                'TO5': self.t_to.displayBriefData(5, 'CName', 'EName'),
-                'TO6': self.t_to.displayBriefData(6, 'CName', 'EName'),
-                'TO7': self.t_to.displayBriefData(7, 'CName', 'EName'),
-                'TO8': self.t_to.displayBriefData(8, 'CName', 'EName')
+                'TI1': ("第一段温度", "Temperature Zone 1"),
+                'TI2': ("第二段温度", "Temperature Zone 2"),
+                'TI3': ("第三段温度", "Temperature Zone 3"),
+                'TI4': ("第四段温度", "Temperature Zone 4"),
+                'TI5': ("第五段温度", "Temperature Zone 5"),
+                'TI6': ("第六段温度", "Temperature Zone 6"),
+                'TI7': ("第七段温度", "Temperature Zone 7"),
+                'TI8': ("第八段温度", "Temperature Zone 8"),
+                'TO1': ("第一段加热", "Heat Zone 1"),
+                'TO2': ("第二段加热", "Heat Zone 2"),
+                'TO3': ("第三段加热", "Heat Zone 3"),
+                'TO4': ("第四段加热", "Heat Zone 4"),
+                'TO5': ("第五段加热", "Heat Zone 5"),
+                'TO6': ("第六段加热", "Heat Zone 6"),
+                'TO7': ("第七段加热", "Heat Zone 7"),
+                'TO8': ("第八段加热", "Heat Zone 8")
             }
         else:
             # 如果没有开启外置热流道，无需专门获取cai888的配点信息
@@ -80,6 +80,25 @@ class IOMaker:
                         module[1][io] = self.t_ti.displayBriefData(io_id, 'CName', 'EName')
                     if str(io).upper().startswith('TO'):
                         module[1][io] = self.t_to.displayBriefData(io_id, 'CName', 'EName')
+                # CAI888为空时时默认配置温度和加热点位
+                if module[0] == "CAI888" and len(module[1]) == 0:
+                    module[1]['TI1'] = ("第一段温度", "Temperature Zone 1")
+                    module[1]['TI2'] = ("第二段温度", "Temperature Zone 2")
+                    module[1]['TI3'] = ("第三段温度", "Temperature Zone 3")
+                    module[1]['TI4'] = ("第四段温度", "Temperature Zone 4")
+                    module[1]['TI5'] = ("第五段温度", "Temperature Zone 5")
+                    module[1]['TI6'] = ("第六段温度", "Temperature Zone 6")
+                    module[1]['TI7'] = ("第七段温度", "Temperature Zone 7")
+                    module[1]['TI8'] = ("第八段温度", "Temperature Zone 8")
+                    module[1]['TO1'] = ("第一段加热", "Heat Zone 1")
+                    module[1]['TO2'] = ("第二段加热", "Heat Zone 2")
+                    module[1]['TO3'] = ("第三段加热", "Heat Zone 3")
+                    module[1]['TO4'] = ("第四段加热", "Heat Zone 4")
+                    module[1]['TO5'] = ("第五段加热", "Heat Zone 5")
+                    module[1]['TO6'] = ("第六段加热", "Heat Zone 6")
+                    module[1]['TO7'] = ("第七段加热", "Heat Zone 7")
+                    module[1]['TO8'] = ("第八段加热", "Heat Zone 8")
+
         if board_2_modules_ios is not None:
             self.board_2_modules_ios = board_2_modules_ios.copy()
             for module in self.board_2_modules_ios:
@@ -97,6 +116,24 @@ class IOMaker:
                         module[1][io] = self.t_ti.displayBriefData(io_id, 'CName', 'EName')
                     if str(io).upper().startswith('TO'):
                         module[1][io] = self.t_to.displayBriefData(io_id, 'CName', 'EName')
+                # CAI888为空时时默认配置温度和加热点位
+                if module[0] == "CAI888" and len(module[1]) == 0:
+                    module[1]['TI1'] = ("第一段温度", "Temperature Zone 1")
+                    module[1]['TI2'] = ("第二段温度", "Temperature Zone 2")
+                    module[1]['TI3'] = ("第三段温度", "Temperature Zone 3")
+                    module[1]['TI4'] = ("第四段温度", "Temperature Zone 4")
+                    module[1]['TI5'] = ("第五段温度", "Temperature Zone 5")
+                    module[1]['TI6'] = ("第六段温度", "Temperature Zone 6")
+                    module[1]['TI7'] = ("第七段温度", "Temperature Zone 7")
+                    module[1]['TI8'] = ("第八段温度", "Temperature Zone 8")
+                    module[1]['TO1'] = ("第一段加热", "Heat Zone 1")
+                    module[1]['TO2'] = ("第二段加热", "Heat Zone 2")
+                    module[1]['TO3'] = ("第三段加热", "Heat Zone 3")
+                    module[1]['TO4'] = ("第四段加热", "Heat Zone 4")
+                    module[1]['TO5'] = ("第五段加热", "Heat Zone 5")
+                    module[1]['TO6'] = ("第六段加热", "Heat Zone 6")
+                    module[1]['TO7'] = ("第七段加热", "Heat Zone 7")
+                    module[1]['TO8'] = ("第八段加热", "Heat Zone 8")
         if main_board_modified_io is not None:
             self.main_board_modified_io = main_board_modified_io.copy()
             for k, v in self.main_board_modified_io.items():
@@ -234,26 +271,5 @@ class IOMaker:
 
 if __name__ == '__main__':
     # 功能测试
-    iomaker = IOMaker(imm_type='ZEs',
-                      board_1_modules_ios=[
-                          ['CDM163', {
-                              'DI1': '73',
-                              'DI2': '74',
-                          }],
-                          ['CDM163', {
-                              'DO1': '73',
-                              'DO2': '74',
-                          }]
-                      ],
-                      board_2_modules_ios=[
-                          ['civ512', {}],
-                          ['cai888', {}],
-                      ],
-                      big=False
-                      )
-    iomaker.func1ToInjSignal()
-    iomaker.func2ToChargeSignal()
-    iomaker.nozzleToValve()
-    iomaker.e73Safety()
-    iomaker.createFile('./1.xlsx')
+    pass
 

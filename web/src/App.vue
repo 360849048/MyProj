@@ -13,9 +13,10 @@ import NavView from "./nav/Nav"
 import axios from 'axios'
 
 
-const SNOW_NUM = 20;
+const SNOW_NUM = 5;
 const MAX_SPEED = 100;
 const MIN_SPEED = 10;
+const ICON_GROUP = ["fa-star", "fa-star-o", "moon-o", "sun-o"];
 
 export default {
   name: 'app',
@@ -30,10 +31,14 @@ export default {
     NavView
   },
   mounted () {
+
     function createSnow () {
       // 初始1个雪花随机位置和速度和大小
       let domSnow = document.createElement("i");
-      domSnow.classList.add("snowbox", "fa", "fa-snowflake-o");
+      // 从ICON_GROUP中获取一个随机的形状
+      let icon_rand = Math.floor(Math.random() * ICON_GROUP.length);
+      let icon = ICON_GROUP[icon_rand];
+      domSnow.classList.add("snowbox", "fa", icon);
       document.body.appendChild(domSnow);
       let snowSpeed = MAX_SPEED * Math.random();
       snowSpeed = snowSpeed < MIN_SPEED ? MIN_SPEED : snowSpeed;

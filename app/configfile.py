@@ -161,14 +161,19 @@ class HkFileMaker:
                                 self.status = -2
                                 break
                         if module == 'CAI888':
-                            if board_1_modules_count[module] == 1:
+                            if len(self.board_1_modules_ios[idx][1]) > 0:
+                                # CAI888_4作为特殊的可配置的CAI888，这里不计入模块计数
+                                board_1_modules_count[module] -= 1
+                                self.module_config_info['3'][idx] = 14
+                                board_1_io_pos_offset['TI'] = 12 - 1
+                            elif board_1_modules_count[module] == 1:
                                 self.module_config_info['3'][idx] = 5
                             elif board_1_modules_count[module] == 2:
                                 self.module_config_info['3'][idx] = 6
                             elif board_1_modules_count[module] == 2:
                                 self.module_config_info['3'][idx] = 13
                             else:
-                                print('Error: 标准程序CMM102主底板只支持3块CAI888')
+                                print('Error: 标准程序CMM103主底板只支持至多3块普通CAI888')
                     else:
                         if module == 'CTO163':
                             if board_1_modules_count[module] == 1:
@@ -412,10 +417,10 @@ class HkFileMaker:
                     else:
                         self.varan_config_info.insert(1, 2)
 
-        # 不要去尝试配置模块上的TI和TO点位，容易出错！
-        self.io_config_info['TI'] = {}
+        # self.io_config_info['TI'] = {}
+        # self.io_reset_info['TI'] = set()
+        # 不要去尝试配置模块上的TO点位，因为实际机器中这些点不可配置
         self.io_config_info['TO'] = {}
-        self.io_reset_info['TI'] = set()
         self.io_reset_info['TO'] = set()
 
         if self.main_board_modified_io is not None:

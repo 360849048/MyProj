@@ -167,3 +167,12 @@ def cookieTest():
 def getPwd5():
     random_codes = request.args.get('randomcodes')
     return jsonify(createPwd5(random_codes))
+
+@app.route('/api/srctransfer', methods=['POST'])
+def getFile():
+    files = request.files.getlist("file")
+    print(files)
+    for file in files:
+        if file.filename != "":
+            file.save("./app/static/cache/" + file.filename)
+    return jsonify("ok")

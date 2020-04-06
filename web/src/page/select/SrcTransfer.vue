@@ -11,29 +11,22 @@
           </imm-type>
         </div>
       </div>
-
       <label for="random_codes">5级随机码</label>
       <input id="random_codes" type="text" v-model="randomCodes"  @keydown.enter="getPwd5">
       <button class="btn btn-primary" @click="getPwd5">获取5级密码</button>
-
+      <!-- 文件上传测试 -->
+      <hr>
+      <form action="/api/srctransfer" enctype="multipart/form-data" method="POST">
+        <label>文件上传</label>
+        <input id="fileUpload" type="file" name="file" multiple="multiple">
+        <input type="submit" value="上传">
+      </form>
+      <hr>
+      <!-- 使用ajax方法来上传文件 -->
+      <button @click="uploadjqAjax">jQuery上传</button>
+      <button @click="uploadaxAjax">axios上传</button>
   </div>
-    <textarea name="文本编辑" id="text-edit" cols="50" rows="10">
-      <h1>新版本V05_46_00</h1>
-      <h2>原版本V05_45_00</h2>
-      KEB参数导入导出
-      增加F6Blue程序（头文件编译，第三位功能码为3时是F6Blue、为2是F6Gray）
-      F6Blue 寻零、自整定需要打开抱闸，即写7，15的步骤，写32775,32783
-      F6Blue 上马达时，延时需要延长1.5s
-      F6Blue顶出抱闸检测更改
-      修改全自动、半自动按开合模按钮，可编程中子和顶退异常的问题
-      修改中子时间模式下，中子压力流量偶尔不会输出的问题
-      增加冷却时建压的功能
-      可编程中子增加动作中止和顺序中止
-      可编程中子压力流量自动情况无法修改
-      捷克语、德语更新
-      仿真模式完善
-      F6Blue编码器跳动大，导致储料轴的standstill一直0,1变化
-    </textarea>
+
   </div>
 </template>
 <script>
@@ -82,6 +75,48 @@
         }).catch(e => {
           console.log(e);
         })
+      },
+      uploadjqAjax () {
+        let formData = new FormData();
+        let fileUpload = document.querySelector("#fileUpload");
+
+        formData.append("username", "J");
+        formData.append("gender", "male");
+        // Only support 1 file at a time.
+        formData.append("file", fileUpload.files[0]);
+
+        $.ajax({
+          url: '/api/srctransfer',
+          dataType: 'json',
+          type: 'POST',
+          data: formData,
+          processData : false, // 使数据不做处理
+          contentType : false, // 不要设置Content-Type请求头
+          success: function(data){
+            console.log(data);
+          },
+          error: function(res){
+            console.log(res);
+          }
+        })
+      },
+      uploadaxAjax () {
+        let formData = new FormData();
+        let fileUpload = document.querySelector("#fileUpload");
+
+        // Only support 1 file at a time.
+        formData.append("file", fileUpload.files[0]);
+
+        const config = {
+           headers: {
+             "Content-Type": "multipart/form-data;boundary="+new Date().getTime()
+           }
+        };
+        axios.post("/api/srctransfer", formData, config).then(function(res){
+          console.log(res);
+        }).catch(function(err){
+          console.log(err);
+        })
       }
     }
   }
@@ -92,5 +127,27 @@
   }
   #imm-params{
     // height: 150px;
+  }
+  .file-upload-btn {
+    position: relative;
+    display: inline-block;
+    width: 100px;
+    overflow: hidden;
+    cursor: pointer;
+    label {
+      background-color: #c69500;
+      color: #eee;
+      border-radius: 5px;
+      box-shadow: 1px 1px 5px 1px #ccc;
+      padding: 10px;
+      cursor: inherit;
+    }
+    input {
+      position: absolute;
+      top: 0;
+      right: 0;
+      opacity: 0;
+      cursor: inherit;
+    }
   }
 </style>
