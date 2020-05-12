@@ -21,6 +21,13 @@
         <input id="fileUpload" type="file" name="file" multiple="multiple">
         <input type="submit" value="上传">
       </form>
+      <div class="progress-wrap">
+        <div class="progress">
+          <div class="progress-bar" role="progressbar" ref="uploadProgressBar"></div>
+        </div>
+        <span class="upload-status" ref="uploadStatus"></span>
+      </div>
+
       <hr>
       <!-- 使用ajax方法来上传文件 -->
       <button @click="uploadjqAjax">jQuery上传</button>
@@ -110,10 +117,15 @@
         const config = {
            headers: {
              "Content-Type": "multipart/form-data;boundary="+new Date().getTime()
-           }
+           },
+          onUploadProgress: e => {
+            let progress = e.loaded / e.total * 100;
+            this.$refs.uploadProgressBar.style.width = progress + "%";
+          },
         };
-        axios.post("/api/srctransfer", formData, config).then(function(res){
+        axios.post("/api/srctransfer", formData, config).then(res => {
           console.log(res);
+          this.$refs.uploadStatus.innerText = "上传完成";
         }).catch(function(err){
           console.log(err);
         })
@@ -148,6 +160,13 @@
       right: 0;
       opacity: 0;
       cursor: inherit;
+    }
+  }
+  .progress-wrap {
+    display: flex;
+    align-items: center;
+    .progress {
+      width: 80%;
     }
   }
 </style>

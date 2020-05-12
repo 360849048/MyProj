@@ -13,10 +13,10 @@ def _searchVerInStr(ver, str):
     '''
     if ver.upper().startswith('V'):
         ver = ver.strip('Vv')
-        re_str = '[^t]' + '[-_]+'.join(re.split(r'[-_]+', ver))
+        re_str = '[^t]' + '[-_ ]+'.join(re.split(r'[-_ ]+', ver))
     else:
         # T开头的版本
-        re_str = '[-_]+'.join(re.split(r'[-_]+', ver))
+        re_str = '[-_ ]+'.join(re.split(r'[-_ ]+', ver))
     return re.search(re_str, str, re.IGNORECASE)
 
 def _createVersDict():
