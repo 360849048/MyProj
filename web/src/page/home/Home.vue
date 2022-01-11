@@ -55,12 +55,12 @@
           <i class="icon-append fa fa-plus" v-show="edMode[verId]" aria-hidden="true" title="新增一行" @click="appendItem(verId)"></i>
           <i class="icon-delete fa fa-trash" v-show="edMode[verId]" aria-hidden="true" title="删除该记录" @click="deleteNote(verId)"></i>
         </article>
-        <a class='line-next' v-if="verId < verNum"></a>
+        <!-- <a class='line-next' v-if="verId < verNum"></a> -->
       </section>
     </main>
     <footer>
-      <p>Services Powered By Python 3.4.1</p>
-      <p>Vue.js</p>
+      <!-- <p>Services Powered By Python 3.4.1</p>
+      <p>Vue.js</p> -->
     </footer>
   </div>
 </template>

@@ -26,6 +26,7 @@
           <input type="text" class="form-control" id="validationDefault04" required autocomplete="off" v-model="safetyStandard">
         </div>
       </div>
+      <func-menu name="地区标准" :list="regionalStandards" @itemchange="handleregionalStandardChange"></func-menu>
       <div class="input-row">
         <label for="techInfo">技术条款</label>
         <textarea id="techInfo" class="form-control" aria-label="With textarea" v-model="technicalClause"></textarea>
@@ -51,9 +52,14 @@
    *   * immType变量输入框发生onchange事件
    *   * 从设计说明进行参数解析
    */
+  import FuncMenu from '@/common/switch/FuncMenu'
+
   export default {
     name: "info-form",
-    props: ['getInfo'],
+    components: {
+      FuncMenu
+    },
+    props: ['getInfo', 'regionalStandards'],
     data(){
       return{
         evaluationNum: '',
@@ -62,7 +68,8 @@
         customer: '',
         safetyStandard: '',
         technicalClause: '',
-        designNote: ''
+        designNote: '',
+        regionalStandardIdx: 0,
       }
     },
     methods: {
@@ -75,6 +82,7 @@
           safetyStandard: _this.safetyStandard,
           technicalClause: _this.technicalClause,
           designNote: _this.designNote,
+          regionalStandardIdx: _this.regionalStandardIdx
         });
       },
       parseParams(){
@@ -116,6 +124,9 @@
       },
       handerImmTypeChange(){
         this._emitParams(this);
+      },
+      handleregionalStandardChange (e) {
+        this.regionalStandardIdx = e;
       }
     },
     watch: {

@@ -12,7 +12,7 @@
       </article>
     </section>
     <footer>
-      <p>颜色来源：Font Awesome中文网</p>
+      <!-- <p>颜色来源：Font Awesome中文网</p> -->
     </footer>
   </div>
 </template>

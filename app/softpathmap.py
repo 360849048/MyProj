@@ -1,5 +1,6 @@
 import re
 import shutil
+import time
 from app.sqljob import TableManager
 from app.pathinfo import *
 
@@ -160,6 +161,10 @@ def mapAllVersionsPath():
                 for ver_id, ver_info in ver_path_map[ver_type].items():
                     if _searchVerInStr(ver_info['version'], file):
                         this_ver_path = os.path.join(root, file)
+                        # feature(2020.06.24): 记录文件修改的时间
+                        ctime = time.strftime("%Y.%m.%d", time.localtime(os.stat(this_ver_path).st_ctime))
+                        this_ver_path += "?" + ctime
+
                         if ver_info['path'] == '':
                             ver_info['path'] = this_ver_path
                         else:
@@ -210,6 +215,9 @@ def mapEmptyPathVersionsPath():
                 for ver_id, ver_info in ver_path_map[ver_type].items():
                     if _searchVerInStr(ver_info['version'], file):
                         this_ver_path = os.path.join(root, file)
+                        # feature(2020.07.16): 记录文件修改的时间
+                        ctime = time.strftime("%Y.%m.%d", time.localtime(os.stat(this_ver_path).st_ctime))
+                        this_ver_path += "?" + ctime
                         if ver_info['path'] == '':
                             ver_info['path'] = this_ver_path
                         else:

@@ -140,15 +140,12 @@ def searchVersion():
 
         for keyword in keywords:
             # 在表中搜索1个关键字
-            ids_for_each_keyword.append(t_vers[soft_type].searchDataInTable(keyword, 'path'))
+            ids_for_each_keyword.append(t_vers[soft_type].searchDataInTable(keyword, 'path', 'torefresh'))
         # 取多个关键字获得到重合id部分，即筛选出符合多个条件的数据
         ids = ids_for_each_keyword[0]
         for i in range(1, len(ids_for_each_keyword)):
             ids = tuple(soft_id for soft_id in ids if soft_id in ids_for_each_keyword[i])
         ret_data['itemsNum'] += len(ids)
-        # for soft_id in ids:
-            # ret_data['items'][key] = t_vers[soft_type].displayDetailedData(soft_id)
-            # key += 1
         for soft_id in ids:
             ver_list.append(t_vers[soft_type].displayDetailedData(soft_id))
     # 将搜索得到的版本号进行降序排序

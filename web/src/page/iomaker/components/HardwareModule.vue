@@ -160,6 +160,9 @@
       ioInfoLoaded: Boolean,
       curBoard: Number,
       newIoToAppend: String,
+      // bug fixes(2020.06.22): 切换到stdio组件时，该组件被销毁，重建时varan配置信息会被重置
+      // CIV512或者CIV521这种Varan连接模块的安装位置
+      varanConnModulePos: String,
     },
     data () {
       return{
@@ -181,8 +184,7 @@
         mAoAmount: 0,
         mTiAmount: 0,
         mToAmount: 0,
-        // CIV512或者CIV521这种Varan连接模块的安装位置
-        varanConnModulePos: 0,
+
       }
     },
     methods: {

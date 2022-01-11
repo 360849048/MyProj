@@ -8,6 +8,8 @@ from app.configfile import HkFileMaker, FcfFileMaker, SysFileMaker, SafetyFileMa
 from app.pathinfo import *
 from app.log2 import log
 
+# 在configfile.py SysFileMaker中会对REGIONAL_STANDARDS项进行判断，留意更改
+REGIONAL_STANDARDS = ['特殊', 'UL', 'BRA', 'TUR', 'KR']
 
 @app.route('/api/io/iolist', methods=['GET'])
 def getIo():
@@ -85,6 +87,11 @@ def getOutputItems():
     ret_data = []
     for each_id in t_func_list.getAllId():
         ret_data.append(t_func_list.displayBriefData(each_id, 'CName')[0])
+    return jsonify(ret_data)
+
+@app.route('/api/io/regionalstandards', methods=['GET'])
+def getRegionalStandards():
+    ret_data = REGIONAL_STANDARDS
     return jsonify(ret_data)
 
 @app.route('/api/io/createxlxs', methods=['POST'])
@@ -239,7 +246,8 @@ def createConfigFile():
 
     clamp_force = data['clampForce']
     injection = data['injection']
-
+    inj_type = data['injType']
+    regional_standard = REGIONAL_STANDARDS[int(data['regionalStandardIdx'])]
     # 下面开始生成文件路径，创建目录
     imm_type = ''
     zip_file_path = ''
@@ -258,13 +266,13 @@ def createConfigFile():
     wrap_url = URL_DIR + dir_name + '/'
     os.mkdir(wrap_dir)
     if ce_standard:
-        dst_file_dir = wrap_dir + data['evaluationNum'] + customer + imm_type + '(CE)/'
-        zip_file_path = wrap_dir + data['evaluationNum'] + customer + imm_type + '(CE).zip'
-        zip_file_url = wrap_url + data['evaluationNum'] + customer + imm_type + '(CE).zip'
+        dst_file_dir = wrap_dir + data['evaluationNum'] + customer + imm_type + inj_type + '(CE)/'
+        zip_file_path = wrap_dir + data['evaluationNum'] + customer + imm_type + inj_type + '(CE).zip'
+        zip_file_url = wrap_url + data['evaluationNum'] + customer + imm_type + inj_type + '(CE).zip'
     else:
-        dst_file_dir = wrap_dir + data['evaluationNum'] + customer + imm_type + '/'
-        zip_file_path = wrap_dir + data['evaluationNum'] + customer + imm_type + '.zip'
-        zip_file_url = wrap_url + data['evaluationNum'] + customer + imm_type + '.zip'
+        dst_file_dir = wrap_dir + data['evaluationNum'] + customer + imm_type + inj_type + '/'
+        zip_file_path = wrap_dir + data['evaluationNum'] + customer + imm_type + inj_type + '.zip'
+        zip_file_url = wrap_url + data['evaluationNum'] + customer + imm_type + inj_type + '.zip'
     if os.path.isdir(dst_file_dir):
         shutil.rmtree(dst_file_dir)
     os.mkdir(dst_file_dir)
@@ -290,11 +298,25 @@ def createConfigFile():
                             func_output2=func_output2)
     if fcfmaker.createFile() != 0:
         return jsonify({'status': 'failure', 'description': '功能配置文件生成失败'})
+    # 系统文件
+    mold_adj_conv = data['funcConfig']['9']['status']
     sysmaker = SysFileMaker(ce_standard=ce_standard,
+                            regional_standard=regional_standard,
                             clamp_force=clamp_force,
+                            injection=injection,
+                            inj_type=inj_type,
+                            imm_type=data['type'],
+                            conv=mold_adj_conv,
                             dst_file_dir=dst_file_dir)
-    if sysmaker.createFile() != 0:
-        return jsonify({'status': 'failure', 'description': '系统文件生成失败'})
+    ret_status = sysmaker.createFile()
+    if ret_status < 0:
+        print("CE:", ce_standard, "锁模力:",clamp_force, "注射量:", injection, inj_type, "机型", data['type'], "变频器:", mold_adj_conv)
+        if ret_status == -1:
+            return jsonify({'status': 'failure', 'description': '系统文件生成失败，未找到BASE系统文件'})
+        if ret_status == -2:
+            return jsonify({'status': 'failure', 'description': '系统文件生成失败，未找到合模部系统文件'})
+        if ret_status == -3:
+            return jsonify({'status': 'failure', 'description': '系统文件生成失败，未找到注射部系统文件'})  
     hkmaker = HkFileMaker(imm_type=data['type'],
                           board_1_modules_ios=board_1_modules_ios,
                           board_2_modules_ios=board_2_modules_ios,

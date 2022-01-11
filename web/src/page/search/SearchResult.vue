@@ -73,9 +73,10 @@
                   <div class="dropdown-menu">
                     <template v-if="hasPath(msg)">
                       <a href="javascript:" class="dropdown-item" v-for="item in msg.path.split(';')"
-                         @click="downloadSrcCode(item)">
+                         @click="downloadSrcCode(item.split('?')[0])"
+                         :title="item.split('?')[1]">
                         <i class="fa fa-download" aria-hidden="true"></i>
-                        {{item}}&nbsp;
+                        {{item.split("?")[0]}}
                       </a>
                       <div class="dropdown-divider"></div>
                       <a class="dropdown-item" href="javascript:" v-if="msg.torefresh == 1">

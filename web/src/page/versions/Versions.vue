@@ -41,10 +41,10 @@
           <thead>
           <tr>
             <th scope="col" class="no-bt" width="10%">客户</th>
-            <th scope="col" class="no-bt" width="7%">版本</th>
+            <th scope="col" class="no-bt" width="8%">版本</th>
             <th scope="col" class="no-bt" width="6%">更改日期</th>
             <th scope="col" class="no-bt" width="7%">原版本</th>
-            <th scope="col" class="no-bt" width="45%">内容</th>
+            <th scope="col" class="no-bt" width="44%">内容</th>
             <th scope="col" class="no-bt" width="5%">原因</th>
             <th scope="col" class="no-bt" width="5%">备注</th>
             <th scope="col" class="no-bt" width="10%">更改人</th>
@@ -69,9 +69,10 @@
                 <div class="dropdown-menu">
                   <template v-if="hasPath(msg)">
                     <a href="javascript:" class="dropdown-item" v-for="item in msg.path.split(';')"
-                      @click="downloadSrcCode(item)">
+                       @click="downloadSrcCode(item.split('?')[0])"
+                       :title="item.split('?')[1]">
                       <i class="fa fa-download" aria-hidden="true"></i>
-                      {{item}}&nbsp;
+                      {{item.split("?")[0]}}
                     </a>
                     <div class="dropdown-divider"></div>
                     <a class="dropdown-item" href="javascript:" v-if="msg.torefresh != 1" @click="submitError(softType, msg.id)">

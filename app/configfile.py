@@ -692,35 +692,82 @@ class FcfFileMaker:
 
 
 class SysFileMaker:
-    def __init__(self, ce_standard=False, clamp_force=40,
+    def __init__(self, ce_standard=False,
+                 regional_standard="特殊",
+                 clamp_force=40, 
+                 injection=80,
+                 inj_type='',
+                 imm_type='ZEs',
+                 conv=False,
                  std_file_dir=STD_SYS_FILE_DIR,
                  dst_file_dir=CACHE_FILE_DIR):
-        self.std_file_path = ''
-        self.dst_file_path = ''
-        for file_name in os.listdir(std_file_dir):
-            if ce_standard and 'CE' in file_name:
-                if int(clamp_force) <= 5500 and '550' in file_name:
-                    self.std_file_path = os.path.join(std_file_dir, file_name)
-                    self.dst_file_path = os.path.join(dst_file_dir, file_name)
-                if int(clamp_force) > 5500 and '650' in file_name:
-                    self.std_file_path = os.path.join(std_file_dir, file_name)
-                    self.dst_file_path = os.path.join(dst_file_dir, file_name)
-            if not ce_standard and 'CE' not in file_name:
-                if int(clamp_force) <= 5500 and '550' in file_name:
-                    self.std_file_path = os.path.join(std_file_dir, file_name)
-                    self.dst_file_path = os.path.join(dst_file_dir, file_name)
-                if int(clamp_force) > 5500 and '650' in file_name:
-                    self.std_file_path = os.path.join(std_file_dir, file_name)
-                    self.dst_file_path = os.path.join(dst_file_dir, file_name)
+        '''
+            imm_type:           'ZEs', 'ZE', 'VE2', 'VE2s'
+            inj_type:           '', 'h', 'hs', 'p' 
+        '''
+        self.dst_file_path = dst_file_dir
+        self.base_file_path = ''
+        self.clamp_file_path = ''
+        self.inj_file_path = ''
+        clamp_force = int(clamp_force)
+        injection = int(injection)
+
+        if ce_standard is False and regional_standard == "特殊":
+            self.base_file_path = os.path.join(std_file_dir, "BASIC_SYSFILE_NONE.sys")
+        elif ce_standard is False and regional_standard == "KR":
+            self.base_file_path = os.path.join(std_file_dir, "BASIC_SYSFILE_KR.sys")
+        elif ce_standard is False and regional_standard == "TUR":
+            self.base_file_path = os.path.join(std_file_dir, "BASIC_SYSFILE_TUR.sys")
+        elif ce_standard is True and regional_standard == "特殊":
+            self.base_file_path = os.path.join(std_file_dir, "BASIC_SYSFILE_CE_NONE.sys")
+        elif ce_standard is True and regional_standard == "BRA":
+            self.base_file_path = os.path.join(std_file_dir, "BASIC_SYSFILE_CE_BRA.sys")
+        elif ce_standard is True and regional_standard == "UL":
+            self.base_file_path = os.path.join(std_file_dir, "BASIC_SYSFILE_CE_UL.sys")
+
+        print(regional_standard, ce_standard)
+        for root, dirs, files in os.walk(std_file_dir):
+            for file in files:
+                if os.path.abspath(root) == os.path.abspath(std_file_dir):
+                    # 在当前目录下的文件
+                    # if (ce_standard and 'CE' in file) or (not ce_standard and 'CE' not in file):
+                    #     self.base_file_path = os.path.join(root, file)
+                    pass
+                else:
+                    # 在子目录下的所有文件
+                    if "合模" in root:
+                        if (conv and "变频器" in file) or (not conv and "变频器" not in file):
+                            if imm_type[:2].upper() in file.upper():
+                                _cp = int(re.sub(r"[^0-9]", '', file))
+                                if _cp == clamp_force:
+                                    self.clamp_file_path = os.path.join(root, file)
+                    if "注射" in root:
+                        file_info = self._parseInjfileInfo(file)
+                        if file_info["valid"] and inj_type.lower() == file_info["inj_type"] and injection == file_info["injection"]:
+                            self.inj_file_path = os.path.join(root, file)
+
+    def _parseInjfileInfo(self, file):
+        info = {"valid": False, "injection": 0, "inj_type": ''}
+        temp = re.search(r"([0-9]+)([a-z]*)\.sys", file, re.I)
+        if temp:
+            info["valid"] = True
+            info["injection"] = int(temp.group(1))
+            info["inj_type"] = temp.group(2).lower()
+        return info
 
     def createFile(self):
-        if not os.path.isfile(self.std_file_path):
-            print('未找到标准系统文件')
+        if not os.path.isfile(self.base_file_path):
+            print('未找到base系统文件')
             return -1
-        shutil.copyfile(self.std_file_path, self.dst_file_path)
-        if not os.path.isfile(self.dst_file_path):
-            print('复制系统文件过程中发生了错误')
+        if not os.path.isfile(self.clamp_file_path):
+            print("未找到合模部系统文件")
             return -2
+        if not os.path.isfile(self.inj_file_path):
+            print("未找到注射部系统文件")
+            return -3
+        shutil.copy(self.base_file_path, self.dst_file_path)
+        shutil.copy(self.clamp_file_path, self.dst_file_path)
+        shutil.copy(self.inj_file_path, self.dst_file_path)
         return 0
 
 
@@ -773,6 +820,3 @@ def createZip(file_dir, dst_zip_path=''):
     fp.close()
     return dst_zip_path
 
-
-if __name__ == '__main__':
-    createZip(r'F:\MyProj\app\static\cache')

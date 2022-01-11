@@ -73,14 +73,9 @@
     computed: {
       pages: function(){
         if (this.loading) {
-          return [1];
+          return 1;
         }
-        let pageAmount = Math.ceil( this.allIO[this.ioType].length / PAGE_ITEM_AMOUNT );
-        let pgs = [];
-        for(let i=1; i<= pageAmount; i++){
-          pgs.push(i);
-        }
-        return pgs
+        return Math.ceil( this.allIO[this.ioType].length / PAGE_ITEM_AMOUNT );
       },
       curPageStartItem: function(){
         /**
@@ -127,7 +122,7 @@
         this.$emit('newioappend',  this.ioType + '--' + ioIdx);
       },
       goto (page) {
-        if (this.loading || this.pages.indexOf(page) === -1) {
+        if (this.loading) {
           return false;
         }
         this.curPage = page;
@@ -202,7 +197,7 @@
         margin: 15px;
         .nav-item{
           display: inline-block;
-          width: 20%;
+          width: 14%;
           text-align: center;
         }
       }

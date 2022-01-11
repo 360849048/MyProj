@@ -88,6 +88,7 @@
           // 6: {name: '7号改可编程输入1', status: false},
           // 7: {name: '功能点1改可编程输出1', status: false},
           // 8: {name: '功能点2改可编程输出2', status: false},
+          9: {name: '调模变频器', status: false, desc: '仅影响系统文件选择，IO点需要自行配置'},
           98: {name: 'PSG热流道', status: false, desc: '仅在IO表额外配置一块SE051，没有其它作用'},
           99: {name: '外置热流道', status: false, desc: ''},
           101: {name: '阀门', status: false, desc: ''},

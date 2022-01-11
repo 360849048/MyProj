@@ -6,6 +6,7 @@
           <div class="col-sm-4 wrapper">
             <info-form
               :getInfo="getInfo"
+              :regionalStandards="regionalStandards"
               @imminfochange="getImmInfo">
             </info-form>
           </div>
@@ -46,6 +47,7 @@
               :ioInfoLoaded="ajaxIOLoadOK"
               :curBoard="curHardwareTitleIdx"
               :newIoToAppend="newIoToAppend"
+              :varanConnModulePos="varanConnModulePos"
               v-if="curHardwareTitleIdx > 1"
               @moduleiosupdate="getHardwareModuleIoInfo"
               @varanposupdate="getVaranConnModulePosInfo"
@@ -93,7 +95,7 @@
               </button>
             </div>
             <div class="modal-body">
-              机型：{{type}}&nbsp;{{clampForce}}-{{injection}}<br>
+              机型：{{type}}&nbsp;{{clampForce}}-{{injection}}{{injType}}<br>
               <div v-if="ceStandard && modalType===1" class="font-weight-bold text-danger">
                 <span>&nbsp;&nbsp;CE</span>
                 <div class="btn-group dropright">
@@ -138,6 +140,8 @@
               <hr>
               外置热流道：<span class="font-weight-bold" :class="{'text-danger': funcConfig[99].status}">{{funcConfig[99].status}}</span>
               <div v-show="funcConfig[99].status">{{extHotrunnerNum}}</div>
+              <hr>
+              调模变频器：<span class="font-weight-bold" :class="{'text-danger': funcConfig[9].status}">{{funcConfig[9].status}}</span>
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
@@ -180,10 +184,12 @@
         safetyStandard: '',
         technicalClause: '',
         designNote: '',
+        regionalStandardIdx: 0,
         // 机器功能配置信息，包括主底板默认IO修改信息
         funcConfig: {
           3: {name: 'E73', status: false},
           5: {name: 'DEE能耗模块', status: false},
+          9: {name: '调模变频器', status: false},
           98: {name: 'PSG热流道', status: false},
           99: {name: '外置热流道', status: false},
           101: {name: '阀门', status: false},
@@ -201,6 +207,7 @@
         isDualScrew: false,
         clampForce: 0,
         injection: 0,
+        injType: '',
         type: '',
         ceStandard: false,
         // 安全继电器信息
@@ -220,6 +227,8 @@
         waiting: false,
         // 控制弹出modal的样式， 0：IO     1: 配置文件
         modalType: 0,
+        // BASE系统文件地区标准
+        regionalStandards: [],
         // 功能点1和2可配置的选项
         funcOutputItems: [],
         // 所有的IO点，格式为{'DI': ['开门止', 'xxx', ...], 'DO': ['xx', ...], ...}
@@ -241,7 +250,7 @@
         extendBoard1ModulesIos: [{}, {}, {}, {}],
         extendBoard2ModulesIos: [{}, {}, {}, {}],
         // Varan连接模块安装位置，0代表在KEB之后，1代表在KEB之前
-        varanConnModulePos: 0,
+        varanConnModulePos: "0",
       }
     },
     computed: {
@@ -350,6 +359,7 @@
         this.safetyStandard = e.safetyStandard;
         this.technicalClause = e.technicalClause;
         this.designNote = e.designNote;
+        this.regionalStandardIdx = e.regionalStandardIdx;
         // 清除获取信息标志位
         this.getInfo = false;
       },
@@ -406,6 +416,7 @@
           safetyStandard: this.safetyStandard,
           technicalClause: this.technicalClause,
           designNote: this.designNote,
+          regionalStandardIdx: this.regionalStandardIdx,
           funcConfig: this.funcConfig,
           funcOutput1: this.funcOutput1,
           funcOutput2: this.funcOutput2,
@@ -417,6 +428,7 @@
           isDualInj: this.isDualInj,
           clampForce: this.clampForce,
           injection: this.injection,
+          injType: this.injType,
           type: this.type,
           ceStandard: this.ceStandard,
           mainBoardModifiedIo: this.getMainBoardModifiedIo(),
@@ -426,6 +438,7 @@
         if(this.modalType === 0){
           url = '/api/io/createxlxs';
         }
+        console.log(dataToPost);
         if(this.modalType === 1){
           url = '/api/io/createconfigfile';
         }
@@ -600,6 +613,7 @@
         this.isDualScrew = false;
         this.clampForce = 0;
         this.injection = 0;
+        this.injType = '';
         this.type = '';
         if(this.immType === ''){
           console.log('_parseImmType失败，immType为空字符串');
@@ -643,6 +657,7 @@
           return;
         }
         this.injection = substr2.replace(/[^0-9]+/, '');
+        this.injType = substr2.replace(/[0-9]+/, '');
         // 判断是否大机以及单双注射
         if(this.clampForce >= 4500){
           this.isBigImm = true;
@@ -720,6 +735,19 @@
         error: function(){
           console.log('AJAX请求失败，无法获取Pilz文件列表');
         }
+      });
+      // 获取地区标准
+      axios.get('api/io/regionalstandards').then( res => {
+        this.regionalStandards = res.data;
+      }).catch( e => {
+        console.warn(e);
+        this.regionalStandards = [
+          '特殊',
+          'UL',
+          'BRA',
+          'TUR',
+          'KR'
+        ];
       });
       // 获取功能点1和2可配置选项
       axios.get('/api/io/funcoutlist').then( (res) => {
